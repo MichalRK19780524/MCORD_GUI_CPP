@@ -5,6 +5,8 @@
 #include <QTcpSocket>
 #include <QSerialPort>
 
+#include "detectionslabswidget.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 QT_END_NAMESPACE
@@ -39,8 +41,9 @@ private slots:
 
 private:
     Ui::Widget *ui;
-    QTcpSocket *socket;
-    QSerialPort *serial;
+    QTcpSocket *socket = nullptr;
+    QSerialPort *serial = nullptr;
+    DetectionSlabsWidget *detectionSlabsWidget = nullptr;
 //    bool socketReady;
 
 

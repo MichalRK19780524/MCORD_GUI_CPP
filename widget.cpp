@@ -49,8 +49,17 @@ Widget::~Widget()
 
     serial->close();
     delete ui;
+    ui = nullptr;
+
     delete socket;
+    socket = nullptr;
+
     delete serial;
+    serial = nullptr;
+
+    delete detectionSlabsWidget;
+    detectionSlabsWidget = nullptr;
+
 }
 
 
@@ -258,18 +267,17 @@ void Widget::addSlab()
 {
     QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
     QList<Slab*> test;
-    for(QWidget* children: ui->groupBoxDetectionSlabs->findChildren<QWidget*>())
-    {
-        qDebug()<<children;
-    }
+
+
     test.push_back(new Slab(12));
-    if(layout->widget() == nullptr)
+    if(detectionSlabsWidget == nullptr)
     {
-        layout->addWidget(new DetectionSlabsWidget(test, this));
+        detectionSlabsWidget = new DetectionSlabsWidget(test, this);
+        layout->addWidget(detectionSlabsWidget);
     }
     else
     {
-        qobject_cast<DetectionSlabsWidget*>(layout->widget())->addDetectionSlab(new Slab(13));
+        detectionSlabsWidget->addDetectionSlab(new Slab(13));
     }
 }
 //void Widget::socketReadySet()
