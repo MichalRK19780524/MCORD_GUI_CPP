@@ -11,15 +11,16 @@ class DetectionSlabsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit DetectionSlabsWidget(QList<Slab*> &slabIds, QWidget *parent = nullptr);
+//    explicit DetectionSlabsWidget(QList<Slab*> &slabs, QWidget *parent = nullptr);
+    explicit DetectionSlabsWidget(QWidget *parent = nullptr);
     virtual ~DetectionSlabsWidget();
-    void addDetectionSlab(Slab* id);
+    void addDetectionSlab(Slab* slab);
 
 signals:
     void clicked(int id);
 
 private:
-    QList<Slab> slabs;
+    QList<Slab> *slabs;
     QSignalMapper *signalMapper;
     QVBoxLayout *vBoxLayout;
 

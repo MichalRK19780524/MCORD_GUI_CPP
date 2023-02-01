@@ -29,6 +29,7 @@ Widget::Widget(QWidget *parent)
     ui->pushButtonDisconnect->hide();
     socket = new QTcpSocket(this);
     serial = new QSerialPort(this);
+    detectionSlabsWidget = new DetectionSlabsWidget;
     connect(ui->pushButtonNext, &QPushButton::clicked, this, &Widget::nextClicked);
     connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
@@ -266,19 +267,20 @@ void Widget::detectionSlabsBackClicked()
 void Widget::addSlab()
 {
     QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
-    QList<Slab*> test;
+//    QList<Slab*> test;
 
 
-    test.push_back(new Slab(12));
-    if(detectionSlabsWidget == nullptr)
-    {
-        detectionSlabsWidget = new DetectionSlabsWidget(test, this);
+//    test.push_back(new Slab(12));
+//    if(detectionSlabsWidget == nullptr)
+//    {
+//        detectionSlabsWidget = new DetectionSlabsWidget(test, this);
+//        layout->addWidget(detectionSlabsWidget);
+//    }
+//    else
+//    {
         layout->addWidget(detectionSlabsWidget);
-    }
-    else
-    {
         detectionSlabsWidget->addDetectionSlab(new Slab(13));
-    }
+//    }
 }
 //void Widget::socketReadySet()
 //{
