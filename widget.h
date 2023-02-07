@@ -6,6 +6,7 @@
 #include <QSerialPort>
 
 #include "detectionslabswidget.h"
+#include "lanconnection.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -22,7 +23,7 @@ class Widget : public QWidget
     };
 
 public:
-    Widget(QWidget *parent = nullptr);
+    Widget(LanConnection *lanConnection, QWidget *parent = nullptr);
     ~Widget();
 
 private:
@@ -41,16 +42,16 @@ private slots:
 
 private:
     Ui::Widget *ui;
-    QTcpSocket *socket = nullptr;
+
+    LanConnection *lanConnection;
     QSerialPort *serial = nullptr;
+//    QTcpSocket *socket = nullptr;
     DetectionSlabsWidget *detectionSlabsWidget = nullptr;
 //    bool socketReady;
 
 
 
     static constexpr quint16 PORT = 5555;
-    static constexpr quint16 CONNECTING_TIME = 1000;
-    static constexpr quint16 READ_READY_LAN_TIME = 5000;
     static constexpr quint16 READ_READY_SERIAL_TIME = 5000;
     static const QString HUB_RESPONSE;
     static const QString LAN_CONNECTION_LABEL_TEXT;

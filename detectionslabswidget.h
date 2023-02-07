@@ -20,9 +20,9 @@ signals:
     void clicked(int id);
 
 private:
-    QList<Slab> *slabs;
-    QSignalMapper *signalMapper;
-    QVBoxLayout *vBoxLayout;
+    QList<Slab> *slabs = nullptr;
+    QSignalMapper *signalMapper = nullptr;
+    QVBoxLayout *vBoxLayout = nullptr;
 
 };
 

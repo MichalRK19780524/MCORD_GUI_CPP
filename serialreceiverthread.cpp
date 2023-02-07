@@ -3,5 +3,5 @@
 SerialReceiverThread::SerialReceiverThread(QObject *parent)
     : QThread{parent}
 {
-
 }
+

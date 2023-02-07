@@ -25,6 +25,8 @@ set(PROJECT_SOURCES
         detectionslabswidget.cpp
         slab.h
         slab.cpp
+        lanconnection.h
+        lanconnection.cpp
         widget.ui
 )
 

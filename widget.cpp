@@ -4,20 +4,18 @@
 #include <QRegularExpressionValidator>
 #include <QSerialPortInfo>
 #include <QDebug>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonDocument>
+
+
 #include "widget.h"
 #include "./ui_widget.h"
 #include "detectionslabswidget.h"
 
-const QString Widget::HUB_RESPONSE = "\"Client connected with AFE HUB ";
 const QString Widget::LAN_CONNECTION_LABEL_TEXT = "Connected to IP: ";
 const QString Widget::USB_CONNECTION_LABEL_TEXT = "Connected to serial port: ";
-const QJsonArray Widget::CLOSE = {QString("!disconnect")};
 
-Widget::Widget(QWidget *parent)
+Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     : QWidget(parent)
+    , lanConnection(lanConnection)
     , ui(new Ui::Widget)
 {
     ui->setupUi(this);
@@ -27,39 +25,37 @@ Widget::Widget(QWidget *parent)
     ui->groupBoxDetectionSlabs->hide();
     ui->connectionLabel->hide();
     ui->pushButtonDisconnect->hide();
-    socket = new QTcpSocket(this);
+
     serial = new QSerialPort(this);
-    detectionSlabsWidget = new DetectionSlabsWidget;
+    detectionSlabsWidget = new DetectionSlabsWidget(this);
     connect(ui->pushButtonNext, &QPushButton::clicked, this, &Widget::nextClicked);
     connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
     connect(ui->pushButtonDetectionSlabsNext, &QPushButton::clicked, this, &Widget::slubNumberSelection);
     connect(ui->pushButtonDetectionSlabsBack, &QPushButton::clicked, this, &Widget::detectionSlabsBackClicked);
     connect(ui->pushButtonAdd, &QPushButton::clicked, this, &Widget::addSlab);
-    connect(socket, &QTcpSocket::disconnected, this, &Widget::disconnected);
-    connect(socket, &QTcpSocket::errorOccurred, this, &Widget::connectionError);
+    connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
+    connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this, &Widget::connectionError);
 }
 
 Widget::~Widget()
 {
-    socket->write(QJsonDocument(CLOSE).toJson(QJsonDocument::Compact));
-    if(socket->waitForBytesWritten(1000))
+
+
+//    serial->close();
+
+    if(lanConnection->closeConnection() < 0)
     {
-        socket->close();
+        QMessageBox::critical(this, "LAN error", "Unable to send data to HUB");
     }
-
-    serial->close();
-    delete ui;
-    ui = nullptr;
-
-    delete socket;
-    socket = nullptr;
-
     delete serial;
     serial = nullptr;
 
     delete detectionSlabsWidget;
     detectionSlabsWidget = nullptr;
+
+    delete ui;
+    ui = nullptr;
 
 }
 
@@ -135,31 +131,14 @@ void Widget::nextClicked()
         {
             qDebug() << "LAN nextClicked";
             QString ipAddress = ui->lineEditLan->text();
-            socket->connectToHost(QHostAddress(ipAddress), PORT);
-            // TODO  W dokumentacji jest napisane, że nie zawsze działa pod Windowsem - do zastanowienia się jak taką samą funkcjonalność napisać z wykorzystaniem innych mechanizmów
-            if(socket->waitForConnected(CONNECTING_TIME))
+            QString connectionResult = lanConnection->connect(ipAddress, PORT);
+            if(connectionResult.isEmpty())
             {
                 showDetectonSlabs(LAN_CONNECTION_LABEL_TEXT + ipAddress, Connection::LAN);
-                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-                {
-                    if(QString(socket->readAll()) != HUB_RESPONSE + ipAddress + "\"")
-                    {
-                        QMessageBox::critical(this, "LAN reading error", "Unable to read from the HUB with specified IP address");
-                    }
-                    else
-                    {
-                        qDebug() << "read OK";
-                    }
-
-                }
-                else
-                {
-                    QMessageBox::critical(this, "Connection error", "Unable to read data from the specified IP address");
-                }
             }
             else
             {
-               QMessageBox::critical(this, "Connection error", "Unable to connect to the specified IP address");
+                QMessageBox::critical(this, "LAN Error", connectionResult);
             }
         }
         else if (ui->radioButtonUsb->isChecked())
@@ -207,11 +186,11 @@ void Widget::disconnectClicked()
 {
     if(ui->radioButtonLan->isChecked())
     {
-        socket->write(QJsonDocument(CLOSE).toJson(QJsonDocument::Compact));
-        if(socket->waitForBytesWritten(1000))
+        if(lanConnection->closeConnection() < 0)
         {
-            socket->close();
+            QMessageBox::critical(this, "LAN error", "Unable to send data to HUB");
         }
+
     }
     else
     {
@@ -267,22 +246,7 @@ void Widget::detectionSlabsBackClicked()
 void Widget::addSlab()
 {
     QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
-//    QList<Slab*> test;
-
-
-//    test.push_back(new Slab(12));
-//    if(detectionSlabsWidget == nullptr)
-//    {
-//        detectionSlabsWidget = new DetectionSlabsWidget(test, this);
-//        layout->addWidget(detectionSlabsWidget);
-//    }
-//    else
-//    {
-        layout->addWidget(detectionSlabsWidget);
-        detectionSlabsWidget->addDetectionSlab(new Slab(13));
-//    }
+    detectionSlabsWidget->addDetectionSlab(new Slab(13));
+    layout->addWidget(detectionSlabsWidget);
 }
-//void Widget::socketReadySet()
-//{
-//    socketReady = true;
-//}
+
