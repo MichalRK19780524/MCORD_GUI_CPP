@@ -2,12 +2,14 @@
 
 Slab::Slab()
 {
-
+    status = "OK";
 }
 
-Slab::Slab(quint16 id)
+Slab::Slab(quint16 id, Simp *master, Simp *slave) : id(std::move(id)),
+    master(master),
+    slave(slave)
 {
-    this->id = id;
+    status = "OK";
 }
 
 quint16 Slab::getId() const
@@ -20,82 +22,24 @@ void Slab::setId(quint16 newId)
     id = newId;
 }
 
-quint16 Slab::getRawSetVoltage() const
+Simp *Slab::getMaster() const
 {
-    return rawSetVoltage;
+    return master;
 }
 
-void Slab::setRawSetVoltage(quint16 newRawSetVoltage)
+Simp *Slab::getSlave() const
 {
-    rawSetVoltage = newRawSetVoltage;
+    return slave;
 }
 
-float Slab::getSetVoltage() const
+QString Slab::getStatus() const
 {
-    return setVoltage;
+    return status;
 }
 
-void Slab::setSetVoltage(float newSetVoltage)
+void Slab::setStatus(const QString &newStatus)
 {
-    setVoltage = newSetVoltage;
+    status = newStatus;
 }
 
-quint16 Slab::getRawMeasuredVoltage() const
-{
-    return rawMeasuredVoltage;
-}
 
-void Slab::setRawMeasuredVoltage(quint16 newRawMeasuredVoltage)
-{
-    rawMeasuredVoltage = newRawMeasuredVoltage;
-}
-
-float Slab::getMeasuredVoltage() const
-{
-    return measuredVoltage;
-}
-
-void Slab::setMeasuredVoltage(float newMeasuredVoltage)
-{
-    measuredVoltage = newMeasuredVoltage;
-}
-
-quint16 Slab::getRawTemperature() const
-{
-    return rawTemperature;
-}
-
-void Slab::setRawTemperature(quint16 newRawTemperature)
-{
-    rawTemperature = newRawTemperature;
-}
-
-float Slab::getTemperature() const
-{
-    return temperature;
-}
-
-void Slab::setTemperature(float newTemperature)
-{
-    temperature = newTemperature;
-}
-
-quint16 Slab::getRawCurrent() const
-{
-    return rawCurrent;
-}
-
-void Slab::setRawCurrent(quint16 newRawCurrent)
-{
-    rawCurrent = newRawCurrent;
-}
-
-float Slab::getCurrent() const
-{
-    return current;
-}
-
-void Slab::setCurrent(float newCurrent)
-{
-    current = newCurrent;
-}

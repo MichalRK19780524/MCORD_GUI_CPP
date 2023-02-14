@@ -27,6 +27,9 @@ set(PROJECT_SOURCES
         slab.cpp
         lanconnection.h
         lanconnection.cpp
+        simp.h
+        simp.cpp
+        afetype.h
         widget.ui
 )
 

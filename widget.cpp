@@ -27,7 +27,7 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     ui->pushButtonDisconnect->hide();
 
     serial = new QSerialPort(this);
-    detectionSlabsWidget = new DetectionSlabsWidget(this);
+    detectionSlabsWidget = new DetectionSlabsWidget(lanConnection, this);
     connect(ui->pushButtonNext, &QPushButton::clicked, this, &Widget::nextClicked);
     connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
@@ -245,8 +245,9 @@ void Widget::detectionSlabsBackClicked()
 
 void Widget::addSlab()
 {
+    quint16 slabId = ui->lineEditAddSlab->text().toUInt();
     QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
-    detectionSlabsWidget->addDetectionSlab(new Slab(13));
+    detectionSlabsWidget->addDetectionSlab(new Slab(slabId, new Simp(), new Simp()), AfeType::Both);
     layout->addWidget(detectionSlabsWidget);
 }
 
