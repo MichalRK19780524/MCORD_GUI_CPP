@@ -22,6 +22,19 @@ class Widget : public QWidget
         LAN
     };
 
+    enum class State
+    {
+        CONNECTION_SELECTION,
+        LAN_SELECTED,
+        LAN_CONNECTED,
+        USB_SELECTED,
+        USB_CONNECTED,
+        DISCONNECTED,
+        ONE_SLAB_LAN,
+        ONE_SLAB_USB,
+        ERROR
+    };
+
 public:
     Widget(LanConnection *lanConnection, QWidget *parent = nullptr);
     ~Widget();
@@ -35,7 +48,7 @@ private slots:
     void disconnectClicked();
     void disconnected();
     void connectionError(QAbstractSocket::SocketError se);
-    void slubNumberSelection();
+    void slabNumberSelection();
     void detectionSlabsBackClicked();
     void addSlab();
 //    void socketReadySet();
@@ -48,6 +61,7 @@ private:
 //    QTcpSocket *socket = nullptr;
     DetectionSlabsWidget *detectionSlabsWidget = nullptr;
 //    bool socketReady;
+    State state = State::CONNECTION_SELECTION;
 
 
 

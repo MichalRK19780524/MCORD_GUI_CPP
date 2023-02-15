@@ -43,6 +43,10 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
         {
             QMessageBox::critical(this, "Internal error", "Inconsistent data in the slab");
         }
+        else if (slab->getStatus() != "OK")
+        {
+            QMessageBox::warning(this, "Adding detection slab error", QString( "Failed to add slab number %1 - probably it is not connected to the hub.").arg(id));
+        }
         else
         {
             slabs->append(slab);

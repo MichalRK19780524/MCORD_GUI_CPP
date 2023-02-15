@@ -31,7 +31,7 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     connect(ui->pushButtonNext, &QPushButton::clicked, this, &Widget::nextClicked);
     connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
-    connect(ui->pushButtonDetectionSlabsNext, &QPushButton::clicked, this, &Widget::slubNumberSelection);
+    connect(ui->pushButtonDetectionSlabsNext, &QPushButton::clicked, this, &Widget::slabNumberSelection);
     connect(ui->pushButtonDetectionSlabsBack, &QPushButton::clicked, this, &Widget::detectionSlabsBackClicked);
     connect(ui->pushButtonAdd, &QPushButton::clicked, this, &Widget::addSlab);
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
@@ -90,13 +90,15 @@ void Widget::showDetectonSlabs(QString labelName, Connection connection)
 void Widget::nextClicked()
 {
     qDebug() << "nextClicked";
-    if(!ui->groupBoxSelectConnection->isHidden())
+    ui->groupBoxSelectConnection->setEnabled(false);
+    if(state == State::CONNECTION_SELECTION)
     {
         qDebug() << "first nextClicked";
-        ui->groupBoxSelectConnection->hide();
+//        ui->groupBoxSelectConnection->hide();       
         ui->pushButtonBack->show();
         if(ui->radioButtonLan->isChecked())
         {
+            state = State::LAN_SELECTED;
             ui->groupBoxLanConnection->show();
 
             QString ipRange = "(([ 0]+)|([ 0]*[0-9] *)|([0-9][0-9] )|([ 0][0-9][0-9])|(1[0-9][0-9])|([2][0-4][0-9])|(25[0-5]))";
@@ -112,6 +114,7 @@ void Widget::nextClicked()
         }
         else if(ui->radioButtonUsb->isChecked())
         {
+            state = State::USB_SELECTED;
             ui->comboBoxUsb->clear();
             ui->groupBoxUsbConnection->show();
             QList<QString> portNames;
@@ -122,6 +125,7 @@ void Widget::nextClicked()
         }
         else
         {
+            state = State::ERROR;
             QMessageBox::critical(this, "Internal error", "Push buttons unexpected behaviour");
         }
     }
@@ -134,10 +138,12 @@ void Widget::nextClicked()
             QString connectionResult = lanConnection->connect(ipAddress, PORT);
             if(connectionResult.isEmpty())
             {
+                state = State::LAN_CONNECTED;
                 showDetectonSlabs(LAN_CONNECTION_LABEL_TEXT + ipAddress, Connection::LAN);
             }
             else
             {
+                state = State::ERROR;
                 QMessageBox::critical(this, "LAN Error", connectionResult);
             }
         }
@@ -150,10 +156,12 @@ void Widget::nextClicked()
                serial->setPortName(portName);
                if (!serial->open(QIODevice::ReadWrite))
                {
+                    state = State::ERROR;
                     QMessageBox::critical(this, "Connection error", "Unable to connect to the specified serial port");
                }
                else
                {
+                    state = State::USB_CONNECTED;
                     showDetectonSlabs(USB_CONNECTION_LABEL_TEXT + portName, Connection::SERIAL);
                     if(serial->waitForReadyRead(READ_READY_SERIAL_TIME))
                     {
@@ -177,6 +185,7 @@ void Widget::nextClicked()
 void Widget::backClicked()
 {
     ui->groupBoxSelectConnection->show();
+    ui->groupBoxSelectConnection->setEnabled(true);
     ui->pushButtonBack->hide();
     ui->groupBoxLanConnection->hide();
     ui->groupBoxUsbConnection->hide();
@@ -209,6 +218,7 @@ void Widget::disconnected()
     ui->connectionLabel->hide();
     ui->pushButtonDisconnect->hide();
     ui->groupBoxSelectConnection->show();
+    ui->groupBoxSelectConnection->setEnabled(true);
     ui->pushButtonNext->show();
     qDebug() << "disconnected";
 }
@@ -218,12 +228,14 @@ void Widget::connectionError(QAbstractSocket::SocketError se)
     qDebug() << "Error: " << se;
 }
 
-void Widget::slubNumberSelection()
+void Widget::slabNumberSelection()
 {
-    ui->radioButtOnoneSlab->hide();
-    ui->radioButtonManySlabs->hide();
+//    ui->radioButtOneSlab->hide();
+//    ui->radioButtonManySlabs->hide();
+    ui->radioButtonOneSlab->setEnabled(false);
+    ui->radioButtonManySlabs->setEnabled(false);
     ui->pushButtonDetectionSlabsNext->hide();
-    if(ui->radioButtOnoneSlab->isChecked())
+    if(ui->radioButtonOneSlab->isChecked())
     {
         ui->labelAddSlab->show();
         ui->lineEditAddSlab->show();
@@ -234,7 +246,7 @@ void Widget::slubNumberSelection()
 
 void Widget::detectionSlabsBackClicked()
 {
-    ui->radioButtOnoneSlab->show();
+    ui->radioButtonOneSlab->show();
     ui->radioButtonManySlabs->show();
     ui->pushButtonDetectionSlabsNext->show();
     ui->pushButtonDetectionSlabsBack->hide();

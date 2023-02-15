@@ -29,6 +29,7 @@ public:
     QString connect(QString ipAddress, quint16 port);
 
     Slab* downloadMeasuredVoltage(Slab* slab, AfeType afeType);
+    Slab* downloadMeasuredCurrent(Slab *slab, AfeType afeType, quint16 number);
 
     QTcpSocket* getSocket();
 
