@@ -61,7 +61,7 @@ private:
 //    QTcpSocket *socket = nullptr;
     DetectionSlabsWidget *detectionSlabsWidget = nullptr;
 //    bool socketReady;
-    State state = State::CONNECTION_SELECTION;
+    State state = State::DISCONNECTED;
 
 
 

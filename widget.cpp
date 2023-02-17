@@ -91,7 +91,7 @@ void Widget::nextClicked()
 {
     qDebug() << "nextClicked";
     ui->groupBoxSelectConnection->setEnabled(false);
-    if(state == State::CONNECTION_SELECTION)
+    if(state == State::DISCONNECTED)
     {
         qDebug() << "first nextClicked";
 //        ui->groupBoxSelectConnection->hide();       
@@ -220,6 +220,7 @@ void Widget::disconnected()
     ui->groupBoxSelectConnection->show();
     ui->groupBoxSelectConnection->setEnabled(true);
     ui->pushButtonNext->show();
+    state = State::DISCONNECTED;
     qDebug() << "disconnected";
 }
 
