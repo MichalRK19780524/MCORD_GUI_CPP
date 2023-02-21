@@ -32,8 +32,9 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
     connect(ui->pushButtonDetectionSlabsNext, &QPushButton::clicked, this, &Widget::slabNumberSelection);
-    connect(ui->pushButtonDetectionSlabsBack, &QPushButton::clicked, this, &Widget::detectionSlabsBackClicked);
-    connect(ui->pushButtonAdd, &QPushButton::clicked, this, &Widget::addSlab);
+    connect(ui->pushButtonDetectionSlabBack, &QPushButton::clicked, this, &Widget::detectionSlabsBackClicked);
+    connect(ui->pushButtonDetect, &QPushButton::clicked, this, &Widget::addSlab);
+    connect(ui->pushButtonBackSlabsChoice, &QPushButton::clicked, this, &Widget::disconnectClicked /*&Widget::backSlabsChoiceClicked*/);
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
     connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this, &Widget::connectionError);
 }
@@ -78,13 +79,16 @@ void Widget::showDetectonSlabs(QString labelName, Connection connection)
     }
     ui->pushButtonBack->hide();
     ui->pushButtonNext->hide();
-    ui->pushButtonDisconnect->show();
+//    ui->pushButtonDisconnect->show();
     ui->connectionLabel->setText(labelName);
     ui->connectionLabel->show();
-    ui->labelAddSlab->hide();
-    ui->lineEditAddSlab->hide();
-    ui->pushButtonAdd->hide();
-    ui->pushButtonDetectionSlabsBack->hide();
+    ui->widgetAddOneSlab->hide();
+    ui->widgetHeaders->hide();
+//    ui->labelAddSlab->hide();
+//    ui->lineEditAddSlab->hide();
+//    ui->pushButtonDetect->hide();
+//    ui->pushButtonOn->hide();
+//    ui->pushButtonDetectionSlabBack->hide();
 }
 
 void Widget::nextClicked()
@@ -136,6 +140,7 @@ void Widget::nextClicked()
             qDebug() << "LAN nextClicked";
             QString ipAddress = ui->lineEditLan->text();
             QString connectionResult = lanConnection->connect(ipAddress, PORT);
+            ui->pushButtonDisconnect->hide();
             if(connectionResult.isEmpty())
             {
                 state = State::LAN_CONNECTED;
@@ -184,6 +189,7 @@ void Widget::nextClicked()
 
 void Widget::backClicked()
 {
+    state = State::DISCONNECTED;
     ui->groupBoxSelectConnection->show();
     ui->groupBoxSelectConnection->setEnabled(true);
     ui->pushButtonBack->hide();
@@ -236,31 +242,42 @@ void Widget::slabNumberSelection()
     ui->radioButtonOneSlab->setEnabled(false);
     ui->radioButtonManySlabs->setEnabled(false);
     ui->pushButtonDetectionSlabsNext->hide();
+    ui->pushButtonBackSlabsChoice->hide();
     if(ui->radioButtonOneSlab->isChecked())
     {
-        ui->labelAddSlab->show();
-        ui->lineEditAddSlab->show();
-        ui->pushButtonAdd->show();
+        ui->widgetAddOneSlab->show();
+//        ui->labelAddSlab->show();
+//        ui->lineEditAddSlab->show();
+//        ui->pushButtonDetect->show();
     }
-    ui->pushButtonDetectionSlabsBack->show();
+    ui->pushButtonDetectionSlabBack->show();
 }
 
 void Widget::detectionSlabsBackClicked()
 {
+    ui->radioButtonOneSlab->setEnabled(true);
+    ui->radioButtonManySlabs->setEnabled(true);
     ui->radioButtonOneSlab->show();
     ui->radioButtonManySlabs->show();
     ui->pushButtonDetectionSlabsNext->show();
-    ui->pushButtonDetectionSlabsBack->hide();
-    ui->labelAddSlab->hide();
-    ui->pushButtonAdd->hide();
-    ui->lineEditAddSlab->hide();
+    ui->pushButtonBackSlabsChoice->show();
+    ui->widgetAddOneSlab->hide();
+//    ui->labelAddSlab->hide();
+//    ui->pushButtonDetect->hide();
+//    ui->lineEditAddSlab->hide();
 }
 
 void Widget::addSlab()
 {
     quint16 slabId = ui->lineEditAddSlab->text().toUInt();
     QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
+    ui->widgetHeaders->show();
     detectionSlabsWidget->addDetectionSlab(new Slab(slabId, new Simp(), new Simp()), AfeType::Both);
-    layout->addWidget(detectionSlabsWidget);
+    layout->insertWidget(2,detectionSlabsWidget);
 }
+
+//void Widget::backSlabsChoiceClicked()
+//{
+
+//}
 

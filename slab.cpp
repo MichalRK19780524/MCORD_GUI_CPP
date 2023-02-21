@@ -2,14 +2,13 @@
 
 Slab::Slab()
 {
-    status = "OK";
+
 }
 
 Slab::Slab(quint16 id, Simp *master, Simp *slave) : id(std::move(id)),
     master(master),
     slave(slave)
 {
-    status = "OK";
 }
 
 quint16 Slab::getId() const
@@ -30,16 +29,6 @@ Simp *Slab::getMaster() const
 Simp *Slab::getSlave() const
 {
     return slave;
-}
-
-QString Slab::getStatus() const
-{
-    return status;
-}
-
-void Slab::setStatus(const QString &newStatus)
-{
-    status = newStatus;
 }
 
 

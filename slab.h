@@ -16,14 +16,10 @@ public:
     Simp *getMaster() const;
     Simp *getSlave() const;
 
-    QString getStatus() const;
-    void setStatus(const QString &newStatus);
-
 private:
     quint16 id = 0;
     Simp* master;
     Simp* slave;
-    QString status;
 };
 
 #endif // SLUB_H

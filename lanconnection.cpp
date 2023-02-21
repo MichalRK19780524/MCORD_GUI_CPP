@@ -75,124 +75,149 @@ QString LanConnection::connect(QString ipAddress, quint16 port)
     return "";
 }
 
-Slab* LanConnection::downloadMeasuredCurrent(Slab *slab, AfeType afeType, quint16 number)
+//QString LanConnection::downloadMeasuredCurrent(Slab *slab, AfeType afeType, quint16 number)
+//{
+
+//}
+
+QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
 {
 
-}
-
-Slab* LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
-{
-    if(slab->getStatus().compare( "OK") != 0)
+    QString result = LanConnection::isSlabCorrect(slab);
+    if(result != "OK")
     {
-        return nullptr;
+        return result;
     }
 
     quint16 id = slab->getId();
-    if(id == 0)
-    {
-        slab->setStatus("No Id");
-        return slab;
-    }
 
     QJsonArray commandMaster = {DOWNLOAD_MASTER_VOLTAGE_COMMAND, id};
     QJsonArray commandSlave = {DOWNLOAD_SLAVE_VOLTAGE_COMMAND, id};
-    qint64 resultMaster = 0;
-    qint64 resultSlave = 0;
+
     if(socket->isOpen())
     {
         if(afeType == AfeType::Master)
         {
-            resultMaster = socket->write(QJsonDocument(commandMaster).toJson(QJsonDocument::Compact));
-            if(resultMaster <= 0)
-            {
-                slab->setStatus("Failed to send master voltage reading command");
-                return slab;
-            }
+            getMasterVoltageSlabFromHub(slab, commandMaster);
+            return "OK";
+        }
+        else if(afeType == AfeType::Slave)
+        {
+            getSlaveVoltageSlabFromHub(slab, commandSlave);
+            return "OK";
+        }
+        else if(afeType == AfeType::Both)
+        {
+            getMasterVoltageSlabFromHub(slab, commandMaster);
+            getSlaveVoltageSlabFromHub(slab, commandSlave);
+            return "OK";
+        }
+        else
+        {
+            return "Internal Error";
+        }
 
-            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+    }
+    else
+    {
+        return "Faild to open TCP socket";
+    }
+
+}
+
+Slab* LanConnection::getMasterVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster)
+{
+    qint64 resultMaster = socket->write(QJsonDocument(commandMaster).toJson(QJsonDocument::Compact));
+    if(resultMaster <= 0)
+    {
+        slab->getMaster()->setStatus("Failed to send master voltage reading command");
+        return slab;
+    }
+
+    if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+    {
+        if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+        {
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+            QString status = jsonDocument.array().at(0).toString();
+            if(status.isNull() || status.compare("OK") != 0)
             {
-                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+                if(status.isEmpty())
                 {
-
-                    QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
-                    QString status = jsonDocument.array().at(0).toString();
-                    if(status.isNull() || status.compare("OK") != 0)
+                    resultMaster = socket->write(QJsonDocument(commandMaster).toJson(QJsonDocument::Compact));
+                    if(resultMaster <= 0)
                     {
-                        if(status.isEmpty())
-                        {
-                            resultMaster = socket->write(QJsonDocument(commandMaster).toJson(QJsonDocument::Compact));
-                            if(resultMaster <= 0)
-                            {
-                                slab->setStatus("Failed to send master voltage reading command");
-                                return slab;
-                            }
+                        slab->getMaster()->setStatus("Failed to send master voltage reading command");
+                        return slab;
+                    }
 
-                            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+                    if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+                    {
+                        if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+                        {
+                            QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                            QString status = jsonDocument.array().at(0).toString();
+                            if(status.isNull() || status.compare("OK") != 0)
                             {
-                                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-                                {
-                                    QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
-                                    QString status = jsonDocument.array().at(0).toString();
-                                    if(status.isNull() || status.compare("OK") != 0)
-                                    {
-                                        slab->setStatus("Error reading voltage from master SiPM");
-                                        return slab;
-                                    }
-                                    else
-                                    {
-                                        float voltage = jsonDocument.array().at(1).toDouble();
-                                        slab->getMaster()->setMeasuredVoltage(voltage);
-                                        slab->setStatus("OK");
-                                        return slab;
-                                    }
-                                }
-                                else
-                                {
-                                    slab->setStatus("Error reading voltage from master SiPM");
-                                    return slab;
-                                }
+                                slab->getMaster()->setStatus("Error reading voltage from master SiPM");
+                                return slab;
                             }
                             else
                             {
-                                slab->setStatus("Voltage read from master SiPM command failed");
+                                float voltage = jsonDocument.array().at(1).toDouble();
+                                slab->getMaster()->setMeasuredVoltage(voltage);
+                                slab->getMaster()->setStatus("OK");
                                 return slab;
                             }
-
                         }
                         else
                         {
-                            slab->setStatus("Error reading voltage from master SiPM");
+                            slab->getMaster()->setStatus("Error reading voltage from master SiPM");
                             return slab;
                         }
-
                     }
                     else
                     {
-                        float voltage = jsonDocument.array().at(1).toDouble();
-                        slab->getMaster()->setMeasuredVoltage(voltage);
-                        slab->setStatus("OK");
+                        slab->getMaster()->setStatus("Voltage read from master SiPM command failed");
                         return slab;
                     }
 
                 }
                 else
                 {
-                    slab->setStatus("Voltage reading from master SiPM failed");
+                    slab->getMaster()->setStatus("Error reading voltage from master SiPM");
                     return slab;
                 }
+
             }
             else
             {
-                slab->setStatus("Voltage read from master SiPM command failed");
+                float voltage = jsonDocument.array().at(1).toDouble();
+                slab->getMaster()->setMeasuredVoltage(voltage);
+                slab->getMaster()->setStatus("OK");
                 return slab;
             }
+
         }
-        else if(afeType == AfeType::Slave)
+        else
         {
-            resultSlave = socket->write(QJsonDocument(commandSlave).toJson(QJsonDocument::Compact));
+            slab->getMaster()->setStatus("Voltage reading from master SiPM failed");
+            return slab;
+        }
+    }
+    else
+    {
+        slab->getMaster()->setStatus("Voltage read from master SiPM command failed");
+        return slab;
+    }
+}
+
+Slab* LanConnection::getSlaveVoltageSlabFromHub(Slab* slab, QJsonArray commandSlave)
+{
+            qint64 resultSlave = socket->write(QJsonDocument(commandSlave).toJson(QJsonDocument::Compact));
             if(resultSlave <= 0)
             {
-                slab->setStatus("Failed to send slave voltage reading command");
+                slab->getSlave()->setStatus("Failed to send slave voltage reading command");
                 return slab;
             }
 
@@ -210,7 +235,7 @@ Slab* LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
                             resultSlave = socket->write(QJsonDocument(commandSlave).toJson(QJsonDocument::Compact));
                             if(resultSlave <= 0)
                             {
-                                slab->setStatus("Failed to send slave voltage reading command");
+                                slab->getSlave()->setStatus("Failed to send slave voltage reading command");
                                 return slab;
                             }
 
@@ -222,33 +247,33 @@ Slab* LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
                                     QString status = jsonDocument.array().at(0).toString();
                                     if(status.isNull() || status.compare("OK") != 0)
                                     {
-                                        slab->setStatus("Error reading voltage from master SiPM");
+                                        slab->getSlave()->setStatus("Error reading voltage from slave SiPM");
                                         return slab;
                                     }
                                     else
                                     {
                                         float voltage = jsonDocument.array().at(1).toDouble();
                                         slab->getSlave()->setMeasuredVoltage(voltage);
-                                        slab->setStatus("OK");
+                                        slab->getSlave()->setStatus("OK");
                                         return slab;
                                     }
                                 }
                                 else
                                 {
-                                    slab->setStatus("Error reading voltage from slave SiPM");
+                                    slab->getSlave()->setStatus("Error reading voltage from slave SiPM");
                                     return slab;
                                 }
                             }
                             else
                             {
-                                slab->setStatus("Voltage read from master SiPM command failed");
+                                slab->getSlave()->setStatus("Voltage read from slave SiPM command failed");
                                 return slab;
                             }
 
                         }
                         else
                         {
-                            slab->setStatus("Error reading voltage from master SiPM");
+                            slab->getSlave()->setStatus("Error reading voltage from slave SiPM");
                             return slab;
                         }
 
@@ -257,157 +282,45 @@ Slab* LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
                     {
                         float voltage = jsonDocument.array().at(1).toDouble();
                         slab->getSlave()->setMeasuredVoltage(voltage);
-                        slab->setStatus("OK");
+                        slab->getSlave()->setStatus("OK");
                         return slab;
                     }
 
                 }
                 else
                 {
-                    slab->setStatus("Voltage reading from slave SiPM failed");
+                    slab->getSlave()->setStatus("Voltage reading from slave SiPM failed");
                     return slab;
                 }
             }
             else
             {
-                slab->setStatus("Voltage read from slave SiPM command failed");
+                slab->getSlave()->setStatus("Voltage read from slave SiPM command failed");
                 return slab;
             }
-        }
-        else
-        {
-            resultMaster = socket->write(QJsonDocument(commandMaster).toJson(QJsonDocument::Compact));
-            if(resultMaster <= 0)
-            {
-                slab->setStatus("Failed to send master voltage reading command");
-                return slab;
-            }
+}
 
-
-            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-            {
-                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-                {
-
-                    QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
-                    QString status = jsonDocument.array().at(0).toString();
-
-                    if(status.isNull() || status.compare("OK") != 0)
-                    {
-                        if(status.isEmpty())
-                        {
-                            resultMaster = socket->write(QJsonDocument(commandMaster).toJson(QJsonDocument::Compact));
-                            if(resultMaster <= 0)
-                            {
-                                slab->setStatus("Failed to send master voltage reading command");
-                                return slab;
-                            }
-
-                            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-                            {
-                                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-                                {
-                                    QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
-                                    QString status = jsonDocument.array().at(0).toString();
-                                    if(status.isNull() || status.compare("OK") != 0)
-                                    {
-                                        slab->setStatus("Error reading voltage from master SiPM");
-                                        return slab;
-                                    }
-                                    else
-                                    {
-                                        float voltage = jsonDocument.array().at(1).toDouble();
-                                        slab->getMaster()->setMeasuredVoltage(voltage);
-                                        slab->setStatus("OK");
-                                        return slab;
-                                    }
-                                }
-                                else
-                                {
-                                    slab->setStatus("Error reading voltage from master SiPM");
-                                    return slab;
-                                }
-                            }
-                            else
-                            {
-                                slab->setStatus("Voltage read from master SiPM command failed");
-                                return slab;
-                            }
-
-                        }
-                        else
-                        {
-                            slab->setStatus("Error reading voltage from master SiPM");
-                            return slab;
-                        }
-
-                    }
-                    else
-                    {
-                        float voltage = jsonDocument.array().at(1).toDouble();
-                        slab->getMaster()->setMeasuredVoltage(voltage);
-
-                        resultSlave = socket->write(QJsonDocument(commandSlave).toJson(QJsonDocument::Compact));
-                        if(resultSlave <= 0)
-                        {
-                            slab->setStatus("Failed to send slave voltage reading command");
-                            return slab;
-                        }
-
-                        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-                        {
-                            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-                            {
-
-                                QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
-                                QString status = jsonDocument.array().at(0).toString();
-                                if(status.isNull() || status.compare("OK") != 0)
-                                {
-                                    slab->setStatus("Error reading voltage from slave SiPM");
-                                    return slab;
-                                }
-                                else
-                                {
-                                    float voltage = jsonDocument.array().at(1).toDouble();
-                                    slab->getSlave()->setMeasuredVoltage(voltage);
-                                    slab->setStatus("OK");
-                                    return slab;
-                                }
-
-                            }
-                            else
-                            {
-                                slab->setStatus("Voltage reading from slave SiPM failed");
-                                return slab;
-                            }
-
-                            slab->setStatus("OK");
-                            return slab;
-                        }
-                        else
-                        {
-                            slab->setStatus("Voltage read from slave SiPM command failed");
-                            return slab;
-                        }
-                    }
-                }
-                else
-                {
-                    slab->setStatus("Voltage reading from master SiPM failed");
-                    return slab;
-                }
-            }
-            else
-            {
-                slab->setStatus("Voltage read from master SiPM command failed");
-                return slab;
-            }
-        }
+QString LanConnection::isSlabCorrect(Slab* slab)
+{
+    if(slab==nullptr)
+    {
+        return "Error: Slab Null Ptr";
+    }
+    else if(slab->getId() == 0)
+    {
+        return "Error: Null Id";
+    }
+    else if(slab->getMaster()->getStatus().compare( "OK") != 0)
+    {
+        return "Error: Master SiPM Status: " + slab->getMaster()->getStatus();
+    }
+    else if(slab->getSlave()->getStatus().compare( "OK") != 0)
+    {
+        return "Error: Slave SiPM Status: " + slab->getSlave()->getStatus();
     }
     else
     {
-        slab->setStatus("Faild to open TCP socket");
-        return slab;
+        return "OK";
     }
 }
 

@@ -1,6 +1,7 @@
 #ifndef SIMP_H
 #define SIMP_H
 #include <QtGlobal>
+#include <QString>
 
 
 class Simp
@@ -24,7 +25,11 @@ public:
     float getCurrent() const;
     void setCurrent(float newCurrent);
 
+    QString getStatus() const;
+    void setStatus(const QString &newStatus);
+
 private:
+    QString status = "OK";
     quint16 rawSetVoltage {0};
     float setVoltage {0.0};
     float measuredVoltage {0.0};

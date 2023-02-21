@@ -51,6 +51,7 @@ private slots:
     void slabNumberSelection();
     void detectionSlabsBackClicked();
     void addSlab();
+//    void backSlabsChoiceClicked();
 //    void socketReadySet();
 
 private:

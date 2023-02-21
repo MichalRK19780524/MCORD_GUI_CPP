@@ -1,8 +1,7 @@
 #include "simp.h"
 
-Simp::Simp()
+Simp::Simp(): status("OK")
 {
-
 }
 
 quint16 Simp::getRawSetVoltage() const
@@ -75,11 +74,24 @@ void Simp::setCurrent(float newCurrent)
     current = newCurrent;
 }
 
-Simp::Simp(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current) : rawSetVoltage(std::move(rawSetVoltage)),
+QString Simp::getStatus() const
+{
+    return status;
+}
+
+void Simp::setStatus(const QString &newStatus)
+{
+    status = newStatus;
+}
+
+Simp::Simp(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current):
+    status("OK"),
+    rawSetVoltage(std::move(rawSetVoltage)),
     setVoltage(setVoltage),
     measuredVoltage(measuredVoltage),
     rawTemperature(std::move(rawTemperature)),
     temperature(temperature),
     rawCurrent(std::move(rawCurrent)),
     current(current)
+
 {}
