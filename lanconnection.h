@@ -42,10 +42,14 @@ private:
     static constexpr quint16 READ_READY_LAN_TIME = 10000;
     static constexpr quint16 BYTES_WRITEN_LAN_TIME = 2000;
 
-    static QString isSlabCorrect(Slab* slab);
-    Slab* getMasterVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
-    Slab* getSlaveVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
     QTcpSocket *socket = nullptr;
+
+    static QString isSlabCorrect(Slab* slab);
+//    Slab* getMasterVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
+//    Slab* getSlaveVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
+    Simp* getSipmVoltagFromHub(Simp* simp, QJsonArray commandSlave);
+
+
 };
 
 #endif // LANCONNECTION_H
