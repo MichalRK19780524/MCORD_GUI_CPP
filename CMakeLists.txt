@@ -11,9 +11,12 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+list(APPEND CMAKE_PREFIX_PATH "/opt/Qt/6.4.2/gcc_64/lib/cmake")
+
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS SerialPort Network Sql)
+find_package(GSL REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -31,7 +34,7 @@ set(PROJECT_SOURCES
         simp.cpp
         afetype.h
         widget.ui
-)
+    )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(MCORD_GUI_CPP
@@ -59,6 +62,7 @@ endif()
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::Network)
+target_link_libraries(MCORD_GUI_CPP PRIVATE GSL::gsl GSL::gslcblas)
 
 set_target_properties(MCORD_GUI_CPP PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

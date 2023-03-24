@@ -28,6 +28,12 @@ public:
     QString getStatus() const;
     void setStatus(const QString &newStatus);
 
+    quint16 getRawCurrentStandardDeviation() const;
+    void setRawCurrentStandardDeviation(quint16 newRawCurrentStandardDeviation);
+
+    float getCurrentStandardDeviation() const;
+    void setCurrentStandardDeviation(float newCurrentStandardDeviation);
+
 private:
     QString status = "OK";
     quint16 rawSetVoltage {0};
@@ -37,6 +43,8 @@ private:
     float temperature {0.0};
     quint16 rawCurrent {0};
     float current {0.0};
+    quint16 rawCurrentStandardDeviation {0};
+    float currentStandardDeviation {0.0};
 };
 
 #endif // SIMP_H

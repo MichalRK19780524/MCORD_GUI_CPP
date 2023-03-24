@@ -17,6 +17,7 @@ public:
     explicit DetectionSlabsWidget(LanConnection *lanConnection, QWidget *parent = nullptr);
     virtual ~DetectionSlabsWidget();
     void addDetectionSlab(Slab* slab, AfeType afeType);
+    static constexpr quint16 CURRENT_AVG_NUMBER {20};
 
 signals:
     void clicked(int id);

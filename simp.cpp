@@ -84,6 +84,26 @@ void Simp::setStatus(const QString &newStatus)
     status = newStatus;
 }
 
+quint16 Simp::getRawCurrentStandardDeviation() const
+{
+    return rawCurrentStandardDeviation;
+}
+
+void Simp::setRawCurrentStandardDeviation(quint16 newRawCurrentStandardDeviation)
+{
+    rawCurrentStandardDeviation = newRawCurrentStandardDeviation;
+}
+
+float Simp::getCurrentStandardDeviation() const
+{
+    return currentStandardDeviation;
+}
+
+void Simp::setCurrentStandardDeviation(float newCurrentStandardDeviation)
+{
+    currentStandardDeviation = newCurrentStandardDeviation;
+}
+
 Simp::Simp(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current):
     status("OK"),
     rawSetVoltage(std::move(rawSetVoltage)),

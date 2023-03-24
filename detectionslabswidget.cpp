@@ -41,6 +41,7 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
     {
 
         QString errorMessage = lanConnection->downloadMeasuredVoltage(slab, afeType);
+        errorMessage = lanConnection->downloadMeasuredCurrent(slab, afeType, DetectionSlabsWidget::CURRENT_AVG_NUMBER);
         if(errorMessage != "OK")
         {
             QMessageBox::critical(this, "Internal error", errorMessage);
@@ -78,8 +79,6 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
             connect(buttonSetMaster, &QPushButton::clicked, signalMapper, static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
             connect(buttonSetSlave, &QPushButton::clicked, signalMapper, static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
 
-
-
             float measuredMasterVoltage = slab->getMaster()->getMeasuredVoltage();
             if(measuredMasterVoltage > 0)
             {
@@ -90,7 +89,9 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
                 labelMV->setText("Null");
             }
 
-            labelMA->setText("Null");
+            float masterAmperage = slab->getMaster()->getCurrent();
+            labelMA->setText(QString::number(masterAmperage));
+
             labelMT->setText("Null");
 
             hBoxLayoutMaster->insertWidget(0, labelMT);
@@ -114,7 +115,9 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
                 labelSV->setText("Null");
             }
 
-            labelSA->setText("Null");
+            float slaveAmperage = slab->getSlave()->getCurrent();
+            labelSA->setText(QString::number(slaveAmperage));
+
             labelST->setText("Null");
 
             hBoxLayoutSlave->insertWidget(0, labelST);

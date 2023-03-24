@@ -1,6 +1,7 @@
 #include <QTcpSocket>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <gsl/gsl_statistics.h>
 
 #include "lanconnection.h"
 #include "afetype.h"
@@ -9,6 +10,8 @@ const QJsonArray LanConnection::CLOSE = {QString("!disconnect")};
 const QString LanConnection::HUB_RESPONSE {"\"Client connected with AFE HUB "};
 const QString LanConnection::DOWNLOAD_MASTER_VOLTAGE_COMMAND {"get_master_voltage"};
 const QString LanConnection::DOWNLOAD_SLAVE_VOLTAGE_COMMAND {"get_slave_voltage"};
+const QString LanConnection::DOWNLOAD_MASTER_CURRENT_COMMAND {"get_master_amperage"};
+const QString LanConnection::DOWNLOAD_SLAVE_CURRENT_COMMAND {"get_slave_amperage"};
 
 LanConnection::LanConnection(QTcpSocket* socket): socket(socket)
 {
@@ -75,10 +78,47 @@ QString LanConnection::connect(QString ipAddress, quint16 port)
     return "";
 }
 
-//QString LanConnection::downloadMeasuredCurrent(Slab *slab, AfeType afeType, quint16 number)
-//{
+QString LanConnection::downloadMeasuredCurrent(Slab *slab, AfeType afeType, quint16 avgNumber)
+{
+    QString result = LanConnection::isSlabCorrect(slab);
+    if(result != "OK")
+    {
+        return result;
+    }
 
-//}
+    quint16 id = slab->getId();
+
+    QJsonArray commandMaster = {DOWNLOAD_MASTER_CURRENT_COMMAND, id};
+    QJsonArray commandSlave = {DOWNLOAD_SLAVE_CURRENT_COMMAND, id};
+
+    if(socket->isOpen())
+    {
+        if(afeType == AfeType::Master)
+        {
+            getSipmAmperageFromHub(slab->getMaster(), commandMaster, avgNumber);
+            return "OK";
+        }
+        else if(afeType == AfeType::Slave)
+        {
+            getSipmAmperageFromHub(slab->getSlave(), commandSlave, avgNumber);
+            return "OK";
+        }
+        else if(afeType == AfeType::Both)
+        {
+            getSipmAmperageFromHub(slab->getMaster(), commandMaster, avgNumber);
+            getSipmAmperageFromHub(slab->getSlave(), commandSlave, avgNumber);
+            return "OK";
+        }
+        else
+        {
+            return "Internal Error";
+        }
+    }
+    else
+    {
+        return "Faild to open TCP socket";
+    }
+}
 
 QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
 {
@@ -124,6 +164,7 @@ QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
     }
 
 }
+
 
 Simp* LanConnection::getSipmVoltagFromHub(Simp* simp, QJsonArray command)
 {
@@ -211,6 +252,58 @@ Simp* LanConnection::getSipmVoltagFromHub(Simp* simp, QJsonArray command)
                 simp->setStatus("Voltage read from SiPM command failed");
                 return simp;
             }
+}
+
+
+Simp *LanConnection::getSipmAmperageFromHub(Simp *simp, QJsonArray command, quint16 avgNumber)
+{
+    QList<double> amperageList;
+    amperageList.reserve(avgNumber);
+    for(int i = 0; i < avgNumber; ++i)
+    {
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        if(result <= 0)
+        {
+            simp->setStatus("Failed to send amperage reading command");
+            return simp;
+        }
+
+        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+        {
+            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+            {
+                QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                QString status = jsonDocument.array().at(0).toString();
+                if(status.isNull() || status.compare("OK") != 0)
+                {
+                    simp->setStatus("Error reading amperage from SiPM");
+                    return simp;
+                }
+                else
+                {
+                    double amperage = jsonDocument.array().at(1).toDouble();
+                    amperageList.append(amperage);
+                }
+            }
+            else
+            {
+                simp->setStatus("Error reading amperage from SiPM");
+                return simp;
+            }
+        }
+        else
+        {
+            simp->setStatus("Amperage read from SiPM command failed");
+            return simp;
+        }
+    }
+
+    const double* amperageArray = amperageList.constData();
+    double meanAmperage = gsl_stats_mean(amperageArray, 1, amperageList.size());
+    simp->setCurrent(static_cast<float>(meanAmperage));
+    double standardDeviationAmperage = gsl_stats_sd_m(amperageArray, 1, amperageList.size(), meanAmperage);
+    simp->setCurrentStandardDeviation(standardDeviationAmperage);
+    return simp;
 }
 
 QString LanConnection::isSlabCorrect(Slab* slab)
