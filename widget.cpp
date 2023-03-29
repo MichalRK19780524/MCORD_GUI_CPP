@@ -37,6 +37,7 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     connect(ui->pushButtonBackSlabsChoice, &QPushButton::clicked, this, &Widget::disconnectClicked /*&Widget::backSlabsChoiceClicked*/);
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
     connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this, &Widget::connectionError);
+    connect(detectionSlabsWidget, &DetectionSlabsWidget::clicked, this, &Widget::setVoltageClicked);
 }
 
 Widget::~Widget()
@@ -216,6 +217,11 @@ void Widget::disconnectClicked()
         ui->groupBoxSelectConnection->show();
         ui->pushButtonNext->show();
     }
+}
+
+void Widget::setVoltageClicked(QObject *button)
+{
+    qDebug() << qobject_cast<QPushButton*>(button)->parentWidget();
 }
 
 void Widget::disconnected()

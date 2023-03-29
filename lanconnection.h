@@ -30,6 +30,7 @@ public:
 
     QString downloadMeasuredVoltage(Slab* slab, AfeType afeType);
     QString downloadMeasuredCurrent(Slab* slab, AfeType afeType, quint16 number);
+    QString downloadMeasuredTemperature(Slab *slab, AfeType afeType, quint16 avgNumber);
 
     QTcpSocket* getSocket();
 
@@ -40,6 +41,8 @@ private:
     static const QString DOWNLOAD_SLAVE_VOLTAGE_COMMAND;
     static const QString DOWNLOAD_MASTER_CURRENT_COMMAND;
     static const QString DOWNLOAD_SLAVE_CURRENT_COMMAND;
+    static const QString DOWNLOAD_MASTER_TEMPERATURE_COMMAND;
+    static const QString DOWNLOAD_SLAVE_TEMPERATURE_COMMAND;
     static constexpr quint16 CONNECTING_TIME = 2000;
     static constexpr quint16 READ_READY_LAN_TIME = 10000;
     static constexpr quint16 BYTES_WRITEN_LAN_TIME = 2000;
@@ -51,7 +54,7 @@ private:
 //    Slab* getSlaveVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
     Simp* getSipmVoltagFromHub(Simp* simp, QJsonArray command);
     Simp* getSipmAmperageFromHub(Simp* simp, QJsonArray command, quint16 avgNumber);
-
+    Simp* getSipmTemperatureFromHub(Simp* simp, QJsonArray command, quint16 avgNumber);
 
 };
 

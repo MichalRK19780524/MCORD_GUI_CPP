@@ -46,6 +46,7 @@ private slots:
     void nextClicked();
     void backClicked();
     void disconnectClicked();
+    void setVoltageClicked(QObject *button);
     void disconnected();
     void connectionError(QAbstractSocket::SocketError se);
     void slabNumberSelection();

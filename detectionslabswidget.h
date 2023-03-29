@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QSignalMapper>
 #include <QVBoxLayout>
+#include <QPushButton>
 
 #include "slab.h"
 #include "lanconnection.h"
@@ -18,9 +19,10 @@ public:
     virtual ~DetectionSlabsWidget();
     void addDetectionSlab(Slab* slab, AfeType afeType);
     static constexpr quint16 CURRENT_AVG_NUMBER {20};
+    static constexpr quint16 TEMPERATURE_AVG_NUMBER {10};
 
 signals:
-    void clicked(int id);
+    void clicked(QObject* button);
 
 private:
     QList<Slab*> *slabs = nullptr;

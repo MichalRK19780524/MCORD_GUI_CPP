@@ -34,6 +34,9 @@ public:
     float getCurrentStandardDeviation() const;
     void setCurrentStandardDeviation(float newCurrentStandardDeviation);
 
+    float getTemperatureStandardDeviation() const;
+    void setTemperatureStandardDeviation(float newTemperatureStandardDeviation);
+
 private:
     QString status = "OK";
     quint16 rawSetVoltage {0};
@@ -45,6 +48,7 @@ private:
     float current {0.0};
     quint16 rawCurrentStandardDeviation {0};
     float currentStandardDeviation {0.0};
+    float temperatureStandardDeviation {0.0};
 };
 
 #endif // SIMP_H

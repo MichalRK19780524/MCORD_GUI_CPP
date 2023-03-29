@@ -104,6 +104,16 @@ void Simp::setCurrentStandardDeviation(float newCurrentStandardDeviation)
     currentStandardDeviation = newCurrentStandardDeviation;
 }
 
+float Simp::getTemperatureStandardDeviation() const
+{
+    return temperatureStandardDeviation;
+}
+
+void Simp::setTemperatureStandardDeviation(float newTemperatureStandardDeviation)
+{
+    temperatureStandardDeviation = newTemperatureStandardDeviation;
+}
+
 Simp::Simp(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current):
     status("OK"),
     rawSetVoltage(std::move(rawSetVoltage)),

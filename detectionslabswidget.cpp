@@ -15,6 +15,8 @@ DetectionSlabsWidget::DetectionSlabsWidget(LanConnection *lanConnection, QWidget
                                                                                            vBoxLayout(new QVBoxLayout),
                                                                                            setId(new QSet<quint16>)
 {  
+    connect(signalMapper, &QSignalMapper::mappedObject,
+                this, &DetectionSlabsWidget::clicked);
 }
 
 DetectionSlabsWidget::~DetectionSlabsWidget()
@@ -42,6 +44,7 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
 
         QString errorMessage = lanConnection->downloadMeasuredVoltage(slab, afeType);
         errorMessage = lanConnection->downloadMeasuredCurrent(slab, afeType, DetectionSlabsWidget::CURRENT_AVG_NUMBER);
+        errorMessage = lanConnection->downloadMeasuredTemperature(slab, afeType, DetectionSlabsWidget::TEMPERATURE_AVG_NUMBER);
         if(errorMessage != "OK")
         {
             QMessageBox::critical(this, "Internal error", errorMessage);
@@ -77,7 +80,9 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
             QLabel *labelST = new QLabel();
 
             connect(buttonSetMaster, &QPushButton::clicked, signalMapper, static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
+            signalMapper->setMapping(buttonSetMaster, buttonSetMaster);
             connect(buttonSetSlave, &QPushButton::clicked, signalMapper, static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
+            signalMapper->setMapping(buttonSetSlave, buttonSetSlave);
 
             float measuredMasterVoltage = slab->getMaster()->getMeasuredVoltage();
             if(measuredMasterVoltage > 0)
@@ -92,7 +97,8 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
             float masterAmperage = slab->getMaster()->getCurrent();
             labelMA->setText(QString::number(masterAmperage));
 
-            labelMT->setText("Null");
+            float masterTemperature = slab->getMaster()->getTemperature();
+            labelMT->setText(QString::number(masterTemperature));
 
             hBoxLayoutMaster->insertWidget(0, labelMT);
             hBoxLayoutMaster->insertWidget(1, labelMA);
@@ -118,7 +124,8 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
             float slaveAmperage = slab->getSlave()->getCurrent();
             labelSA->setText(QString::number(slaveAmperage));
 
-            labelST->setText("Null");
+            float slaveTemperature = slab->getSlave()->getTemperature();
+            labelST->setText(QString::number(slaveTemperature));
 
             hBoxLayoutSlave->insertWidget(0, labelST);
             hBoxLayoutSlave->insertWidget(1, labelSA);

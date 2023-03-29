@@ -12,6 +12,8 @@ const QString LanConnection::DOWNLOAD_MASTER_VOLTAGE_COMMAND {"get_master_voltag
 const QString LanConnection::DOWNLOAD_SLAVE_VOLTAGE_COMMAND {"get_slave_voltage"};
 const QString LanConnection::DOWNLOAD_MASTER_CURRENT_COMMAND {"get_master_amperage"};
 const QString LanConnection::DOWNLOAD_SLAVE_CURRENT_COMMAND {"get_slave_amperage"};
+const QString LanConnection::DOWNLOAD_MASTER_TEMPERATURE_COMMAND {"get_temperature_degree_master"};
+const QString LanConnection::DOWNLOAD_SLAVE_TEMPERATURE_COMMAND {"get_temperature_degree_slave"};
 
 LanConnection::LanConnection(QTcpSocket* socket): socket(socket)
 {
@@ -119,6 +121,56 @@ QString LanConnection::downloadMeasuredCurrent(Slab *slab, AfeType afeType, quin
         return "Faild to open TCP socket";
     }
 }
+
+//Z AFE do HUBa przychodzi temperatura z dwóch SiPMów, więc docelowo trzeba się zastanowić,
+//czy nie zmienić pobierania temperatury w AFE lub HUB, tak żeby było to zrobione spójnie.
+
+// From the AFE to the HUB comes the temperature from two SiPMs,
+//so ultimately you need to consider whether to rework the functions in the HUB or AFE,
+//so that there is a uniform download of temperature and current.
+
+QString LanConnection::downloadMeasuredTemperature(Slab *slab, AfeType afeType, quint16 avgNumber)
+{
+    QString result = LanConnection::isSlabCorrect(slab);
+    if(result != "OK")
+    {
+        return result;
+    }
+
+    quint16 id = slab->getId();
+
+    QJsonArray commandMaster = {DOWNLOAD_MASTER_TEMPERATURE_COMMAND, id};
+    QJsonArray commandSlave = {DOWNLOAD_SLAVE_TEMPERATURE_COMMAND, id};
+
+    if(socket->isOpen())
+    {
+        if(afeType == AfeType::Master)
+        {
+            getSipmTemperatureFromHub(slab->getMaster(), commandMaster, avgNumber);
+            return "OK";
+        }
+        else if(afeType == AfeType::Slave)
+        {
+            getSipmTemperatureFromHub(slab->getSlave(), commandSlave, avgNumber);
+            return "OK";
+        }
+        else if(afeType == AfeType::Both)
+        {
+            getSipmTemperatureFromHub(slab->getMaster(), commandMaster, avgNumber);
+            getSipmTemperatureFromHub(slab->getSlave(), commandSlave, avgNumber);
+            return "OK";
+        }
+        else
+        {
+            return "Internal Error";
+        }
+    }
+    else
+    {
+        return "Faild to open TCP socket";
+    }
+}
+
 
 QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
 {
@@ -300,9 +352,61 @@ Simp *LanConnection::getSipmAmperageFromHub(Simp *simp, QJsonArray command, quin
 
     const double* amperageArray = amperageList.constData();
     double meanAmperage = gsl_stats_mean(amperageArray, 1, amperageList.size());
-    simp->setCurrent(static_cast<float>(meanAmperage));
+    double meanNanoAmperage = meanAmperage * 1E9;
+    simp->setCurrent(static_cast<float>(meanNanoAmperage));
     double standardDeviationAmperage = gsl_stats_sd_m(amperageArray, 1, amperageList.size(), meanAmperage);
     simp->setCurrentStandardDeviation(standardDeviationAmperage);
+    return simp;
+}
+
+Simp *LanConnection::getSipmTemperatureFromHub(Simp *simp, QJsonArray command, quint16 avgNumber)
+{
+    QList<double> temperatureList;
+    temperatureList.reserve(avgNumber);
+    for(int i = 0; i < avgNumber; ++i)
+    {
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        if(result <= 0)
+        {
+            simp->setStatus("Failed to send temperature reading command");
+            return simp;
+        }
+
+        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+        {
+            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+            {
+                QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                QString status = jsonDocument.array().at(0).toString();
+                if(status.isNull() || status.compare("OK") != 0)
+                {
+                    simp->setStatus("Error reading temperature from SiPM");
+                    return simp;
+                }
+                else
+                {
+                    double temperature = jsonDocument.array().at(1).toDouble();
+                    temperatureList.append(temperature);
+                }
+            }
+            else
+            {
+                simp->setStatus("Error reading temperature from SiPM");
+                return simp;
+            }
+        }
+        else
+        {
+            simp->setStatus("Temperature read from SiPM command failed");
+            return simp;
+        }
+    }
+
+    const double* temperatureArray = temperatureList.constData();
+    double meanTemperature = gsl_stats_mean(temperatureArray, 1, temperatureList.size());
+    simp->setTemperature(static_cast<float>(meanTemperature));
+    double standardDeviationTemperature = gsl_stats_sd_m(temperatureArray, 1, temperatureList.size(), meanTemperature);
+    simp->setTemperatureStandardDeviation(standardDeviationTemperature);
     return simp;
 }
 
