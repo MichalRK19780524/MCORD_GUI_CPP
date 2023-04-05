@@ -100,6 +100,7 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
             float masterTemperature = slab->getMaster()->getTemperature();
             labelMT->setText(QString::number(masterTemperature));
 
+            hBoxLayoutMaster->setDirection(QBoxLayout::RightToLeft); //Temporary
             hBoxLayoutMaster->insertWidget(0, labelMT);
             hBoxLayoutMaster->insertWidget(1, labelMA);
             hBoxLayoutMaster->insertWidget(2, labelMV);
@@ -127,6 +128,7 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
             float slaveTemperature = slab->getSlave()->getTemperature();
             labelST->setText(QString::number(slaveTemperature));
 
+            hBoxLayoutSlave->setDirection(QBoxLayout::RightToLeft);
             hBoxLayoutSlave->insertWidget(0, labelST);
             hBoxLayoutSlave->insertWidget(1, labelSA);
             hBoxLayoutSlave->insertWidget(2, labelSV);
@@ -139,7 +141,7 @@ void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
 
             vBoxLayoutSlab->addLayout(hBoxLayoutMaster);
             vBoxLayoutSlab->addLayout(hBoxLayoutSlave);
-
+            hBoxLayoutSlab->setDirection(QBoxLayout::RightToLeft);
             hBoxLayoutSlab->addLayout(vBoxLayoutSlab);
 
             hBoxLayoutSlab->insertWidget(-1,labelId);

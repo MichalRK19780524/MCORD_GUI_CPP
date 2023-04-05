@@ -26,7 +26,7 @@
     </rect>
    </property>
    <property name="layoutDirection">
-    <enum>Qt::RightToLeft</enum>
+    <enum>Qt::LeftToRight</enum>
    </property>
    <property name="tabPosition">
     <enum>QTabWidget::West</enum>
@@ -111,16 +111,16 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QLineEdit" name="lineEditLan">
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
+           <widget class="QLabel" name="labelLan">
+            <property name="text">
+             <string>Enter the IP address of MCORD HUB:  (e.g 10.7.0.130)  </string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="labelLan">
-            <property name="text">
-             <string>Enter the IP address of MCORD HUB:  (e.g 10.7.0.130)  </string>
+           <widget class="QLineEdit" name="lineEditLan">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -137,14 +137,14 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QComboBox" name="comboBoxUsb"/>
-          </item>
-          <item>
            <widget class="QLabel" name="labelUsb">
             <property name="text">
              <string>Select serial port:</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxUsb"/>
           </item>
          </layout>
         </widget>
@@ -162,16 +162,12 @@
            <widget class="QWidget" name="widgetSlabsChoice" native="true">
             <layout class="QHBoxLayout" name="horizontalLayoutSlabsChoice">
              <item>
-              <widget class="QPushButton" name="pushButtonBackSlabsChoice">
+              <widget class="QRadioButton" name="radioButtonOneSlab">
                <property name="text">
-                <string>Back</string>
+                <string>One by one slab</string>
                </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButtonDetectionSlabsNext">
-               <property name="text">
-                <string>Next</string>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -183,107 +179,32 @@
               </widget>
              </item>
              <item>
-              <widget class="QRadioButton" name="radioButtonOneSlab">
+              <widget class="QPushButton" name="pushButtonDetectionSlabsNext">
                <property name="text">
-                <string>One by one slab</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="widgetHeaders" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <item>
-              <widget class="QLabel" name="labelT">
-               <property name="text">
-                <string>T[C]</string>
+                <string>Next</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="labelI">
-               <property name="text">
-                <string>I[mA]</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelU">
-               <property name="text">
-                <string>U[V]</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="Line" name="line">
-               <property name="minimumSize">
-                <size>
-                 <width>10</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelSet">
-               <property name="text">
-                <string>Set SiPM Volt.</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelType">
-               <property name="text">
-                <string>Type</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelStatus">
-               <property name="text">
-                <string>Status</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelSlabNo">
-               <property name="text">
-                <string>Slab No.</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="widgetAddOneSlab" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayoutAddSlab">
-             <item>
-              <widget class="QPushButton" name="pushButtonDetectionSlabBack">
+              <widget class="QPushButton" name="pushButtonBackSlabsChoice">
                <property name="text">
                 <string>Back</string>
                </property>
               </widget>
              </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableView" name="slabsTableView"/>
+          </item>
+          <item>
+           <widget class="QWidget" name="widgetAddOneSlab" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayoutAddSlab">
              <item>
-              <widget class="QPushButton" name="pushButtonDetect">
+              <widget class="QLabel" name="labelAddSlab">
                <property name="text">
-                <string>Detect</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButtonOn">
-               <property name="text">
-                <string>On</string>
+                <string>Add Slab</string>
                </property>
               </widget>
              </item>
@@ -298,9 +219,23 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="labelAddSlab">
+              <widget class="QPushButton" name="pushButtonOn">
                <property name="text">
-                <string>Add Slab</string>
+                <string>On</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonDetect">
+               <property name="text">
+                <string>Detect</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonDetectionSlabBack">
+               <property name="text">
+                <string>Back</string>
                </property>
               </widget>
              </item>

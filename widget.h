@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTcpSocket>
 #include <QSerialPort>
+#include <QStandardItemModel>
 
 #include "detectionslabswidget.h"
 #include "lanconnection.h"
@@ -62,6 +63,7 @@ private:
     QSerialPort *serial = nullptr;
 //    QTcpSocket *socket = nullptr;
     DetectionSlabsWidget *detectionSlabsWidget = nullptr;
+    QStandardItemModel *model = nullptr;
 //    bool socketReady;
     State state = State::DISCONNECTED;
 

@@ -16,6 +16,7 @@ const QString Widget::USB_CONNECTION_LABEL_TEXT = "Connected to serial port: ";
 Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     : QWidget(parent)
     , lanConnection(lanConnection)
+    , model(new QStandardItemModel(this))
     , ui(new Ui::Widget)
 {
     ui->setupUi(this);
@@ -25,6 +26,9 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     ui->groupBoxDetectionSlabs->hide();
     ui->connectionLabel->hide();
     ui->pushButtonDisconnect->hide();
+    QStringList headers = {"Slab No.", "Status", "Type", "Set SiPM Volt.", "U[V]", "I[nA]", "T[C]"};
+    model->setHorizontalHeaderLabels(headers);
+    ui->slabsTableView->setModel(model);
 
     serial = new QSerialPort(this);
     detectionSlabsWidget = new DetectionSlabsWidget(lanConnection, this);
@@ -56,6 +60,9 @@ Widget::~Widget()
     delete detectionSlabsWidget;
     detectionSlabsWidget = nullptr;
 
+    delete model;
+    model = nullptr;
+
     delete ui;
     ui = nullptr;
 
@@ -84,7 +91,7 @@ void Widget::showDetectonSlabs(QString labelName, Connection connection)
     ui->connectionLabel->setText(labelName);
     ui->connectionLabel->show();
     ui->widgetAddOneSlab->hide();
-    ui->widgetHeaders->hide();
+    ui->slabsTableView->hide();
 //    ui->labelAddSlab->hide();
 //    ui->lineEditAddSlab->hide();
 //    ui->pushButtonDetect->hide();
@@ -277,7 +284,11 @@ void Widget::addSlab()
 {
     quint16 slabId = ui->lineEditAddSlab->text().toUInt();
     QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
-    ui->widgetHeaders->show();
+    QList<QStandardItem *> items = {new QStandardItem("test1"), new QStandardItem("test2")};
+    model->appendRow(items);
+    int lastRowIndex = model->rowCount() - 1;
+    ui->slabsTableView->setIndexWidget(model->index(lastRowIndex,2), new QPushButton("test"));
+    ui->slabsTableView->show();
     detectionSlabsWidget->addDetectionSlab(new Slab(slabId, new Simp(), new Simp()), AfeType::Both);
     layout->insertWidget(2,detectionSlabsWidget);
 }
