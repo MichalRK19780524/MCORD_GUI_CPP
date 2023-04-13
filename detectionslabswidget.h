@@ -18,8 +18,7 @@ public:
     explicit DetectionSlabsWidget(LanConnection *lanConnection, QWidget *parent = nullptr);
     virtual ~DetectionSlabsWidget();
     void addDetectionSlab(Slab* slab, AfeType afeType);
-    static constexpr quint16 CURRENT_AVG_NUMBER {20};
-    static constexpr quint16 TEMPERATURE_AVG_NUMBER {10};
+
 
 signals:
     void clicked(QObject* button);

@@ -30,10 +30,12 @@ set(PROJECT_SOURCES
         slab.cpp
         lanconnection.h
         lanconnection.cpp
-        simp.h
-        simp.cpp
+        sipm.h
+        sipm.cpp
         afetype.h
         widget.ui
+        detectortablemodel.h
+        detectortablemodel.cpp
     )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

@@ -1,14 +1,14 @@
-#ifndef SIMP_H
-#define SIMP_H
+#ifndef SIPM_H
+#define SIPM_H
 #include <QtGlobal>
 #include <QString>
 
 
-class Simp
+class Sipm
 {
 public:
-    Simp();
-    Simp(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current);
+    Sipm();
+    Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current);
 
     quint16 getRawSetVoltage() const;
     void setRawSetVoltage(quint16 newRawSetVoltage);
@@ -51,4 +51,4 @@ private:
     float temperatureStandardDeviation {0.0};
 };
 
-#endif // SIMP_H
+#endif // SIPM_H

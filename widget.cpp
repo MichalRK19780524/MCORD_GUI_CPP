@@ -12,11 +12,11 @@
 
 const QString Widget::LAN_CONNECTION_LABEL_TEXT = "Connected to IP: ";
 const QString Widget::USB_CONNECTION_LABEL_TEXT = "Connected to serial port: ";
+const QStringList Widget::HEADERS {"Slab No.", "Status", "Type", "Set SiPM Volt.", "U[V]", "I[nA]", "T[C]"};
 
 Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     : QWidget(parent)
     , lanConnection(lanConnection)
-    , model(new QStandardItemModel(this))
     , ui(new Ui::Widget)
 {
     ui->setupUi(this);
@@ -26,12 +26,15 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     ui->groupBoxDetectionSlabs->hide();
     ui->connectionLabel->hide();
     ui->pushButtonDisconnect->hide();
-    QStringList headers = {"Slab No.", "Status", "Type", "Set SiPM Volt.", "U[V]", "I[nA]", "T[C]"};
-    model->setHorizontalHeaderLabels(headers);
+    model = new DetectorTableModel(&Widget::HEADERS);
     ui->slabsTableView->setModel(model);
 
+    QHeaderView *verticalHeader = ui->slabsTableView->verticalHeader();
+    verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
+    verticalHeader->setDefaultSectionSize(48);
+
     serial = new QSerialPort(this);
-    detectionSlabsWidget = new DetectionSlabsWidget(lanConnection, this);
+
     connect(ui->pushButtonNext, &QPushButton::clicked, this, &Widget::nextClicked);
     connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
@@ -283,14 +286,60 @@ void Widget::detectionSlabsBackClicked()
 void Widget::addSlab()
 {
     quint16 slabId = ui->lineEditAddSlab->text().toUInt();
-    QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
-    QList<QStandardItem *> items = {new QStandardItem("test1"), new QStandardItem("test2")};
-    model->appendRow(items);
-    int lastRowIndex = model->rowCount() - 1;
-    ui->slabsTableView->setIndexWidget(model->index(lastRowIndex,2), new QPushButton("test"));
+//    QBoxLayout* layout = qobject_cast<QBoxLayout*>(ui->groupBoxDetectionSlabs->layout());
+//    QList<QStandardItem *> items = {new QStandardItem(QString::number(slabId)), new QStandardItem("Gray")};
+    Slab* slab = new Slab(slabId);
+    QString result = lanConnection->getSlab(slab, AfeType::Both);
+    if(result == "OK")
+    {
+        QString result = model->appendSlab(slab);
+        if(result != "OK")
+        {
+            QMessageBox::information(this, "Adding detection slab error", result);
+        }
+    }
+    else
+    {
+        QMessageBox::critical(this, "Error", result);
+    }
+
+    QWidget * setVoltageWidgetMaster = new QWidget();
+    QLineEdit * setVoltageLineEditMaster = new QLineEdit(setVoltageWidgetMaster);
+    QPushButton * setVoltageButtonMaster = new QPushButton("Set", setVoltageWidgetMaster);
+    QHBoxLayout * setVoltageLayoutMaster = new QHBoxLayout(setVoltageWidgetMaster);
+    setVoltageLayoutMaster->addWidget(setVoltageLineEditMaster);
+    setVoltageLayoutMaster->addWidget(setVoltageButtonMaster);
+
+    QWidget * setVoltageWidgetSlave = new QWidget();
+    QLineEdit * setVoltageLineEditSlave = new QLineEdit(setVoltageWidgetSlave);
+    QPushButton * setVoltageButtonSlave = new QPushButton("Set", setVoltageWidgetSlave);
+    QHBoxLayout * setVoltageLayoutSlave = new QHBoxLayout(setVoltageWidgetSlave);
+    setVoltageLayoutSlave->addWidget(setVoltageLineEditSlave);
+    setVoltageLayoutSlave->addWidget(setVoltageButtonSlave);
+
+    ui->slabsTableView->setIndexWidget(model->index(model->rowCount() - 2, model->columnCount() - 5), setVoltageWidgetMaster);
+    ui->slabsTableView->setIndexWidget(model->index(model->rowCount() - 1, model->columnCount() - 5), setVoltageWidgetSlave);
+
+    QWidget * powerWidgetMaster = new QWidget();
+    QPushButton * powerOnButtonMaster = new QPushButton("On", powerWidgetMaster);
+    QPushButton * powerOffButtonMaster = new QPushButton("Off", powerWidgetMaster);
+    QHBoxLayout * powerLayoutMaster = new QHBoxLayout(powerWidgetMaster);
+    powerLayoutMaster->addWidget(powerOnButtonMaster);
+    powerLayoutMaster->addWidget(powerOffButtonMaster);
+
+    QWidget * powerWidgetSlave = new QWidget();
+    QPushButton * powerOnButtonSlave = new QPushButton("On", powerWidgetSlave);
+    QPushButton * powerOffButtonSlave = new QPushButton("Off", powerWidgetSlave);
+    QHBoxLayout * powerLayoutSlave = new QHBoxLayout(powerWidgetSlave);
+    powerLayoutSlave->addWidget(powerOnButtonSlave);
+    powerLayoutSlave->addWidget(powerOffButtonSlave);
+
+    ui->slabsTableView->setIndexWidget(model->index(model->rowCount() - 2, model->columnCount() - 4), powerWidgetMaster);
+    ui->slabsTableView->setIndexWidget(model->index(model->rowCount() - 1, model->columnCount() - 4), powerWidgetSlave);
+
+    ui->slabsTableView->setShowGrid(false);
+    ui->slabsTableView->setAlternatingRowColors(true);
     ui->slabsTableView->show();
-    detectionSlabsWidget->addDetectionSlab(new Slab(slabId, new Simp(), new Simp()), AfeType::Both);
-    layout->insertWidget(2,detectionSlabsWidget);
 }
 
 //void Widget::backSlabsChoiceClicked()

@@ -5,9 +5,11 @@
 #include <QTcpSocket>
 #include <QSerialPort>
 #include <QStandardItemModel>
+#include <QStringList>
 
 #include "detectionslabswidget.h"
 #include "lanconnection.h"
+#include "detectortablemodel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -53,18 +55,14 @@ private slots:
     void slabNumberSelection();
     void detectionSlabsBackClicked();
     void addSlab();
-//    void backSlabsChoiceClicked();
-//    void socketReadySet();
 
 private:
     Ui::Widget *ui;
 
-    LanConnection *lanConnection;
+    LanConnection *lanConnection = nullptr;
     QSerialPort *serial = nullptr;
-//    QTcpSocket *socket = nullptr;
     DetectionSlabsWidget *detectionSlabsWidget = nullptr;
-    QStandardItemModel *model = nullptr;
-//    bool socketReady;
+    DetectorTableModel *model = nullptr;
     State state = State::DISCONNECTED;
 
 
@@ -74,6 +72,7 @@ private:
     static const QString HUB_RESPONSE;
     static const QString LAN_CONNECTION_LABEL_TEXT;
     static const QString USB_CONNECTION_LABEL_TEXT;
+    static const QStringList HEADERS;
     static const QJsonArray CLOSE;
 
 

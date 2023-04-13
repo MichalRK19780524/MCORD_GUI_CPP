@@ -14,6 +14,10 @@ class LanConnection : public QObject
         Q_OBJECT
 
 public:
+
+    static constexpr quint16 CURRENT_AVG_NUMBER {20};
+    static constexpr quint16 TEMPERATURE_AVG_NUMBER {10};
+
     LanConnection(QTcpSocket* socket);
     virtual ~LanConnection();
 
@@ -29,8 +33,9 @@ public:
     QString connect(QString ipAddress, quint16 port);
 
     QString downloadMeasuredVoltage(Slab* slab, AfeType afeType);
-    QString downloadMeasuredCurrent(Slab* slab, AfeType afeType, quint16 number);
+    QString downloadMeasuredCurrent(Slab* slab, AfeType afeType, quint16 avgNumber);
     QString downloadMeasuredTemperature(Slab *slab, AfeType afeType, quint16 avgNumber);
+    QString getSlab(Slab *slab, AfeType afeType);
 
     QTcpSocket* getSocket();
 
@@ -52,9 +57,9 @@ private:
     static QString isSlabCorrect(Slab* slab);
 //    Slab* getMasterVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
 //    Slab* getSlaveVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
-    Simp* getSipmVoltagFromHub(Simp* simp, QJsonArray command);
-    Simp* getSipmAmperageFromHub(Simp* simp, QJsonArray command, quint16 avgNumber);
-    Simp* getSipmTemperatureFromHub(Simp* simp, QJsonArray command, quint16 avgNumber);
+    Sipm* getSipmVoltagFromHub(Sipm* simp, QJsonArray command);
+    Sipm* getSipmAmperageFromHub(Sipm* simp, QJsonArray command, quint16 avgNumber);
+    Sipm* getSipmTemperatureFromHub(Sipm* simp, QJsonArray command, quint16 avgNumber);
 
 };
 

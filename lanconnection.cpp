@@ -171,6 +171,15 @@ QString LanConnection::downloadMeasuredTemperature(Slab *slab, AfeType afeType, 
     }
 }
 
+QString LanConnection::getSlab(Slab *slab, AfeType afeType)
+{
+    QString result;
+    result = downloadMeasuredVoltage(slab, afeType);
+    result = downloadMeasuredCurrent(slab, afeType, CURRENT_AVG_NUMBER);
+    result = downloadMeasuredTemperature(slab, afeType, TEMPERATURE_AVG_NUMBER);
+    return result;
+}
+
 
 QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
 {
@@ -218,7 +227,7 @@ QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
 }
 
 
-Simp* LanConnection::getSipmVoltagFromHub(Simp* simp, QJsonArray command)
+Sipm* LanConnection::getSipmVoltagFromHub(Sipm* simp, QJsonArray command)
 {
             qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
             if(result <= 0)
@@ -307,7 +316,7 @@ Simp* LanConnection::getSipmVoltagFromHub(Simp* simp, QJsonArray command)
 }
 
 
-Simp *LanConnection::getSipmAmperageFromHub(Simp *simp, QJsonArray command, quint16 avgNumber)
+Sipm *LanConnection::getSipmAmperageFromHub(Sipm *simp, QJsonArray command, quint16 avgNumber)
 {
     QList<double> amperageList;
     amperageList.reserve(avgNumber);
@@ -359,7 +368,7 @@ Simp *LanConnection::getSipmAmperageFromHub(Simp *simp, QJsonArray command, quin
     return simp;
 }
 
-Simp *LanConnection::getSipmTemperatureFromHub(Simp *simp, QJsonArray command, quint16 avgNumber)
+Sipm *LanConnection::getSipmTemperatureFromHub(Sipm *simp, QJsonArray command, quint16 avgNumber)
 {
     QList<double> temperatureList;
     temperatureList.reserve(avgNumber);

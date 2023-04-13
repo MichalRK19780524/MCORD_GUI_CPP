@@ -2,12 +2,16 @@
 
 Slab::Slab()
 {
-
 }
 
-Slab::Slab(quint16 id, Simp *master, Simp *slave) : id(std::move(id)),
+Slab::Slab(quint16 id, Sipm *master, Sipm *slave) : id(std::move(id)),
     master(master),
     slave(slave)
+{
+}
+
+
+Slab::Slab(quint16 id) : id(std::move(id)), master(new Sipm()), slave(new Sipm())
 {
 }
 
@@ -21,14 +25,12 @@ void Slab::setId(quint16 newId)
     id = newId;
 }
 
-Simp *Slab::getMaster() const
+Sipm *Slab::getMaster() const
 {
     return master;
 }
 
-Simp *Slab::getSlave() const
+Sipm *Slab::getSlave() const
 {
     return slave;
 }
-
-
