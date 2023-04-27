@@ -28,6 +28,22 @@ public:
     // Add data:
 //    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     QString appendSlab(Slab* slab);
+
+    QModelIndex findIndexOfMasterSlabSetButton(quint16 slabId);
+    QModelIndex findIndexOfSlaveSlabSetButton(quint16 slabId);
+
+    QModelIndex findIndexOfMasterSlabOnButton(quint16 slabId);
+    QModelIndex findIndexOfSlaveSlabOnButton(quint16 slabId);
+
+    QModelIndex findIndexOfMasterSlabOffButton(quint16 slabId);
+    QModelIndex findIndexOfSlaveSlabOffButton(quint16 slabId);
+
+    Slab* findSlab(quint16 slabId);
+    QString reloadMasterSlab(Slab* slab);
+    QString reloadSlaveSlab(Slab* slab);
+
+    int findSlabPosition(quint16 slabId);
+
 private:
     QList<Slab*> *slabs = nullptr;
     QSet<quint16> *setId = nullptr;

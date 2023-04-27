@@ -36,6 +36,8 @@ set(PROJECT_SOURCES
         widget.ui
         detectortablemodel.h
         detectortablemodel.cpp
+        pushbuttondelegate.h
+        pushbuttondelegate.cpp
     )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

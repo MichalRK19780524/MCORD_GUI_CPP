@@ -31,8 +31,8 @@ DetectionSlabsWidget::~DetectionSlabsWidget()
     setId = nullptr;
 }
 
-//void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
-//{
+void DetectionSlabsWidget::addDetectionSlab(Slab* slab, AfeType afeType)
+{
 
 //    quint16 id = slab->getId();
 //    if(setId->contains(id))
@@ -61,7 +61,7 @@ DetectionSlabsWidget::~DetectionSlabsWidget()
 //            QVBoxLayout *vBoxLayoutSlab = new QVBoxLayout;
 //            QHBoxLayout *hBoxLayoutMaster = new QHBoxLayout;
 //            QHBoxLayout *hBoxLayoutSlave = new QHBoxLayout;
-//            QPushButton *buttonSetMaster = new QPushButton("Set");
+            QPushButton *buttonSetMaster = new QPushButton("Set");
 //            QPushButton *buttonSetSlave = new QPushButton("Set");
 //            QLabel *labelId = new QLabel(QString::number(id));
 //            QLabel *labelMaster = new QLabel("Master");
@@ -79,8 +79,8 @@ DetectionSlabsWidget::~DetectionSlabsWidget()
 //            QLabel *labelMT = new QLabel();
 //            QLabel *labelST = new QLabel();
 
-//            connect(buttonSetMaster, &QPushButton::clicked, signalMapper, static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
-//            signalMapper->setMapping(buttonSetMaster, buttonSetMaster);
+            connect(buttonSetMaster, &QPushButton::clicked, signalMapper, static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
+            signalMapper->setMapping(buttonSetMaster, buttonSetMaster);
 //            connect(buttonSetSlave, &QPushButton::clicked, signalMapper, static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
 //            signalMapper->setMapping(buttonSetSlave, buttonSetSlave);
 
@@ -150,4 +150,4 @@ DetectionSlabsWidget::~DetectionSlabsWidget()
 //            setLayout(vBoxLayout);
 //        }
 //    }
-//}
+}

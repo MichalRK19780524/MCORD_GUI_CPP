@@ -40,7 +40,7 @@ public:
 private:
     QString status = "OK";
     quint16 rawSetVoltage {0};
-    float setVoltage {0.0};
+    float setVoltage {53.0}; //Voltage set on the HUB when initializing the slab
     float measuredVoltage {0.0};
     quint16 rawTemperature {0};
     float temperature {0.0};

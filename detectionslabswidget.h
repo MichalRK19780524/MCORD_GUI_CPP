@@ -9,6 +9,7 @@
 #include "slab.h"
 #include "lanconnection.h"
 #include "afetype.h"
+#include <QApplication>
 
 class DetectionSlabsWidget : public QWidget
 {
