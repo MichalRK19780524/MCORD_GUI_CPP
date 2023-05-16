@@ -3,23 +3,25 @@
 #include <QtGlobal>
 #include <QString>
 
-#include "simp.h"
+#include "sipm.h"
 
 class Slab
 {
 public:
     Slab();
-    Slab(quint16 id, Simp *master, Simp *slave);
+    Slab(quint16 id);
+
+    Slab(quint16 id, Sipm *master, Sipm *slave);
     quint16 getId() const;
     void setId(quint16 newId);
 
-    Simp *getMaster() const;
-    Simp *getSlave() const;
+    Sipm *getMaster() const;
+    Sipm *getSlave() const;
 
 private:
     quint16 id = 0;
-    Simp* master;
-    Simp* slave;
+    Sipm* master;
+    Sipm* slave;
 };
 
 #endif // SLUB_H

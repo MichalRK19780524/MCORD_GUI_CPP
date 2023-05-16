@@ -14,6 +14,10 @@ const QString LanConnection::DOWNLOAD_MASTER_CURRENT_COMMAND {"get_master_ampera
 const QString LanConnection::DOWNLOAD_SLAVE_CURRENT_COMMAND {"get_slave_amperage"};
 const QString LanConnection::DOWNLOAD_MASTER_TEMPERATURE_COMMAND {"get_temperature_degree_master"};
 const QString LanConnection::DOWNLOAD_SLAVE_TEMPERATURE_COMMAND {"get_temperature_degree_slave"};
+const QString LanConnection::INIT_COMMAND {"init"};
+const QString LanConnection::ON_COMMAND {"hvon"};
+const QString LanConnection::OFF_COMMAND {"hvoff"};
+const QString LanConnection::SET_VOLTAGE_COMMAND {"setdac"};
 
 LanConnection::LanConnection(QTcpSocket* socket): socket(socket)
 {
@@ -171,6 +175,207 @@ QString LanConnection::downloadMeasuredTemperature(Slab *slab, AfeType afeType, 
     }
 }
 
+QString LanConnection::setSlabVoltage(Slab *slab)
+{
+    QString result = LanConnection::isSlabCorrect(slab);
+    if(result != "OK")
+    {
+        return result;
+    }
+
+    quint16 id = slab->getId();
+    float masterVoltage = slab->getMaster()->getSetVoltage();
+    float slaveVoltage = slab->getSlave()->getSetVoltage();
+
+    QJsonArray command = {SET_VOLTAGE_COMMAND, id, masterVoltage, slaveVoltage};
+
+    if(socket->isOpen())
+    {
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        if(result <= 0)
+        {
+            return "Failed to send voltage setting command";
+        }
+
+        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+        {
+            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+            {
+                QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                QString status = jsonDocument.array().at(0).toString();
+                if(status.isNull() || status.compare("OK") != 0)
+                {
+                    return "Error setting voltage to SiPM";
+                }
+                else
+                {
+                    return status;
+                }
+            }
+            else
+            {
+                return "Error reading amperage from SiPM";
+
+            }
+        }
+        else
+        {
+            return "Amperage read from SiPM command failed";
+        }
+    }
+    else
+    {
+        return "Faild to open TCP socket";
+    }
+
+
+    return result;
+}
+
+QString LanConnection::getSlab(Slab *slab, AfeType afeType)
+{
+    QString result;
+    result = downloadMeasuredVoltage(slab, afeType);
+    result = downloadMeasuredCurrent(slab, afeType, CURRENT_AVG_NUMBER);
+    result = downloadMeasuredTemperature(slab, afeType, TEMPERATURE_AVG_NUMBER);
+    return result;
+}
+
+QString LanConnection::initSlab(quint16 slabId)
+{
+    QJsonArray command = {INIT_COMMAND, slabId};
+
+    if(socket->isOpen())
+    {
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        if(result <= 0)
+        {
+            return "Failed to send initialization command";
+        }
+        else
+        {
+            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+            {
+                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+                {
+
+                    QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                    QString status = jsonDocument.array().at(0).toString();
+                    if(status.isNull() || status.compare("OK") != 0)
+                    {
+                        return "Error while executing initialization command";
+                    }
+                    else
+                    {
+                        return "OK";
+                    }
+                }
+                else
+                {
+                    return "Error reading the result of the initialization command";
+                }
+            }
+            else
+            {
+                return "Error processing initialization command";
+            }
+        }
+    }
+    {
+        return "Faild to open TCP socket";
+    }
+}
+
+QString LanConnection::onSlab(quint16 slabId)
+{
+    QJsonArray command = {ON_COMMAND, slabId};
+
+    if(socket->isOpen())
+    {
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        if(result <= 0)
+        {
+            return "Failed to send the command to turn on the SiPM voltage";
+        }
+        else
+        {
+            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+            {
+                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+                {
+
+                    QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                    QString status = jsonDocument.array().at(0).toString();
+                    if(status.isNull() || status.compare("OK") != 0)
+                    {
+                        return "Error while executing the command to turn on the SiPM voltage";
+                    }
+                    else
+                    {
+                        return "OK";
+                    }
+                }
+                else
+                {
+                    return "Error reading the result of the SiPM voltage turn on command";
+                }
+            }
+            else
+            {
+                return "Error processing the SiPM power on command";
+            }
+        }
+    }
+    {
+        return "Faild to open TCP socket";
+    }
+}
+
+QString LanConnection::offSlab(quint16 slabId)
+{
+    QJsonArray command = {OFF_COMMAND, slabId};
+
+    if(socket->isOpen())
+    {
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        if(result <= 0)
+        {
+            return "Failed to send the command to turn off the SiPM voltage";
+        }
+        else
+        {
+            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+            {
+                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+                {
+
+                    QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                    QString status = jsonDocument.array().at(0).toString();
+                    if(status.isNull() || status.compare("OK") != 0)
+                    {
+                        return "Error while executing the command to turn off the SiPM voltage";
+                    }
+                    else
+                    {
+                        return "OK";
+                    }
+                }
+                else
+                {
+                    return "Error reading the result of the SiPM voltage turn off command";
+                }
+            }
+            else
+            {
+                return "Error processing the SiPM power off command";
+            }
+        }
+    }
+    {
+        return "Faild to open TCP socket";
+    }
+}
+
 
 QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
 {
@@ -218,7 +423,7 @@ QString LanConnection::downloadMeasuredVoltage(Slab *slab, AfeType afeType)
 }
 
 
-Simp* LanConnection::getSipmVoltagFromHub(Simp* simp, QJsonArray command)
+Sipm* LanConnection::getSipmVoltagFromHub(Sipm* simp, QJsonArray command)
 {
             qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
             if(result <= 0)
@@ -242,6 +447,7 @@ Simp* LanConnection::getSipmVoltagFromHub(Simp* simp, QJsonArray command)
                             if(result <= 0)
                             {
                                 simp->setStatus("Failed to send voltage reading command");
+                                emit
                                 return simp;
                             }
 
@@ -307,7 +513,7 @@ Simp* LanConnection::getSipmVoltagFromHub(Simp* simp, QJsonArray command)
 }
 
 
-Simp *LanConnection::getSipmAmperageFromHub(Simp *simp, QJsonArray command, quint16 avgNumber)
+Sipm *LanConnection::getSipmAmperageFromHub(Sipm *simp, QJsonArray command, quint16 avgNumber)
 {
     QList<double> amperageList;
     amperageList.reserve(avgNumber);
@@ -359,7 +565,7 @@ Simp *LanConnection::getSipmAmperageFromHub(Simp *simp, QJsonArray command, quin
     return simp;
 }
 
-Simp *LanConnection::getSipmTemperatureFromHub(Simp *simp, QJsonArray command, quint16 avgNumber)
+Sipm *LanConnection::getSipmTemperatureFromHub(Sipm *simp, QJsonArray command, quint16 avgNumber)
 {
     QList<double> temperatureList;
     temperatureList.reserve(avgNumber);

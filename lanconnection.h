@@ -14,6 +14,10 @@ class LanConnection : public QObject
         Q_OBJECT
 
 public:
+
+    static constexpr quint16 CURRENT_AVG_NUMBER {10};
+    static constexpr quint16 TEMPERATURE_AVG_NUMBER {5};
+
     LanConnection(QTcpSocket* socket);
     virtual ~LanConnection();
 
@@ -29,8 +33,13 @@ public:
     QString connect(QString ipAddress, quint16 port);
 
     QString downloadMeasuredVoltage(Slab* slab, AfeType afeType);
-    QString downloadMeasuredCurrent(Slab* slab, AfeType afeType, quint16 number);
+    QString downloadMeasuredCurrent(Slab* slab, AfeType afeType, quint16 avgNumber);
     QString downloadMeasuredTemperature(Slab *slab, AfeType afeType, quint16 avgNumber);
+    QString getSlab(Slab *slab, AfeType afeType);
+    QString initSlab(quint16 slabId);
+    QString onSlab(quint16 slabId);
+    QString offSlab(quint16 slabId);
+    QString setSlabVoltage(Slab *slab);
 
     QTcpSocket* getSocket();
 
@@ -43,6 +52,10 @@ private:
     static const QString DOWNLOAD_SLAVE_CURRENT_COMMAND;
     static const QString DOWNLOAD_MASTER_TEMPERATURE_COMMAND;
     static const QString DOWNLOAD_SLAVE_TEMPERATURE_COMMAND;
+    static const QString INIT_COMMAND;
+    static const QString ON_COMMAND;
+    static const QString OFF_COMMAND;
+    static const QString SET_VOLTAGE_COMMAND;
     static constexpr quint16 CONNECTING_TIME = 2000;
     static constexpr quint16 READ_READY_LAN_TIME = 10000;
     static constexpr quint16 BYTES_WRITEN_LAN_TIME = 2000;
@@ -50,12 +63,9 @@ private:
     QTcpSocket *socket = nullptr;
 
     static QString isSlabCorrect(Slab* slab);
-//    Slab* getMasterVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
-//    Slab* getSlaveVoltageSlabFromHub(Slab* slab, QJsonArray commandMaster);
-    Simp* getSipmVoltagFromHub(Simp* simp, QJsonArray command);
-    Simp* getSipmAmperageFromHub(Simp* simp, QJsonArray command, quint16 avgNumber);
-    Simp* getSipmTemperatureFromHub(Simp* simp, QJsonArray command, quint16 avgNumber);
-
+    Sipm* getSipmVoltagFromHub(Sipm* simp, QJsonArray command);
+    Sipm* getSipmAmperageFromHub(Sipm* simp, QJsonArray command, quint16 avgNumber);
+    Sipm* getSipmTemperatureFromHub(Sipm* simp, QJsonArray command, quint16 avgNumber);
 };
 
 #endif // LANCONNECTION_H

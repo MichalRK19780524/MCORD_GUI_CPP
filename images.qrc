@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/green_circle.svg</file>
+        <file>images/red_circle.svg</file>
+        <file>images/transparent_circle.svg</file>
+        <file>images/yellow_circle.svg</file>
+    </qresource>
+</RCC>

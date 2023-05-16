@@ -1,14 +1,15 @@
-#ifndef SIMP_H
-#define SIMP_H
+#ifndef SIPM_H
+#define SIPM_H
 #include <QtGlobal>
 #include <QString>
+#include "statuscolor.h"
 
 
-class Simp
+class Sipm
 {
 public:
-    Simp();
-    Simp(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current);
+    Sipm();
+    Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current);
 
     quint16 getRawSetVoltage() const;
     void setRawSetVoltage(quint16 newRawSetVoltage);
@@ -37,10 +38,14 @@ public:
     float getTemperatureStandardDeviation() const;
     void setTemperatureStandardDeviation(float newTemperatureStandardDeviation);
 
+    StatusColor getStatusColor() const;
+    void setStatusColor(StatusColor newStatusColor);
+
 private:
     QString status = "OK";
+    StatusColor statusColor {StatusColor::Transparent};
     quint16 rawSetVoltage {0};
-    float setVoltage {0.0};
+    float setVoltage {53.0}; //Voltage set on the HUB when initializing the slab
     float measuredVoltage {0.0};
     quint16 rawTemperature {0};
     float temperature {0.0};
@@ -51,4 +56,4 @@ private:
     float temperatureStandardDeviation {0.0};
 };
 
-#endif // SIMP_H
+#endif // SIPM_H
