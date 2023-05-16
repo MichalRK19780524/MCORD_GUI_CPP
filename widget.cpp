@@ -4,12 +4,12 @@
 #include <QRegularExpressionValidator>
 #include <QSerialPortInfo>
 #include <QDebug>
+#include <QSvgRenderer>
 
 
 #include "widget.h"
+#include "statusicondelegate.h"
 #include "./ui_widget.h"
-//#include "detectionslabswidget.h"
-//#include "pushbuttondelegate.h"
 
 const QString Widget::LAN_CONNECTION_LABEL_TEXT = "Connected to IP: ";
 const QString Widget::USB_CONNECTION_LABEL_TEXT = "Connected to serial port: ";
@@ -37,7 +37,7 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     offSlaveSignalMapper = new QSignalMapper(this);
 
     ui->slabsTableView->setModel(model);
-//    ui->slabsTableView->setItemDelegate(new PushButtonDelegate());
+    ui->slabsTableView->setItemDelegate(new StatusIconDelegate());
     ui->slabsTableView->setShowGrid(false);
     ui->slabsTableView->setAlternatingRowColors(true);
 
@@ -337,6 +337,24 @@ QString Widget::appendSlabToModel()
             QMessageBox::information(this, message, result);
             return message;
         }
+
+        if(slab->getMaster()->getMeasuredVoltage() > 0)
+        {
+            slab->getMaster()->setStatusColor(StatusColor::Yellow);
+        }
+        else
+        {
+            slab->getMaster()->setStatusColor(StatusColor::Transparent);
+        }
+
+        if(slab->getSlave()->getMeasuredVoltage() > 0)
+        {
+            slab->getSlave()->setStatusColor(StatusColor::Yellow);
+        }
+        else
+        {
+            slab->getSlave()->setStatusColor(StatusColor::Transparent);
+        }
     }
     else
     {
@@ -404,7 +422,6 @@ QString Widget::initAndOnSlab()
         {
             message = "Error";
             QMessageBox::critical(this, message, result);
-
         }
     }
     else
@@ -526,6 +543,7 @@ void Widget::setMasterVoltageClicked(int slabId)
             message = "Error";
             QMessageBox::critical(this, message, result);
         }
+        slab->getMaster()->setStatusColor(StatusColor::Green);
     }
     else
     {
@@ -535,6 +553,7 @@ void Widget::setMasterVoltageClicked(int slabId)
 
 }
 
+//TO DO zdebagować jak zmienia się model podczas wywoływania tej funkcji
 void Widget::setSlaveVoltageClicked(int slabId)
 {
     Slab* slab = model->findSlab(slabId);
@@ -551,6 +570,7 @@ void Widget::setSlaveVoltageClicked(int slabId)
             message = "Error";
             QMessageBox::critical(this, message, result);
         }
+        slab->getSlave()->setStatusColor(StatusColor::Green);
     }
     else
     {

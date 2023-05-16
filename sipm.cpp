@@ -114,6 +114,16 @@ void Sipm::setTemperatureStandardDeviation(float newTemperatureStandardDeviation
     temperatureStandardDeviation = newTemperatureStandardDeviation;
 }
 
+StatusColor Sipm::getStatusColor() const
+{
+    return statusColor;
+}
+
+void Sipm::setStatusColor(StatusColor newStatusColor)
+{
+    statusColor = newStatusColor;
+}
+
 Sipm::Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current):
     status("OK"),
     rawSetVoltage(std::move(rawSetVoltage)),

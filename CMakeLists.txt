@@ -15,7 +15,7 @@ list(APPEND CMAKE_PREFIX_PATH "/opt/Qt/6.4.2/gcc_64/lib/cmake")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS SerialPort Network Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS SerialPort Network Sql Svg)
 find_package(GSL REQUIRED)
 
 set(PROJECT_SOURCES
@@ -24,8 +24,6 @@ set(PROJECT_SOURCES
         widget.cpp
         serialreceiverthread.h
         serialreceiverthread.cpp
-        detectionslabswidget.h
-        detectionslabswidget.cpp
         slab.h
         slab.cpp
         lanconnection.h
@@ -33,11 +31,13 @@ set(PROJECT_SOURCES
         sipm.h
         sipm.cpp
         afetype.h
-        widget.ui
+        statuscolor.h
         detectortablemodel.h
         detectortablemodel.cpp
-        pushbuttondelegate.h
-        pushbuttondelegate.cpp
+        statusicondelegate.h
+        statusicondelegate.cpp
+        images.qrc
+        widget.ui
     )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -66,6 +66,7 @@ endif()
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::Network)
+target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::Svg)
 target_link_libraries(MCORD_GUI_CPP PRIVATE GSL::gsl GSL::gslcblas)
 
 set_target_properties(MCORD_GUI_CPP PROPERTIES

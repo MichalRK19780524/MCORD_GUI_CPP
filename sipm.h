@@ -2,6 +2,7 @@
 #define SIPM_H
 #include <QtGlobal>
 #include <QString>
+#include "statuscolor.h"
 
 
 class Sipm
@@ -37,8 +38,12 @@ public:
     float getTemperatureStandardDeviation() const;
     void setTemperatureStandardDeviation(float newTemperatureStandardDeviation);
 
+    StatusColor getStatusColor() const;
+    void setStatusColor(StatusColor newStatusColor);
+
 private:
     QString status = "OK";
+    StatusColor statusColor {StatusColor::Transparent};
     quint16 rawSetVoltage {0};
     float setVoltage {53.0}; //Voltage set on the HUB when initializing the slab
     float measuredVoltage {0.0};

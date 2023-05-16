@@ -447,6 +447,7 @@ Sipm* LanConnection::getSipmVoltagFromHub(Sipm* simp, QJsonArray command)
                             if(result <= 0)
                             {
                                 simp->setStatus("Failed to send voltage reading command");
+                                emit
                                 return simp;
                             }
 

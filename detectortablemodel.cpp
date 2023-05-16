@@ -3,6 +3,7 @@
 #include "widget.h"
 
 #include <QMessageBox>
+//#include <QPainter>
 
 DetectorTableModel::DetectorTableModel(QObject *parent)
     : QAbstractTableModel(parent), slabs(new QList<Slab*>), setId(new QSet<quint16>)
@@ -58,9 +59,15 @@ int DetectorTableModel::columnCount(const QModelIndex &parent) const
 QVariant DetectorTableModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
+    {
         return QVariant();
+    }
+
     if (index.row() < 0 || index.row() >= 2 * slabs->size())
+    {
         return QVariant();
+    }
+
     int row = index.row();
     Slab * slab = slabs->at(row/2);
     Sipm * sipm = nullptr;
@@ -75,6 +82,7 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const
 
     if(role == Qt::DisplayRole)
     {
+        QVariant var;
         switch(index.column())
         {
             case 0:
@@ -89,11 +97,12 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const
                     return QString("Slave");
                 }
             case 2:
-                return sipm->getStatus();
+                var.setValue(sipm->getStatusColor());
+                return var;
             case 3:
-                return QVariant();
+                return QString();
             case 4:
-                return QVariant();
+                return QString();
             case 5:
                 return sipm->getMeasuredVoltage();
             case 6:
@@ -198,7 +207,6 @@ QString DetectorTableModel::reloadMasterSlab(Slab *slab)
     {
         return QString("Internal Error: Slab number %1 does not exist in model").arg(slabId);
     }
-//    slabs->insert(slabPosition, slab);
     slabs->replace(slabPosition, slab);
     emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition, columnCount() - 1));
     return "OK";
@@ -212,7 +220,7 @@ QString DetectorTableModel::reloadSlaveSlab(Slab *slab)
     {
         return QString("Internal Error: Slab number %1 does not exist in model").arg(slabId);
     }
-    slabs->insert(slabPosition, slab);
+    slabs->replace(slabPosition, slab);
     emit dataChanged(index(2 * slabPosition + 1, 0), index(2 * slabPosition + 1, columnCount() - 1));
     return "OK";
 }
