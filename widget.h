@@ -7,6 +7,7 @@
 #include <QStandardItemModel>
 #include <QStringList>
 #include <QSignalMapper>
+#include <QSettings>
 
 //#include "detectionslabswidget.h"
 #include "lanconnection.h"
@@ -20,13 +21,13 @@ class Widget : public QWidget
 {
     Q_OBJECT
 
-    enum class Connection
+    enum class Connection: size_t
     {
         SERIAL,
         LAN
     };
 
-    enum class State
+    enum class State: size_t
     {
         CONNECTION_SELECTION,
         LAN_SELECTED,
@@ -39,6 +40,20 @@ class Widget : public QWidget
         ERROR
     };
 
+    enum class SlabState: size_t
+    {
+        Detected,
+        On,
+        Off,
+        Set,
+        Error
+    };
+
+    inline size_t qHash(SlabState &key, uint seed)
+    {
+        return ::qHash(static_cast<size_t>(key), seed);
+    }
+
 public:
     Widget(LanConnection *lanConnection, QWidget *parent = nullptr);
     ~Widget();
@@ -50,8 +65,8 @@ public:
 
 private:
     void showDetectonSlabs(QString labelName, Connection connection);
-    QString appendSlabToModel();
-    QString initAndOnSlab();
+    QString appendSlabToModel(int slabId);
+    QString initAndOnSlab(int slabId);
     QString reloadMasterSlabToModel(Slab* slab);
     QString reloadSlaveSlabToModel(Slab* slab);
 
@@ -90,6 +105,8 @@ private:
     QSignalMapper *offMasterSignalMapper = nullptr;
     QSignalMapper *offSlaveSignalMapper = nullptr;
     State state = State::DISCONNECTED;
+    QHash<quint8, SlabState> slabStates;
+    QSettings *settings = nullptr;
 
     static constexpr quint16 PORT = 5555;
     static constexpr quint16 READ_READY_SERIAL_TIME = 5000;
