@@ -208,7 +208,7 @@ QString DetectorTableModel::reloadMasterSlab(Slab *slab)
         return QString("Internal Error: Slab number %1 does not exist in model").arg(slabId);
     }
     slabs->replace(slabPosition, slab);
-    emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition, columnCount() - 1));
+    emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition + 1, columnCount() - 1));
     return "OK";
 }
 

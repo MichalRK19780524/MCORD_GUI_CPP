@@ -5,6 +5,7 @@
 #include <QSerialPortInfo>
 #include <QDebug>
 #include <QSvgRenderer>
+#include <QThread>
 
 
 #include "widget.h"
@@ -49,6 +50,12 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
 
     settings = new QSettings("TJ3", "MCORD_GUI");
 
+//    lanConnectionThread = new QThread(this);
+
+//    lanConnection->moveToThread(lanConnectionThread);
+
+//    lanConnectionThread->start();
+
     connect(ui->pushButtonNext, &QPushButton::clicked, this, &Widget::nextClicked);
     connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
@@ -68,6 +75,8 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setSlaveVoltageClicked);
     connect(onSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::onSlaveClicked);
     connect(offSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::offSlaveClicked);
+    connect(this, &Widget::connectLan, lanConnection, &LanConnection::connect);
+    connect(lanConnection, &LanConnection::connectionSucceeded, this, &Widget::showSlabsAfterLanConnection);
 }
 
 Widget::~Widget()
@@ -112,6 +121,15 @@ Widget::~Widget()
 
 }
 
+void Widget::showSlabsAfterLanConnection(QString ipAddress)
+{
+    state = State::LAN_CONNECTED;
+    settings->beginGroup("IP address");
+    settings->setValue("LAN address", ipAddress);
+    settings->endGroup();
+    ui->pushButtonDisconnect->hide();
+    showDetectonSlabs(LAN_CONNECTION_LABEL_TEXT + ipAddress, Connection::LAN);
+}
 
 void Widget::showDetectonSlabs(QString labelName, Connection connection)
 {
@@ -196,22 +214,24 @@ void Widget::nextClicked()
         {
             qDebug() << "LAN nextClicked";
             QString ipAddress = ui->lineEditLan->text();
-            QString connectionResult = lanConnection->connect(ipAddress, PORT);
-            settings->beginGroup("IP address");
-                settings->setValue("LAN address", ipAddress);
-            settings->endGroup();
-            ui->pushButtonDisconnect->hide();
-            if(connectionResult.isEmpty())
-            {
-                state = State::LAN_CONNECTED;
+//            QString connectionResult = lanConnection->connect(ipAddress, PORT);
+            emit connectLan(ipAddress, PORT);
 
-                showDetectonSlabs(LAN_CONNECTION_LABEL_TEXT + ipAddress, Connection::LAN);
-            }
-            else
-            {
-                state = State::ERROR;
-                QMessageBox::critical(this, "LAN Error", connectionResult);
-            }
+//            settings->beginGroup("IP address");
+//                settings->setValue("LAN address", ipAddress);
+//            settings->endGroup();
+//            ui->pushButtonDisconnect->hide();
+//            if(connectionResult.isEmpty())
+//            {
+//                state = State::LAN_CONNECTED;
+
+//                showDetectonSlabs(LAN_CONNECTION_LABEL_TEXT + ipAddress, Connection::LAN);
+//            }
+//            else
+//            {
+//                state = State::ERROR;
+//                QMessageBox::critical(this, "LAN Error", connectionResult);
+//            }
         }
         else if (ui->radioButtonUsb->isChecked())
         {
@@ -247,6 +267,8 @@ void Widget::nextClicked()
     }
 }
 
+//void
+
 
 void Widget::backClicked()
 {
@@ -277,11 +299,6 @@ void Widget::disconnectClicked()
         ui->groupBoxSelectConnection->show();
         ui->pushButtonNext->show();
     }
-}
-
-void Widget::setVoltageClicked(QObject *button)
-{
-    qDebug() << qobject_cast<QPushButton*>(button)->parentWidget();
 }
 
 void Widget::disconnected()
@@ -535,6 +552,13 @@ void Widget::addSlab()
     }
     addSetWidgets();
     addPowerWidgets();
+    int rowCount = ui->slabsTableView->model()->rowCount();
+    QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
+    QWidget* masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+    QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
+    QWidget* slaveSetWidget =ui->slabsTableView->indexWidget(slaveSetIndex);
+    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
     ui->slabsTableView->show();
     slabStates[slabId] = SlabState::Detected;
 }
@@ -562,6 +586,7 @@ void Widget::setMasterVoltageClicked(int slabId)
     QString setVoltageText = setWidget->findChildren<QLineEdit *>().at(0)->text();
     slab->getMaster()->setSetVoltage(setVoltageText.toFloat());
     QString result = lanConnection->setSlabVoltage(slab);
+    //Emituję signal z wartością ustawianych napięć oraz parametrami deski
     QString message;
     if(result == "OK")
     {

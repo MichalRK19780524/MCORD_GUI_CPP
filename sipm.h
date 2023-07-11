@@ -11,6 +11,8 @@ public:
     Sipm();
     Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current);
 
+    static constexpr float INITIAL_VOLTAGE = 53.0;
+
     quint16 getRawSetVoltage() const;
     void setRawSetVoltage(quint16 newRawSetVoltage);
     float getSetVoltage() const;
@@ -45,7 +47,7 @@ private:
     QString status = "OK";
     StatusColor statusColor {StatusColor::Transparent};
     quint16 rawSetVoltage {0};
-    float setVoltage {53.0}; //Voltage set on the HUB when initializing the slab
+    float setVoltage {INITIAL_VOLTAGE}; //Voltage set on the HUB when initializing the slab
     float measuredVoltage {0.0};
     quint16 rawTemperature {0};
     float temperature {0.0};

@@ -70,11 +70,13 @@ private:
     QString reloadMasterSlabToModel(Slab* slab);
     QString reloadSlaveSlabToModel(Slab* slab);
 
+signals:
+    void connectLan (QString ipAddress, quint16 port);
+
 private slots:
     void nextClicked();
     void backClicked();
     void disconnectClicked();
-    void setVoltageClicked(QObject *button);
     void disconnected();
     void connectionError(QAbstractSocket::SocketError se);
     void slabNumberSelection();
@@ -90,6 +92,8 @@ private slots:
 
     void offMasterClicked(int slabId);
     void offSlaveClicked(int slabId);
+
+    void showSlabsAfterLanConnection(QString ipAddress);
 
 private:
     Ui::Widget *ui;
@@ -107,6 +111,7 @@ private:
     State state = State::DISCONNECTED;
     QHash<quint8, SlabState> slabStates;
     QSettings *settings = nullptr;
+
 
     static constexpr quint16 PORT = 5555;
     static constexpr quint16 READ_READY_SERIAL_TIME = 5000;

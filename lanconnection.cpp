@@ -19,10 +19,14 @@ const QString LanConnection::ON_COMMAND {"hvon"};
 const QString LanConnection::OFF_COMMAND {"hvoff"};
 const QString LanConnection::SET_VOLTAGE_COMMAND {"setdac"};
 
-LanConnection::LanConnection(QTcpSocket* socket): socket(socket)
+LanConnection::LanConnection(QTcpSocket* socket, QObject *parent): socket(socket)
 {
-//    socket = new QTcpSocket();
 }
+
+//LanConnection::LanConnection()
+//{
+//    socket = new QTcpSocket();
+//}
 
 LanConnection::~LanConnection()
 {
@@ -52,7 +56,7 @@ qint64 LanConnection::closeConnection()
 
 
 
-QString LanConnection::connect(QString ipAddress, quint16 port)
+void LanConnection::connect(QString ipAddress, quint16 port)
 {
 
     socket->connectToHost(QHostAddress(ipAddress), port);
@@ -64,24 +68,24 @@ QString LanConnection::connect(QString ipAddress, quint16 port)
             QString welcomeMessage = QString(socket->readAll());
             if(welcomeMessage != HUB_RESPONSE + ipAddress + "\"")
             {
-                return "Unable to read from the HUB with specified IP address";
+                emit connectionFailed("Unable to read from the HUB with specified IP address");
             }
             else
             {
-                qDebug() << "read OK";
+                emit connectionSucceeded(ipAddress);
             }
 
         }
         else
         {
-            return "Unable to read data from the specified IP address";
+            emit connectionFailed("Unable to read data from the specified IP address");
         }
     }
     else
     {
-       return "Unable to connect to the specified IP address";
+        emit connectionFailed("Unable to connect to the specified IP address");
     }
-    return "";
+    emit connectionFailed("");
 }
 
 QString LanConnection::downloadMeasuredCurrent(Slab *slab, AfeType afeType, quint16 avgNumber)
@@ -447,7 +451,7 @@ Sipm* LanConnection::getSipmVoltagFromHub(Sipm* simp, QJsonArray command)
                             if(result <= 0)
                             {
                                 simp->setStatus("Failed to send voltage reading command");
-                                emit
+//                                emit
                                 return simp;
                             }
 

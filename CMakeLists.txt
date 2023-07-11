@@ -22,8 +22,6 @@ set(PROJECT_SOURCES
         main.cpp
         widget.h
         widget.cpp
-        serialreceiverthread.h
-        serialreceiverthread.cpp
         slab.h
         slab.cpp
         lanconnection.h
