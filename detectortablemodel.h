@@ -21,7 +21,7 @@ public:
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    QString appendSlab(Slab* slab);
+    QString appendSlab(Slab slab);
 
     QModelIndex findIndexOfMasterSlabSetButton(quint16 slabId);
     QModelIndex findIndexOfSlaveSlabSetButton(quint16 slabId);
@@ -32,17 +32,20 @@ public:
     QModelIndex findIndexOfMasterSlabOffButton(quint16 slabId);
     QModelIndex findIndexOfSlaveSlabOffButton(quint16 slabId);
 
-    Slab* findSlab(quint16 slabId);
-    QString reloadMasterSlab(Slab* slab);
-    QString reloadSlaveSlab(Slab* slab);
+    Slab findSlab(quint16 slabId);
+//    QString reloadMasterSlab(Slab* slab);
+//    QString reloadSlaveSlab(Slab* slab);
 
     int findSlabPosition(quint16 slabId);
 
 private:
-    QList<Slab*> *slabs = nullptr;
+    QList<Slab> *slabs = nullptr;
     QSet<quint16> *setId = nullptr;
     const QStringList *headers = nullptr;
     static QPixmap createPixmapFromSvgFile(QString path, int width, int height);
+
+signals:
+    void slabAppended(quint16 id);
 
 };
 

@@ -2,6 +2,7 @@
 #define SLUB_H
 #include <QtGlobal>
 #include <QString>
+#include <QMetaType>
 
 #include "sipm.h"
 
@@ -24,4 +25,5 @@ private:
     Sipm* slave;
 };
 
+Q_DECLARE_METATYPE(Slab)
 #endif // SLUB_H

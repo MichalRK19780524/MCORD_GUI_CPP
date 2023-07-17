@@ -61,22 +61,30 @@ Widget::Widget(LanConnection * lanConnection, QWidget *parent)
     connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
     connect(ui->pushButtonDetectionSlabsNext, &QPushButton::clicked, this, &Widget::slabNumberSelection);
     connect(ui->pushButtonDetectionSlabBack, &QPushButton::clicked, this, &Widget::detectionSlabsBackClicked);
-    connect(ui->pushButtonDetect, &QPushButton::clicked, this, &Widget::addSlab);
-    connect(ui->pushButtonOn, &QPushButton::clicked, this, &Widget::addAndOnSlab);
+    connect(ui->pushButtonDetect, &QPushButton::clicked, this, &Widget::detectSlab);
+    connect(ui->pushButtonOn, &QPushButton::clicked, this, &Widget::detectAndOnSlab);
     connect(ui->pushButtonBackSlabsChoice, &QPushButton::clicked, this, &Widget::disconnectClicked /*&Widget::backSlabsChoiceClicked*/);
 
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
     connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this, &Widget::connectionError);
 
-    connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setMasterVoltageClicked);
-    connect(onMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::onMasterClicked);
-    connect(offMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::offMasterClicked);
+//    connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setMasterVoltageClicked);
+//    connect(onMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::onMasterClicked);
+//    connect(offMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::offMasterClicked);
 
-    connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setSlaveVoltageClicked);
-    connect(onSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::onSlaveClicked);
-    connect(offSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::offSlaveClicked);
+//    connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setSlaveVoltageClicked);
+//    connect(onSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::onSlaveClicked);
+//    connect(offSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::offSlaveClicked);
     connect(this, &Widget::connectLan, lanConnection, &LanConnection::connect);
     connect(lanConnection, &LanConnection::connectionSucceeded, this, &Widget::showSlabsAfterLanConnection);
+    connect(this, &Widget::closeLanConnection, lanConnection, &LanConnection::closeConnection);
+    connect(lanConnection, &LanConnection::writingError, this, &Widget::writingLanErrorHandler);
+
+    connect(this, &Widget::slabRequired, lanConnection, &LanConnection::getSlab);
+    connect(lanConnection, &LanConnection::slabReadingCompleted, this, &Widget::appendSlabToModel);
+    connect(model, &DetectorTableModel::slabAppended, this, &Widget::addWidgetsToTable);
+
+    connect(this, &Widget::initializationRequired, lanConnection, &LanConnection::initAndOnSlab)
 }
 
 Widget::~Widget()
@@ -85,10 +93,11 @@ Widget::~Widget()
 
 //    serial->close();
 
-    if(lanConnection->closeConnection() < 0)
-    {
-        QMessageBox::critical(this, "LAN error", "Unable to send data to HUB");
-    }
+//    if(lanConnection->closeConnection() < 0)
+//    {
+//        QMessageBox::critical(this, "LAN error", "Unable to send data to HUB");
+//    }
+    emit closeLanConnection();
     delete serial;
     serial = nullptr;
 
@@ -125,7 +134,7 @@ void Widget::showSlabsAfterLanConnection(QString ipAddress)
 {
     state = State::LAN_CONNECTED;
     settings->beginGroup("IP address");
-    settings->setValue("LAN address", ipAddress);
+        settings->setValue("LAN address", ipAddress);
     settings->endGroup();
     ui->pushButtonDisconnect->hide();
     showDetectonSlabs(LAN_CONNECTION_LABEL_TEXT + ipAddress, Connection::LAN);
@@ -267,9 +276,6 @@ void Widget::nextClicked()
     }
 }
 
-//void
-
-
 void Widget::backClicked()
 {
     state = State::DISCONNECTED;
@@ -284,10 +290,11 @@ void Widget::disconnectClicked()
 {
     if(ui->radioButtonLan->isChecked())
     {
-        if(lanConnection->closeConnection() < 0)
-        {
-            QMessageBox::critical(this, "LAN error", "Unable to send data to HUB");
-        }
+//        if(lanConnection->closeConnection() < 0)
+//        {
+//            QMessageBox::critical(this, "LAN error", "Unable to send data to HUB");
+//        }
+        emit closeLanConnection();
 
     }
     else
@@ -350,100 +357,111 @@ void Widget::detectionSlabsBackClicked()
 //    ui->lineEditAddSlab->hide();
 }
 
-QString Widget::appendSlabToModel(int slabId)
+void Widget::appendSlabToModel(Slab slab)
 {
-//    quint16 slabId = ui->lineEditAddSlab->text().toUInt();
-    Slab* slab = new Slab(slabId);
-    QString result = lanConnection->getSlab(slab, AfeType::Both);
-    QString message;
-    if(result == "OK")
+
+    if(slab.getMaster()->getStatus() != "OK")
     {
-        QString result = model->appendSlab(slab);
-        if(result != "OK")
-        {
-            message = "Adding detection slab error";
-            QMessageBox::information(this, message, result);
-            return message;
-        }
-
-        if(slab->getMaster()->getStatus() != "OK")
-        {
-            slab->getMaster()->setStatusColor(StatusColor::Red);
-        }
-        else if(slab->getMaster()->getMeasuredVoltage() > 0 && slabStates.value(slabId) == SlabState::Set)
-        {
-            slab->getMaster()->setStatusColor(StatusColor::Green);
-        }
-        else
-        {
-            slab->getMaster()->setStatusColor(StatusColor::Transparent);
-        }
-
-        if(slab->getSlave()->getStatus() != "OK")
-        {
-            slab->getSlave()->setStatusColor(StatusColor::Red);
-        }
-        else if(slab->getSlave()->getMeasuredVoltage() > 0)
-        {
-            slab->getSlave()->setStatusColor(StatusColor::Yellow);
-        }
-        else
-        {
-            slab->getSlave()->setStatusColor(StatusColor::Transparent);
-        }
+        slab.getMaster()->setStatusColor(StatusColor::Red);
+    }
+    else if(slab.getMaster()->getMeasuredVoltage() > 0 && slabStates.value(slab.getId()) == SlabState::Set)
+    {
+        slab.getMaster()->setStatusColor(StatusColor::Green);
     }
     else
     {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
+        slab.getMaster()->setStatusColor(StatusColor::Transparent);
     }
-    return "OK";
-}
 
-QString Widget::reloadMasterSlabToModel(Slab* slab)
-{
-
-    QString result = lanConnection->getSlab(slab, AfeType::Master);
-    QString message;
-    if(result == "OK")
+    if(slab.getSlave()->getStatus() != "OK")
     {
-        QString result = model->reloadMasterSlab(slab);
-        if(result != "OK")
-        {
-            message = "Adding detection slab error";
-            QMessageBox::information(this, message, result);
-            return message;
-        }
+        slab.getSlave()->setStatusColor(StatusColor::Red);
+    }
+    else if(slab.getSlave()->getMeasuredVoltage() > 0)
+    {
+        slab.getSlave()->setStatusColor(StatusColor::Yellow);
     }
     else
     {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
+        slab.getSlave()->setStatusColor(StatusColor::Transparent);
     }
-    return "OK";
+
+    QString result = model->appendSlab(slab);
+    QString message;
+    if(result != "OK")
+    {
+        message = "Adding detection slab error";
+        QMessageBox::information(this, message, result);
+    }
 }
 
-QString Widget::reloadSlaveSlabToModel(Slab *slab)
+void Widget::addWidgetsToTable(quint16 id)
 {
-    QString result = lanConnection->getSlab(slab, AfeType::Slave);
-    QString message;
-    if(result == "OK")
+    addSetWidgets();
+    addPowerWidgets();
+    if(state == State::LAN_SLAB_DETECTING)
     {
-        QString result = model->reloadSlaveSlab(slab);
-        if(result != "OK")
-        {
-            message = "Adding detection slab error";
-            QMessageBox::information(this, message, result);
-            return message;
-        }
+        int rowCount = ui->slabsTableView->model()->rowCount();
+        QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
+        QWidget* masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+        masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+        QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
+        QWidget* slaveSetWidget =ui->slabsTableView->indexWidget(slaveSetIndex);
+        slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+        ui->slabsTableView->show();
+        slabStates[id] = SlabState::Detected;
     }
-    else
-    {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
-    }
-    return "OK";
+    ui->pushButtonDetect->setDisabled(false);
+    ui->pushButtonOn->setDisabled(false);
+    ui->pushButtonDetectionSlabBack->setDisabled(false);
+    ui->slabsTableView->show();
 }
+
+
+//QString Widget::reloadMasterSlabToModel(Slab* slab)
+//{
+
+//    QString result = lanConnection->getSlab(*slab, AfeType::Master);
+//    QString message;
+//    if(result == "OK")
+//    {
+//        QString result = model->reloadMasterSlab(slab);
+//        if(result != "OK")
+//        {
+//            message = "Adding detection slab error";
+//            QMessageBox::information(this, message, result);
+//            return message;
+//        }
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
+//    return "OK";
+//}
+
+//QString Widget::reloadSlaveSlabToModel(Slab *slab)
+//{
+//    QString result = lanConnection->getSlab(*slab, AfeType::Slave);
+//    QString message;
+//    if(result == "OK")
+//    {
+//        QString result = model->reloadSlaveSlab(slab);
+//        if(result != "OK")
+//        {
+//            message = "Adding detection slab error";
+//            QMessageBox::information(this, message, result);
+//            return message;
+//        }
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
+//    return "OK";
+//}
 
 
 QString Widget::initAndOnSlab(int slabId)
@@ -543,209 +561,247 @@ void Widget::addPowerWidgets()
     offSlaveSignalMapper->setMapping(powerOffButtonSlave, slaveSlabId);
 }
 
-void Widget::addSlab()
+//void Widget::addSlab()
+//{
+//    quint16 slabId = ui->lineEditAddSlab->text().toUInt();
+//    if(appendSlabToModel(slabId) != "OK")
+//    {
+//        slabStates[slabId] = SlabState::Error;
+//    }
+//    addSetWidgets();
+//    addPowerWidgets();
+//    int rowCount = ui->slabsTableView->model()->rowCount();
+//    QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
+//    QWidget* masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+//    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+//    QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
+//    QWidget* slaveSetWidget =ui->slabsTableView->indexWidget(slaveSetIndex);
+//    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+//    ui->slabsTableView->show();
+//    slabStates[slabId] = SlabState::Detected;
+//}
+
+void Widget::detectSlab()
 {
     quint16 slabId = ui->lineEditAddSlab->text().toUInt();
-    if(appendSlabToModel(slabId) != "OK")
-    {
-        slabStates[slabId] = SlabState::Error;
-    }
-    addSetWidgets();
-    addPowerWidgets();
-    int rowCount = ui->slabsTableView->model()->rowCount();
-    QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
-    QWidget* masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
-    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
-    QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
-    QWidget* slaveSetWidget =ui->slabsTableView->indexWidget(slaveSetIndex);
-    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
-    ui->slabsTableView->show();
-    slabStates[slabId] = SlabState::Detected;
+    state = State::LAN_SLAB_DETECTING;
+    ui->pushButtonDetect->setDisabled(true);
+    ui->pushButtonOn->setDisabled(true);
+    ui->pushButtonDetectionSlabBack->setDisabled(true);
+//    Slab slab(slabId);
+//    QString result = lanConnection->getSlab(slab, AfeType::Both);
+//    addSetWidgets();
+//    addPowerWidgets();
+//    int rowCount = ui->slabsTableView->model()->rowCount();
+//    QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
+//    QWidget* masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+//    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+//    QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
+//    QWidget* slaveSetWidget =ui->slabsTableView->indexWidget(slaveSetIndex);
+//    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+//    ui->slabsTableView->show();
+//    slabStates[slabId] = SlabState::Detected;
+    emit slabRequired(slabId, AfeType::Both);
+    return;
 }
 
-void Widget::addAndOnSlab()
+void Widget::detectAndOnSlab()
 {
     quint16 slabId = ui->lineEditAddSlab->text().toUInt();
-    QString result = initAndOnSlab(slabId);
-    if(result == "OK")
+    state = State::LAN_SLAB_INITIALIZING;
+    ui->pushButtonDetect->setDisabled(true);
+    ui->pushButtonOn->setDisabled(true);
+    ui->pushButtonDetectionSlabBack->setDisabled(true);
+    emit initializationRequired(slabId);
+//    QString result = initAndOnSlab(slabId);
+//    if(result == "OK")
+//    {
+//        appendSlabToModel(slabId);
+//    }
+
+//    addSetWidgets();
+//    addPowerWidgets();
+
+//    ui->slabsTableView->show();
+//    slabStates[slabId] = SlabState::On;
+    return;
+}
+
+void Widget::writingLanErrorHandler(const QJsonArray command)
+{
+    if(command[0].toString() == LanConnection::CLOSE[0].toString())
     {
-        appendSlabToModel(slabId);
+        QMessageBox::critical(this, "LAN error", "Unable to send data to close connection to HUB");
     }
-
-    addSetWidgets();
-    addPowerWidgets();
-
-    ui->slabsTableView->show();
-    slabStates[slabId] = SlabState::On;
 }
 
 void Widget::setMasterVoltageClicked(int slabId)
 {
-    Slab* slab = model->findSlab(slabId);
-    QWidget * setWidget = ui->slabsTableView->indexWidget(model->findIndexOfMasterSlabSetButton(slabId));
-    QString setVoltageText = setWidget->findChildren<QLineEdit *>().at(0)->text();
-    slab->getMaster()->setSetVoltage(setVoltageText.toFloat());
-    QString result = lanConnection->setSlabVoltage(slab);
-    //Emituję signal z wartością ustawianych napięć oraz parametrami deski
-    QString message;
-    if(result == "OK")
-    {
-        result = reloadMasterSlabToModel(slab);
-        if(result != "OK")
-        {
-            message = "Error";
-            QMessageBox::critical(this, message, result);
-        }
-        slab->getMaster()->setStatusColor(StatusColor::Green);
-        slabStates[slabId] = SlabState::Set;
-    }
-    else
-    {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
-    }
+//    Slab* slab = model->findSlab(slabId);
+//    QWidget * setWidget = ui->slabsTableView->indexWidget(model->findIndexOfMasterSlabSetButton(slabId));
+//    QString setVoltageText = setWidget->findChildren<QLineEdit *>().at(0)->text();
+//    slab->getMaster()->setSetVoltage(setVoltageText.toFloat());
+//    QString result = lanConnection->setSlabVoltage(slab);
+//    //Emituję signal z wartością ustawianych napięć oraz parametrami deski
+//    QString message;
+//    if(result == "OK")
+//    {
+//        result = reloadMasterSlabToModel(slab);
+//        if(result != "OK")
+//        {
+//            message = "Error";
+//            QMessageBox::critical(this, message, result);
+//        }
+//        slab->getMaster()->setStatusColor(StatusColor::Green);
+//        slabStates[slabId] = SlabState::Set;
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
 
 }
 
 //TO DO zdebagować jak zmienia się model podczas wywoływania tej funkcji
 void Widget::setSlaveVoltageClicked(int slabId)
 {
-    Slab* slab = model->findSlab(slabId);
-    QWidget * setWidget = ui->slabsTableView->indexWidget(model->findIndexOfSlaveSlabSetButton(slabId));
-    QString setVoltageText = setWidget->findChildren<QLineEdit *>().at(0)->text();
-    slab->getSlave()->setSetVoltage(setVoltageText.toFloat());
-    QString result = lanConnection->setSlabVoltage(slab);
-    QString message;
-    if(result == "OK")
-    {
-        result = reloadSlaveSlabToModel(slab);
-        if(result != "OK")
-        {
-            slabStates[slabId] = SlabState::Error;
-            message = "Error";
-            QMessageBox::critical(this, message, result);
-        }
-        slab->getSlave()->setStatusColor(StatusColor::Green);
-        slabStates[slabId] = SlabState::Set;
+//    Slab* slab = model->findSlab(slabId);
+//    QWidget * setWidget = ui->slabsTableView->indexWidget(model->findIndexOfSlaveSlabSetButton(slabId));
+//    QString setVoltageText = setWidget->findChildren<QLineEdit *>().at(0)->text();
+//    slab->getSlave()->setSetVoltage(setVoltageText.toFloat());
+//    QString result = lanConnection->setSlabVoltage(slab);
+//    QString message;
+//    if(result == "OK")
+//    {
+//        result = reloadSlaveSlabToModel(slab);
+//        if(result != "OK")
+//        {
+//            slabStates[slabId] = SlabState::Error;
+//            message = "Error";
+//            QMessageBox::critical(this, message, result);
+//        }
+//        slab->getSlave()->setStatusColor(StatusColor::Green);
+//        slabStates[slabId] = SlabState::Set;
 
-    }
-    else
-    {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
-    }
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
 }
 
 void Widget::onMasterClicked(int slabId)
 {
-    Slab* slab = model->findSlab(slabId);
-    QString result = lanConnection->initSlab(slabId);
-    QString message;
-    if(result == "OK")
-    {
-        result = lanConnection->onSlab(slabId);
-        if(result == "OK")
-        {
-            result = reloadMasterSlabToModel(slab);
-            if(result != "OK")
-            {
-                message = "Error";
-                QMessageBox::critical(this, message, result);
-            }
-            slab->getMaster()->setStatusColor(StatusColor::Yellow);
-            slabStates[slabId] = SlabState::On;
-        }
-        else
-        {
-            message = "Error";
-            QMessageBox::critical(this, message, result);
-        }
-    }
-    else
-    {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
-    }
+//    Slab* slab = model->findSlab(slabId);
+//    QString result = lanConnection->initSlab(slabId);
+//    QString message;
+//    if(result == "OK")
+//    {
+//        result = lanConnection->onSlab(slabId);
+//        if(result == "OK")
+//        {
+//            result = reloadMasterSlabToModel(slab);
+//            if(result != "OK")
+//            {
+//                message = "Error";
+//                QMessageBox::critical(this, message, result);
+//            }
+//            slab->getMaster()->setStatusColor(StatusColor::Yellow);
+//            slabStates[slabId] = SlabState::On;
+//        }
+//        else
+//        {
+//            message = "Error";
+//            QMessageBox::critical(this, message, result);
+//        }
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
 }
 
 void Widget::onSlaveClicked(int slabId)
 {
-    Slab* slab = model->findSlab(slabId);
-    QString result = lanConnection->initSlab(slabId);
-    QString message;
-    if(result == "OK")
-    {
-        QString result = lanConnection->onSlab(slabId);
-        if(result == "OK")
-        {
-            result = reloadSlaveSlabToModel(slab);
-            if(result != "OK")
-            {
-                slabStates[slabId] = SlabState::Error;
-                message = "Error";
-                QMessageBox::critical(this, message, result);
-            }
-            slab->getSlave()->setStatusColor(StatusColor::Yellow);
-            slabStates[slabId] = SlabState::On;
-        }
-        else
-        {
-            message = "Error";
-            QMessageBox::critical(this, message, result);
-        }
-    }
-    else
-    {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
-    }
+//    Slab* slab = model->findSlab(slabId);
+//    QString result = lanConnection->initSlab(slabId);
+//    QString message;
+//    if(result == "OK")
+//    {
+//        QString result = lanConnection->onSlab(slabId);
+//        if(result == "OK")
+//        {
+//            result = reloadSlaveSlabToModel(slab);
+//            if(result != "OK")
+//            {
+//                slabStates[slabId] = SlabState::Error;
+//                message = "Error";
+//                QMessageBox::critical(this, message, result);
+//            }
+//            slab->getSlave()->setStatusColor(StatusColor::Yellow);
+//            slabStates[slabId] = SlabState::On;
+//        }
+//        else
+//        {
+//            message = "Error";
+//            QMessageBox::critical(this, message, result);
+//        }
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
 }
 
 void Widget::offMasterClicked(int slabId)
 {
-    Slab* slab = model->findSlab(slabId);
-    QString result = lanConnection->offSlab(slabId);
-    QString message;
-    if(result == "OK")
-    {
-        result = reloadMasterSlabToModel(slab);
-        if(result != "OK")
-        {
-            message = "Error";
-            QMessageBox::critical(this, message, result);
-        }
-        slab->getMaster()->setStatusColor(StatusColor::Transparent);
-        slabStates[slabId] = SlabState::Off;
-    }
-    else
-    {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
-    }
+//    Slab* slab = model->findSlab(slabId);
+//    QString result = lanConnection->offSlab(slabId);
+//    QString message;
+//    if(result == "OK")
+//    {
+//        result = reloadMasterSlabToModel(slab);
+//        if(result != "OK")
+//        {
+//            message = "Error";
+//            QMessageBox::critical(this, message, result);
+//        }
+//        slab->getMaster()->setStatusColor(StatusColor::Transparent);
+//        slabStates[slabId] = SlabState::Off;
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
 }
 
 void Widget::offSlaveClicked(int slabId)
 {
-    Slab* slab = model->findSlab(slabId);
-    QString result = lanConnection->offSlab(slabId);
-    QString message;
-    if(result == "OK")
-    {
-        result = reloadSlaveSlabToModel(slab);
-        if(result != "OK")
-        {
-            slabStates[slabId] = SlabState::Error;
-            message = "Error";
-            QMessageBox::critical(this, message, result);
-        }
-        slab->getSlave()->setStatusColor(StatusColor::Transparent);
-        slabStates[slabId] = SlabState::Off;
-    }
-    else
-    {
-        message = "Error";
-        QMessageBox::critical(this, message, result);
-    }
+//    Slab* slab = model->findSlab(slabId);
+//    QString result = lanConnection->offSlab(slabId);
+//    QString message;
+//    if(result == "OK")
+//    {
+//        result = reloadSlaveSlabToModel(slab);
+//        if(result != "OK")
+//        {
+//            slabStates[slabId] = SlabState::Error;
+//            message = "Error";
+//            QMessageBox::critical(this, message, result);
+//        }
+//        slab->getSlave()->setStatusColor(StatusColor::Transparent);
+//        slabStates[slabId] = SlabState::Off;
+//    }
+//    else
+//    {
+//        message = "Error";
+//        QMessageBox::critical(this, message, result);
+//    }
 }
 
 //void Widget::backSlabsChoiceClicked()

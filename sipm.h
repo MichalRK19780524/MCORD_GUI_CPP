@@ -2,6 +2,8 @@
 #define SIPM_H
 #include <QtGlobal>
 #include <QString>
+#include <QMetaType>
+
 #include "statuscolor.h"
 
 
@@ -58,4 +60,5 @@ private:
     float temperatureStandardDeviation {0.0};
 };
 
+Q_DECLARE_METATYPE(Sipm)
 #endif // SIPM_H

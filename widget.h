@@ -37,6 +37,8 @@ class Widget : public QWidget
         DISCONNECTED,
         ONE_SLAB_LAN,
         ONE_SLAB_USB,
+        LAN_SLAB_DETECTING,
+        LAN_SLAB_INITIALIZING,
         ERROR
     };
 
@@ -65,13 +67,18 @@ public:
 
 private:
     void showDetectonSlabs(QString labelName, Connection connection);
-    QString appendSlabToModel(int slabId);
+//    QString appendSlabToModel(int slabId);
+
     QString initAndOnSlab(int slabId);
     QString reloadMasterSlabToModel(Slab* slab);
     QString reloadSlaveSlabToModel(Slab* slab);
 
 signals:
     void connectLan (QString ipAddress, quint16 port);
+    void closeLanConnection();
+    void slabRequired(quint16 slabId, AfeType afeType);
+    void initializationRequired(quint16 slabId);
+
 
 private slots:
     void nextClicked();
@@ -81,8 +88,9 @@ private slots:
     void connectionError(QAbstractSocket::SocketError se);
     void slabNumberSelection();
     void detectionSlabsBackClicked();
-    void addSlab();
-    void addAndOnSlab();
+    void detectSlab();
+    void detectAndOnSlab();
+    void writingLanErrorHandler(QJsonArray command);
 
     void setMasterVoltageClicked(int slabId);
     void setSlaveVoltageClicked(int slabId);
@@ -94,6 +102,9 @@ private slots:
     void offSlaveClicked(int slabId);
 
     void showSlabsAfterLanConnection(QString ipAddress);
+    void appendSlabToModel(Slab slab);
+    void addWidgetsToTable(quint16 id);
+
 
 private:
     Ui::Widget *ui;

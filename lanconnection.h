@@ -20,12 +20,11 @@ public:
 
     static constexpr quint16 CURRENT_AVG_NUMBER {10};
     static constexpr quint16 TEMPERATURE_AVG_NUMBER {5};
+    static const QJsonArray CLOSE;
 
 //    LanConnection(QTcpSocket* socket);
 
     virtual ~LanConnection();
-
-    qint64 closeConnection();
 
     //! Connects the specified HUB
     /*!
@@ -36,10 +35,10 @@ public:
      */
 
 
-    QString downloadMeasuredVoltage(Slab* slab, AfeType afeType);
-    QString downloadMeasuredCurrent(Slab* slab, AfeType afeType, quint16 avgNumber);
-    QString downloadMeasuredTemperature(Slab *slab, AfeType afeType, quint16 avgNumber);
-    QString getSlab(Slab *slab, AfeType afeType);
+    QString downloadMeasuredVoltage(Slab& slab, AfeType afeType);
+    QString downloadMeasuredCurrent(Slab& slab, AfeType afeType, quint16 avgNumber);
+    QString downloadMeasuredTemperature(Slab& slab, AfeType afeType, quint16 avgNumber);
+    QString getSlab(quint16 slabId, AfeType afeType);
     QString initSlab(quint16 slabId);
     QString onSlab(quint16 slabId);
     QString offSlab(quint16 slabId);
@@ -48,13 +47,16 @@ public:
 signals:
     void connectionFailed(QString message);
     void connectionSucceeded(QString ipAddress);
+    void writingError(QJsonArray command);
+    void readingError(QString message);
+    void slabReadingCompleted(Slab slab);
 public slots:
     void connect(QString ipAddress, quint16 port);
+    void closeConnection();
 
     QTcpSocket* getSocket();
 
 private:
-    static const QJsonArray CLOSE;
     static const QString HUB_RESPONSE;
     static const QString DOWNLOAD_MASTER_VOLTAGE_COMMAND;
     static const QString DOWNLOAD_SLAVE_VOLTAGE_COMMAND;

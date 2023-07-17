@@ -6,12 +6,12 @@
 //#include <QPainter>
 
 DetectorTableModel::DetectorTableModel(QObject *parent)
-    : QAbstractTableModel(parent), slabs(new QList<Slab*>), setId(new QSet<quint16>)
+    : QAbstractTableModel(parent), slabs(new QList<Slab>), setId(new QSet<quint16>)
 {
 }
 
 DetectorTableModel::DetectorTableModel(const QStringList *headers, QObject *parent) : QAbstractTableModel(parent),
-    headers(headers), slabs(new QList<Slab*>), setId(new QSet<quint16>)
+    headers(headers), slabs(new QList<Slab>), setId(new QSet<quint16>)
 {}
 
 QVariant DetectorTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -69,15 +69,15 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const
     }
 
     int row = index.row();
-    Slab * slab = slabs->at(row/2);
+    Slab slab = slabs->at(row/2);
     Sipm * sipm = nullptr;
     if(row%2 == 0)
     {
-        sipm = slab->getMaster();
+        sipm = slab.getMaster();
     }
     else
     {
-        sipm = slab->getSlave();
+        sipm = slab.getSlave();
     }
 
     if(role == Qt::DisplayRole)
@@ -86,7 +86,7 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
             case 0:
-                return slab->getId();
+                return slab.getId();
             case 1:
                 if(row%2 == 0)
                 {
@@ -114,11 +114,11 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-QString DetectorTableModel::appendSlab(Slab* slab)
+QString DetectorTableModel::appendSlab(Slab slab)
 {
     const int rowIndex = 2 * slabs->size();
     beginInsertRows(QModelIndex(), rowIndex, rowIndex + 1);
-    quint16 id = slab->getId();
+    quint16 id = slab.getId();
     if(setId->contains(id))
     {
         return QString("Slab number %1 has already been added.").arg(id);
@@ -129,6 +129,7 @@ QString DetectorTableModel::appendSlab(Slab* slab)
         setId->insert(id);
     }
     endInsertRows();
+    emit slabAppended(id);
     return "OK";
 }
 
@@ -138,7 +139,7 @@ int DetectorTableModel::findSlabPosition(quint16 slabId)
     int slabPosition{0};
     for(int i = 0; i < size; ++i)
     {
-        if(slabs->at(i)->getId() == slabId)
+        if(slabs->at(i).getId() == slabId)
         {
                 slabPosition = i;
                 break;
@@ -184,14 +185,14 @@ QModelIndex DetectorTableModel::findIndexOfSlaveSlabOffButton(quint16 slabId)
     return  index(2 * slabPosition + 1, Widget::POWER_COLUMN_INDEX);
 }
 
-Slab * DetectorTableModel::findSlab(quint16 slabId)
+Slab DetectorTableModel::findSlab(quint16 slabId)
 {
     int size = slabs->size();
-    Slab* slab{nullptr};
+    Slab slab;
     for(int i = 0; i < size; ++i)
     {
         slab = slabs->at(i);
-        if(slab->getId() == slabId)
+        if(slab.getId() == slabId)
         {
                 break;
         }
@@ -199,28 +200,28 @@ Slab * DetectorTableModel::findSlab(quint16 slabId)
     return slab;
 }
 
-QString DetectorTableModel::reloadMasterSlab(Slab *slab)
-{
-    quint16 slabId = slab->getId();
-    int slabPosition = findSlabPosition(slabId);
-    if(!setId->contains(slabId))
-    {
-        return QString("Internal Error: Slab number %1 does not exist in model").arg(slabId);
-    }
-    slabs->replace(slabPosition, slab);
-    emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition + 1, columnCount() - 1));
-    return "OK";
-}
+//QString DetectorTableModel::reloadMasterSlab(Slab *slab)
+//{
+//    quint16 slabId = slab->getId();
+//    int slabPosition = findSlabPosition(slabId);
+//    if(!setId->contains(slabId))
+//    {
+//        return QString("Internal Error: Slab number %1 does not exist in model").arg(slabId);
+//    }
+//    slabs->replace(slabPosition, slab);
+//    emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition + 1, columnCount() - 1));
+//    return "OK";
+//}
 
-QString DetectorTableModel::reloadSlaveSlab(Slab *slab)
-{
-    quint16 slabId = slab->getId();
-    int slabPosition = findSlabPosition(slabId);
-    if(!setId->contains(slabId))
-    {
-        return QString("Internal Error: Slab number %1 does not exist in model").arg(slabId);
-    }
-    slabs->replace(slabPosition, slab);
-    emit dataChanged(index(2 * slabPosition + 1, 0), index(2 * slabPosition + 1, columnCount() - 1));
-    return "OK";
-}
+//QString DetectorTableModel::reloadSlaveSlab(Slab *slab)
+//{
+//    quint16 slabId = slab->getId();
+//    int slabPosition = findSlabPosition(slabId);
+//    if(!setId->contains(slabId))
+//    {
+//        return QString("Internal Error: Slab number %1 does not exist in model").arg(slabId);
+//    }
+//    slabs->replace(slabPosition, slab);
+//    emit dataChanged(index(2 * slabPosition + 1, 0), index(2 * slabPosition + 1, columnCount() - 1));
+//    return "OK";
+//}
