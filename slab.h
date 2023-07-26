@@ -1,29 +1,46 @@
-#ifndef SLUB_H
-#define SLUB_H
-#include <QtGlobal>
-#include <QString>
+#ifndef SLAB_H
+#define SLAB_H
+
 #include <QMetaType>
+#include <QMutex>
+#include <QString>
+#include <QtGlobal>
+#include <memory>
 
 #include "sipm.h"
 
-class Slab
-{
+class Slab {
 public:
-    Slab();
-    Slab(quint16 id);
+    Slab() = default;
 
-    Slab(quint16 id, Sipm *master, Sipm *slave);
-    quint16 getId() const;
-    void setId(quint16 newId);
+    Slab(Slab &&slab) noexcept ;
 
-    Sipm *getMaster() const;
-    Sipm *getSlave() const;
+    Slab(Slab const &slab) = default;
+
+    Slab & operator=(Slab && slab) noexcept ;
+
+    Slab & operator=(const Slab & slab);
+
+    virtual ~Slab() = default;
+    //  explicit Slab(quint16 id);
+
+    static const std::unique_ptr<QMutex> mutex;
+
+    Slab(int id, std::shared_ptr<Sipm> master, std::shared_ptr<Sipm> slave);
+
+    [[nodiscard]] int getId() const;
+//  void setId(quint16 newId);
+
+    [[nodiscard]] std::shared_ptr<Sipm> &getMaster();
+
+    [[nodiscard]] std::shared_ptr<Sipm> &getSlave();
 
 private:
-    quint16 id = 0;
-    Sipm* master;
-    Sipm* slave;
+    int id = -1;
+    std::shared_ptr<Sipm> master;
+    std::shared_ptr<Sipm> slave;
 };
 
 Q_DECLARE_METATYPE(Slab)
-#endif // SLUB_H
+
+#endif // SLAB_H

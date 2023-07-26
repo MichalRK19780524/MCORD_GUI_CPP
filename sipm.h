@@ -1,8 +1,9 @@
 #ifndef SIPM_H
 #define SIPM_H
-#include <QtGlobal>
-#include <QString>
 #include <QMetaType>
+#include <QMutex>
+#include <QString>
+#include <QtGlobal>
 
 #include "statuscolor.h"
 
@@ -10,6 +11,9 @@
 class Sipm
 {
 public:
+
+    static const std::unique_ptr<QMutex> mutex;
+
     Sipm();
     Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current);
 
@@ -44,8 +48,9 @@ public:
 
     StatusColor getStatusColor() const;
     void setStatusColor(StatusColor newStatusColor);
+    virtual ~Sipm();
 
-private:
+  private:
     QString status = "OK";
     StatusColor statusColor {StatusColor::Transparent};
     quint16 rawSetVoltage {0};

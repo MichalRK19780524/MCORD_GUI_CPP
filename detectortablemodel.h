@@ -12,7 +12,7 @@ class DetectorTableModel : public QAbstractTableModel
 
 public:
     explicit DetectorTableModel(QObject *parent = nullptr);
-    DetectorTableModel(const QStringList *headers, QObject *parent = nullptr);
+    explicit DetectorTableModel(const QStringList *headers, QObject *parent = nullptr);
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
@@ -22,6 +22,8 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
     QString appendSlab(Slab slab);
+
+    QString updateSlab(Slab slab);
 
     QModelIndex findIndexOfMasterSlabSetButton(quint16 slabId);
     QModelIndex findIndexOfSlaveSlabSetButton(quint16 slabId);
@@ -37,15 +39,21 @@ public:
 //    QString reloadSlaveSlab(Slab* slab);
 
     int findSlabPosition(quint16 slabId);
+//
+//    [[nodiscard]] QList<Slab> *getSlabs() const;
+
+public:
+  [[nodiscard]] QSet<int> *getSetId() const;
 
 private:
-    QList<Slab> *slabs = nullptr;
-    QSet<quint16> *setId = nullptr;
-    const QStringList *headers = nullptr;
-    static QPixmap createPixmapFromSvgFile(QString path, int width, int height);
+  QList<Slab> *slabs = nullptr;
+  QSet<int> *setId = nullptr;
+  const QStringList *headers = nullptr;
+  static QPixmap createPixmapFromSvgFile(QString path, int width, int height);
 
 signals:
     void slabAppended(quint16 id);
+    void slabUpdated(quint16 id);
 
 };
 
