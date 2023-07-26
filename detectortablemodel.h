@@ -43,11 +43,11 @@ public:
 //    [[nodiscard]] QList<Slab> *getSlabs() const;
 
 public:
-  [[nodiscard]] QSet<int> *getSetId() const;
+  [[nodiscard]] QSet<quint16> *getSetId() const;
 
 private:
   QList<Slab> *slabs = nullptr;
-  QSet<int> *setId = nullptr;
+  QSet<quint16> *setId = nullptr;
   const QStringList *headers = nullptr;
   static QPixmap createPixmapFromSvgFile(QString path, int width, int height);
 

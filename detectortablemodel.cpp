@@ -6,13 +6,13 @@
 //#include <QPainter>
 
 DetectorTableModel::DetectorTableModel(QObject *parent)
-        : QAbstractTableModel(parent), slabs(new QList<Slab>), setId(new QSet<int>) {
+        : QAbstractTableModel(parent), slabs(new QList<Slab>), setId(new QSet<quint16>) {
 }
 
 DetectorTableModel::DetectorTableModel(const QStringList *headers, QObject *parent) : QAbstractTableModel(parent),
                                                                                       headers(headers),
                                                                                       slabs(new QList<Slab>),
-                                                                                      setId(new QSet<int>) {}
+                                                                                      setId(new QSet<quint16>) {}
 
 QVariant DetectorTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (role != Qt::DisplayRole) {
@@ -71,9 +71,9 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const {
     }
     shared_ptr<Sipm> sipm;
     if (row % 2 == 0) {
-        sipm = std::move(slab.getMaster());
+        sipm = slab.getMaster();
     } else {
-        sipm = std::move(slab.getSlave());
+        sipm = slab.getSlave();
     }
 
     if (role == Qt::DisplayRole) {
@@ -191,7 +191,7 @@ Slab DetectorTableModel::findSlab(quint16 slabId) {
 }
 
 //QList<Slab> *DetectorTableModel::getSlabs() const { return slabs; }
-QSet<int> *DetectorTableModel::getSetId() const { return setId; }
+QSet<quint16> *DetectorTableModel::getSetId() const { return setId; }
 
 //QString DetectorTableModel::reloadMasterSlab(Slab *slab)
 //{

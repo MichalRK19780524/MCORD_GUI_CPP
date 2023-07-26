@@ -15,7 +15,7 @@ public:
 
     Slab(Slab &&slab) noexcept ;
 
-    Slab(Slab const &slab) = default;
+    Slab(const Slab &slab);
 
     Slab & operator=(Slab && slab) noexcept ;
 
@@ -36,7 +36,7 @@ public:
     [[nodiscard]] std::shared_ptr<Sipm> &getSlave();
 
 private:
-    int id = -1;
+    quint16 id = 0;
     std::shared_ptr<Sipm> master;
     std::shared_ptr<Sipm> slave;
 };

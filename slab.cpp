@@ -46,15 +46,23 @@ std::shared_ptr<Sipm>& Slab::getSlave()
 }
 
 Slab::Slab(Slab &&slab) noexcept {
-    this->master = std::move(slab.master);
-    this->slave = std::move(slab.slave);
+  this->id = slab.id;
+  this->master = std::move(slab.master);
+  this->slave = std::move(slab.slave);
+}
+
+Slab::Slab(const Slab &slab)
+{
+  this->id = slab.id;
+  this->master = slab.master;
+  this->slave = slab.slave;
 }
 
 Slab &Slab::operator=(Slab &&slab) noexcept{
     if(this == &slab){
         return *this;
     }
-
+    this->id = slab.id;
     this->master = std::move(slab.master);
     this->slave = std::move(slab.slave);
 

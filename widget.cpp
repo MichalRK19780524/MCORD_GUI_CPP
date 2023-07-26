@@ -51,7 +51,7 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
   QTimer * updateTableTimer = new QTimer(this);
   connect(updateTableTimer, &QTimer::timeout, this, &Widget::tableUpdate);
 //  connect(updateTableTimer, &QTimer::timeout, lanConnection, &LanConnection::tableUpdate);
-  updateTableTimer->start(30000);
+  updateTableTimer->start(UPDATE_TABLE_TIME);
 
   connect(ui->pushButtonNext, &QPushButton::clicked, this,
           &Widget::nextClicked);
@@ -299,13 +299,7 @@ void Widget::backClicked() {
 
 void Widget::disconnectClicked() {
   if (ui->radioButtonLan->isChecked()) {
-    //        if(lanConnection->closeConnection() < 0)
-    //        {
-    //            QMessageBox::critical(this, "LAN error", "Unable to send data
-    //            to HUB");
-    //        }
     emit closeLanConnection();
-
   } else {
     serial->close();
     ui->groupBoxDetectionSlabs->hide();
@@ -802,7 +796,7 @@ void Widget::refreshSlab(quint16 id){
 }
 
 void Widget::tableUpdate() {
-  QSet<int> slabIds = *model->getSetId();
+  QSet<quint16> slabIds = *model->getSetId();
   for(quint16 slabId: slabIds){
     emit slabUpdateRequired(slabId);
   }

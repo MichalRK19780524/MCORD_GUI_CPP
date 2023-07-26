@@ -153,6 +153,7 @@ private:
 
     static constexpr quint16 PORT = 5555;
     static constexpr quint16 READ_READY_SERIAL_TIME = 5000;
+    static constexpr int UPDATE_TABLE_TIME = 10000;
     static const QString HUB_RESPONSE;
     static const QString LAN_CONNECTION_LABEL_TEXT;
     static const QString USB_CONNECTION_LABEL_TEXT;
