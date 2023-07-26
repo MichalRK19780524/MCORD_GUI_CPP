@@ -17,18 +17,15 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 QT_END_NAMESPACE
 
-class Widget : public QWidget
-{
-    Q_OBJECT
+class Widget : public QWidget {
+Q_OBJECT
 
-    enum class Connection: size_t
-    {
+    enum class Connection : size_t {
         SERIAL,
         LAN
     };
 
-    enum class State: size_t
-    {
+    enum class State : size_t {
         CONNECTION_SELECTION,
         LAN_SELECTED,
         LAN_CONNECTED,
@@ -42,8 +39,7 @@ class Widget : public QWidget
         ERROR
     };
 
-    enum class SlabState: size_t
-    {
+    enum class SlabState : size_t {
         Detected,
         On,
         Off,
@@ -51,13 +47,13 @@ class Widget : public QWidget
         Error
     };
 
-    inline size_t qHash(SlabState &key, uint seed)
-    {
+    inline size_t qHash(SlabState &key, uint seed) {
         return ::qHash(static_cast<size_t>(key), seed);
     }
 
 public:
     Widget(LanConnection *lanConnection, QWidget *parent = nullptr);
+
     ~Widget();
 
     void addPowerWidgets();
@@ -69,43 +65,74 @@ private:
     void showDetectonSlabs(QString labelName, Connection connection);
 //    QString appendSlabToModel(int slabId);
 
-    QString initAndOnSlab(int slabId);
-    QString reloadMasterSlabToModel(Slab* slab);
-    QString reloadSlaveSlabToModel(Slab* slab);
+//    QString initAndOnSlab(int slabId);
+    QString reloadMasterSlabToModel(Slab *slab);
+
+    QString reloadSlaveSlabToModel(Slab *slab);
 
 signals:
-    void connectLan (QString ipAddress, quint16 port);
+
+    void connectLan(QString ipAddress, quint16 port);
+
     void closeLanConnection();
+
     void slabRequired(quint16 slabId, AfeType afeType);
+
+    void slabUpdateRequired(quint16 slabId);
+
     void initializationRequired(quint16 slabId);
 
 
+
 private slots:
+
     void nextClicked();
+
     void backClicked();
+
     void disconnectClicked();
+
     void disconnected();
+
     void connectionError(QAbstractSocket::SocketError se);
+
     void slabNumberSelection();
+
     void detectionSlabsBackClicked();
+
     void detectSlab();
+
     void detectAndOnSlab();
-    void writingLanErrorHandler(QJsonArray command);
+
+    void writingErrorLanHandler(const QJsonArray& command);
 
     void setMasterVoltageClicked(int slabId);
+
     void setSlaveVoltageClicked(int slabId);
 
     void onMasterClicked(int slabId);
+
     void onSlaveClicked(int slabId);
 
     void offMasterClicked(int slabId);
+
     void offSlaveClicked(int slabId);
 
     void showSlabsAfterLanConnection(QString ipAddress);
+
     void appendSlabToModel(Slab slab);
+
+    void updateSlabInModel(Slab slab);
+
     void addWidgetsToTable(quint16 id);
 
+    void initFailedLanHandler(quint16 id, const QString& message);
 
+    void onFailedLanHandler(quint16 id, const QString& message);
+
+    void refreshSlab(quint16 id);
+
+    void tableUpdate();
 private:
     Ui::Widget *ui;
 
@@ -131,6 +158,8 @@ private:
     static const QString USB_CONNECTION_LABEL_TEXT;
     static const QStringList HEADERS;
     static const QJsonArray CLOSE;
+
     void addSetWidgets();
 };
+
 #endif // WIDGET_H

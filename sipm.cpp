@@ -1,127 +1,153 @@
 #include "sipm.h"
 
+const std::unique_ptr<QMutex> Sipm::mutex = std::make_unique<QMutex>();
+
 Sipm::Sipm(): status("OK")
 {
 }
 
 quint16 Sipm::getRawSetVoltage() const
 {
-    return rawSetVoltage;
+  QMutexLocker locker(&*mutex);
+  return rawSetVoltage;
 }
 
 void Sipm::setRawSetVoltage(quint16 newRawSetVoltage)
 {
-    rawSetVoltage = newRawSetVoltage;
+  QMutexLocker locker(&*mutex);
+  rawSetVoltage = newRawSetVoltage;
 }
 
 float Sipm::getSetVoltage() const
 {
-    return setVoltage;
+  QMutexLocker locker(&*mutex);
+  return setVoltage;
 }
 
 void Sipm::setSetVoltage(float newSetVoltage)
 {
-    setVoltage = newSetVoltage;
+  QMutexLocker locker(&*mutex);
+  setVoltage = newSetVoltage;
 }
 
 float Sipm::getMeasuredVoltage() const
 {
-    return measuredVoltage;
+  QMutexLocker locker(&*mutex);
+  return measuredVoltage;
 }
 
 void Sipm::setMeasuredVoltage(float newMeasuredVoltage)
 {
-    measuredVoltage = newMeasuredVoltage;
+  QMutexLocker locker(&*mutex);
+  measuredVoltage = newMeasuredVoltage;
 }
 
 quint16 Sipm::getRawTemperature() const
 {
-    return rawTemperature;
+  QMutexLocker locker(&*mutex);
+  return rawTemperature;
 }
 
 void Sipm::setRawTemperature(quint16 newRawTemperature)
 {
-    rawTemperature = newRawTemperature;
+  QMutexLocker locker(&*mutex);
+  rawTemperature = newRawTemperature;
 }
 
 float Sipm::getTemperature() const
 {
-    return temperature;
+  QMutexLocker locker(&*mutex);
+  return temperature;
 }
 
 void Sipm::setTemperature(float newTemperature)
 {
-    temperature = newTemperature;
+  QMutexLocker locker(&*mutex);
+  temperature = newTemperature;
 }
 
 quint16 Sipm::getRawCurrent() const
 {
-    return rawCurrent;
+  QMutexLocker locker(&*mutex);
+  return rawCurrent;
 }
 
 void Sipm::setRawCurrent(quint16 newRawCurrent)
 {
-    rawCurrent = newRawCurrent;
+  QMutexLocker locker(&*mutex);
+  rawCurrent = newRawCurrent;
 }
 
 float Sipm::getCurrent() const
 {
-    return current;
+  QMutexLocker locker(&*mutex);
+  return current;
 }
 
 void Sipm::setCurrent(float newCurrent)
 {
-    current = newCurrent;
+  QMutexLocker locker(&*mutex);
+  current = newCurrent;
 }
 
 QString Sipm::getStatus() const
 {
-    return status;
+  QMutexLocker locker(&*mutex);
+  return status;
 }
 
 void Sipm::setStatus(const QString &newStatus)
 {
-    status = newStatus;
+  QMutexLocker locker(&*mutex);
+  status = newStatus;
 }
 
 quint16 Sipm::getRawCurrentStandardDeviation() const
 {
-    return rawCurrentStandardDeviation;
+  QMutexLocker locker(&*mutex);
+  return rawCurrentStandardDeviation;
 }
 
 void Sipm::setRawCurrentStandardDeviation(quint16 newRawCurrentStandardDeviation)
 {
-    rawCurrentStandardDeviation = newRawCurrentStandardDeviation;
+  QMutexLocker locker(&*mutex);
+  rawCurrentStandardDeviation = newRawCurrentStandardDeviation;
 }
 
 float Sipm::getCurrentStandardDeviation() const
 {
-    return currentStandardDeviation;
+  QMutexLocker locker(&*mutex);
+  return currentStandardDeviation;
 }
 
 void Sipm::setCurrentStandardDeviation(float newCurrentStandardDeviation)
 {
-    currentStandardDeviation = newCurrentStandardDeviation;
+  QMutexLocker locker(&*mutex);
+  currentStandardDeviation = newCurrentStandardDeviation;
 }
 
 float Sipm::getTemperatureStandardDeviation() const
 {
-    return temperatureStandardDeviation;
+  QMutexLocker locker(&*mutex);
+  return temperatureStandardDeviation;
 }
 
 void Sipm::setTemperatureStandardDeviation(float newTemperatureStandardDeviation)
 {
-    temperatureStandardDeviation = newTemperatureStandardDeviation;
+  QMutexLocker locker(&*mutex);
+  temperatureStandardDeviation = newTemperatureStandardDeviation;
 }
 
 StatusColor Sipm::getStatusColor() const
 {
-    return statusColor;
+  QMutexLocker locker(&*mutex);
+  return statusColor;
 }
 
 void Sipm::setStatusColor(StatusColor newStatusColor)
 {
-    statusColor = newStatusColor;
+  QMutexLocker locker(&*mutex);
+  statusColor = newStatusColor;
 }
 
 Sipm::Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current):
@@ -134,3 +160,6 @@ Sipm::Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint
     rawCurrent(std::move(rawCurrent)),
     current(current)
 {}
+Sipm::~Sipm() {
+  QMutexLocker locker(&*mutex);
+}
