@@ -193,9 +193,9 @@ Slab DetectorTableModel::findSlab(quint16 slabId) {
 //QList<Slab> *DetectorTableModel::getSlabs() const { return slabs; }
 QSet<quint16> *DetectorTableModel::getSetId() const { return setId; }
 
-//QString DetectorTableModel::reloadMasterSlab(Slab *slab)
+//QString DetectorTableModel::reloadMasterSlab(Slab slab)
 //{
-//    quint16 slabId = slab->getId();
+//    quint16 slabId = slab.getId();
 //    int slabPosition = findSlabPosition(slabId);
 //    if(!setId->contains(slabId))
 //    {

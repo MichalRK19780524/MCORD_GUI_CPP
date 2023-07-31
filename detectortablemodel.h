@@ -35,7 +35,7 @@ public:
     QModelIndex findIndexOfSlaveSlabOffButton(quint16 slabId);
 
     Slab findSlab(quint16 slabId);
-//    QString reloadMasterSlab(Slab* slab);
+//    QString reloadMasterSlab(Slab slab);
 //    QString reloadSlaveSlab(Slab* slab);
 
     int findSlabPosition(quint16 slabId);

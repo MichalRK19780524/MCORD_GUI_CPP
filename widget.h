@@ -47,14 +47,14 @@ Q_OBJECT
         Error
     };
 
-    inline size_t qHash(SlabState &key, uint seed) {
+    [[maybe_unused]] static inline size_t qHash(SlabState &key, uint seed) {
         return ::qHash(static_cast<size_t>(key), seed);
     }
 
 public:
-    Widget(LanConnection *lanConnection, QWidget *parent = nullptr);
+    explicit Widget(LanConnection *lanConnection, QWidget *parent = nullptr);
 
-    ~Widget();
+    ~Widget() override;
 
     void addPowerWidgets();
 
@@ -62,13 +62,13 @@ public:
     static constexpr int POWER_COLUMN_INDEX = 4;
 
 private:
-    void showDetectonSlabs(QString labelName, Connection connection);
+    void showDetectonSlabs(const QString& labelName, Connection connection);
 //    QString appendSlabToModel(int slabId);
 
-//    QString initAndOnSlab(int slabId);
-    QString reloadMasterSlabToModel(Slab *slab);
+//    QString initAndOnNewSlab(int slabId);
+//    QString reloadMasterSlabToModel(Slab *slab);
 
-    QString reloadSlaveSlabToModel(Slab *slab);
+//    QString reloadSlaveSlabToModel(Slab *slab);
 
 signals:
 
@@ -82,6 +82,18 @@ signals:
 
     void initializationRequired(quint16 slabId);
 
+    void setMasterVoltageRequired(Slab slab);
+
+    void setSlaveVoltageRequired(Slab slab);
+
+    void onMasterRequired(quint16 slabId);
+
+    void offMasterRequired(quint16 slabId);
+
+    void onSlaveRequired(quint16 slabId);
+
+    void offSlaveRequired(quint16 slabId);
+
 
 
 private slots:
@@ -94,7 +106,7 @@ private slots:
 
     void disconnected();
 
-    void connectionError(QAbstractSocket::SocketError se);
+    static void connectionError(QAbstractSocket::SocketError se);
 
     void slabNumberSelection();
 
@@ -118,7 +130,7 @@ private slots:
 
     void offSlaveClicked(int slabId);
 
-    void showSlabsAfterLanConnection(QString ipAddress);
+    void showSlabsAfterLanConnection(const QString& ipAddress);
 
     void appendSlabToModel(Slab slab);
 
@@ -129,6 +141,10 @@ private slots:
     void initFailedLanHandler(quint16 id, const QString& message);
 
     void onFailedLanHandler(quint16 id, const QString& message);
+
+    void setMasterFailedLanHandler(quint16 id, const QString &message);
+
+    void setSlaveFailedLanHandler(quint16 id, const QString &message);
 
     void refreshSlab(quint16 id);
 

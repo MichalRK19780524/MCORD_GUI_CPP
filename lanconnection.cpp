@@ -157,65 +157,65 @@ QString LanConnection::downloadMeasuredTemperature(Slab &slab, AfeType afeType,
     }
 }
 
-// QString LanConnection::setSlabVoltage(Slab *slab)
-//{
-//     QString result = LanConnection::isSlabCorrect(slab);
-//     if(result != "OK")
-//     {
-//         return result;
-//     }
+ QString LanConnection::setSlabVoltage(Slab &slab)
+{
+     QString result = LanConnection::isSlabCorrect(&slab);
+     if(result != "OK")
+     {
+         return result;
+     }
 
-//    quint16 id = slab->getId();
-//    float masterVoltage = slab->getMaster()->getSetVoltage();
-//    float slaveVoltage = slab->getSlave()->getSetVoltage();
+    quint16 id = slab.getId();
+    float masterVoltage = slab.getMaster()->getSetVoltage();
+    float slaveVoltage = slab.getSlave()->getSetVoltage();
 
-//    QJsonArray command = {SET_VOLTAGE_COMMAND, id, masterVoltage,
-//    slaveVoltage};
+    QJsonArray command = {SET_VOLTAGE_COMMAND, id, masterVoltage,
+    slaveVoltage};
 
-//    if(socket->isOpen())
-//    {
-//        qint64 result =
-//        socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//        if(result <= 0)
-//        {
-//            return "Failed to send voltage setting command";
-//        }
+    if(socket->isOpen())
+    {
+        qint64 result =
+        socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
+        if(result <= 0)
+        {
+            return "Failed to send voltage setting command";
+        }
 
-//        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//        {
-//            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//            {
-//                QJsonDocument jsonDocument =
-//                QJsonDocument::fromJson(socket->readAll()); QString status =
-//                jsonDocument.array().at(0).toString(); if(status.isNull() ||
-//                status.compare("OK") != 0)
-//                {
-//                    return "Error setting voltage to SiPM";
-//                }
-//                else
-//                {
-//                    return status;
-//                }
-//            }
-//            else
-//            {
-//                return "Error reading amperage from SiPM";
+        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+        {
+            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+            {
+                QJsonDocument jsonDocument =
+                QJsonDocument::fromJson(socket->readAll()); QString status =
+                jsonDocument.array().at(0).toString(); if(status.isNull() ||
+                status.compare("OK") != 0)
+                {
+                    return "Error setting voltage to SiPM";
+                }
+                else
+                {
+                    return status;
+                }
+            }
+            else
+            {
+                return "Error reading amperage from SiPM";
 
-//            }
-//        }
-//        else
-//        {
-//            return "Amperage read from SiPM command failed";
-//        }
-//    }
-//    else
-//    {
-//        return "Faild to open TCP socket";
-//    }
+            }
+        }
+        else
+        {
+            return "Amperage read from SiPM command failed";
+        }
+    }
+    else
+    {
+        return "Faild to open TCP socket";
+    }
+}
 
-//    return result;
-//}
-bool LanConnection::readSlab(Slab &slab, quint16 slabId, AfeType afeType) {
+bool LanConnection::readSlab(Slab &slab, AfeType afeType) {
     QString result;
 
     result = downloadMeasuredVoltage(slab, afeType);
@@ -238,14 +238,14 @@ bool LanConnection::readSlab(Slab &slab, quint16 slabId, AfeType afeType) {
 
 void LanConnection::getSlab(quint16 slabId, AfeType afeType) {
     Slab slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
-    if (readSlab(slab, slabId, afeType)) {
+    if (readSlab(slab, afeType)) {
         emit slabReadingCompleted(slab);
     }
 }
 
 void LanConnection::updateSlab(quint16 slabId) {
     Slab slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
-    if (readSlab(slab, slabId, AfeType::Both)) {
+    if (readSlab(slab, AfeType::Both)) {
         emit slabDataRetrieved(slab);
     }
 }
@@ -301,8 +301,8 @@ QString LanConnection::initSlab(quint16 slabId) {
     QJsonArray command = {INIT_COMMAND, slabId};
 
     if (socket->isOpen()) {
-        qint64 result =
-                socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
         if (result <= 0) {
             emit writingError(command);
             return "Writing Error";
@@ -382,8 +382,8 @@ QString LanConnection::onSlab(quint16 slabId) {
     QJsonArray command = {ON_COMMAND, slabId};
 
     if (socket->isOpen()) {
-        qint64 result =
-                socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
         if (result <= 0) {
             emit writingError(command);
             return "Writing Error";
@@ -462,10 +462,11 @@ QString LanConnection::onSlab(quint16 slabId) {
 
 QString LanConnection::offSlab(quint16 slabId) {
     QJsonArray command = {OFF_COMMAND, slabId};
+    QString message;
 
     if (socket->isOpen()) {
-        qint64 result =
-                socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
         if (result <= 0) {
             emit writingError(command);
             return "Writing Error";
@@ -477,21 +478,29 @@ QString LanConnection::offSlab(quint16 slabId) {
                             QJsonDocument::fromJson(socket->readAll());
                     QString status = jsonDocument.array().at(0).toString();
                     if (status.isNull() || status.compare("OK") != 0) {
-                        return "Error while executing the command to turn off the SiPM "
-                               "voltage";
+                        message = "Error while executing the command to turn off the SiPM voltage";
+                        emit offFailed(slabId, message);
+                        return message;
                     } else {
+                        emit updateSlabToTableRequired(slabId);;
                         return "OK";
                     }
                 } else {
-                    return "Error reading the result of the SiPM voltage turn off "
-                           "command";
+                    message = "Error reading the result of the SiPM voltage turn off command";
+                    emit offFailed(slabId, message);
+                    return message;
                 }
             } else {
-                return "Error processing the SiPM power off command";
+                message = "Error processing the SiPM power off command";
+                emit offFailed(slabId, message);
+                return message;
             }
         }
+    } else {
+        message = "Faild to open TCP socket";
+        emit offFailed(slabId, message);
+        return message;
     }
-    { return "Faild to open TCP socket"; }
 }
 
 QString LanConnection::downloadMeasuredVoltage(Slab &slab, AfeType afeType) {
@@ -624,8 +633,8 @@ QString LanConnection::downloadMeasuredVoltage(Slab &slab, AfeType afeType) {
 //}
 
 std::shared_ptr<Sipm> LanConnection::getSipmVoltagFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command) {
-    qint64 result =
-            socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+    qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+    qDebug() << command;
     if (result <= 0) {
         emit writingError(command);
     }
@@ -750,8 +759,8 @@ std::shared_ptr<Sipm> LanConnection::getSipmAmperageFromHub(std::shared_ptr<Sipm
     QList<double> amperageList;
     amperageList.reserve(avgNumber);
     for (int i = 0; i < avgNumber; ++i) {
-        qint64 result =
-                socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
         if (result <= 0) {
             emit writingError(command);
         }
@@ -787,70 +796,13 @@ std::shared_ptr<Sipm> LanConnection::getSipmAmperageFromHub(std::shared_ptr<Sipm
     return sipm;
 }
 
-// Sipm *LanConnection::getSipmTemperatureFromHub(Sipm *simp, QJsonArray
-// command, quint16 avgNumber)
-//{
-//     QList<double> temperatureList;
-//     temperatureList.reserve(avgNumber);
-//     for(int i = 0; i < avgNumber; ++i)
-//     {
-//         qint64 result =
-//         socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//         if(result <= 0)
-//         {
-//             simp->setStatus("Failed to send temperature reading command");
-//             return simp;
-//         }
-
-//        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//        {
-//            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//            {
-//                QJsonDocument jsonDocument =
-//                QJsonDocument::fromJson(socket->readAll()); QString status =
-//                jsonDocument.array().at(0).toString(); if(status.isNull() ||
-//                status.compare("OK") != 0)
-//                {
-//                    simp->setStatus("Error reading temperature from SiPM");
-//                    return simp;
-//                }
-//                else
-//                {
-//                    double temperature =
-//                    jsonDocument.array().at(1).toDouble();
-//                    temperatureList.append(temperature);
-//                }
-//            }
-//            else
-//            {
-//                simp->setStatus("Error reading temperature from SiPM");
-//                return simp;
-//            }
-//        }
-//        else
-//        {
-//            simp->setStatus("Temperature read from SiPM command failed");
-//            return simp;
-//        }
-//    }
-
-//    const double* temperatureArray = temperatureList.constData();
-//    double meanTemperature = gsl_stats_mean(temperatureArray, 1,
-//    temperatureList.size());
-//    simp->setTemperature(static_cast<float>(meanTemperature));
-//    double standardDeviationTemperature = gsl_stats_sd_m(temperatureArray, 1,
-//    temperatureList.size(), meanTemperature);
-//    simp->setTemperatureStandardDeviation(standardDeviationTemperature);
-//    return simp;
-//}
-
-std::shared_ptr<Sipm> LanConnection::getSipmTemperatureFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command,
+std::shared_ptr<Sipm> LanConnection::getSipmTemperatureFromHub(std::shared_ptr<Sipm> sipm, const QJsonArray& command,
                                                quint16 avgNumber) {
     QList<double> temperatureList;
     temperatureList.reserve(avgNumber);
     for (int i = 0; i < avgNumber; ++i) {
-        qint64 result =
-                socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
         if (result <= 0) {
             emit writingError(command);
         }
@@ -882,7 +834,7 @@ std::shared_ptr<Sipm> LanConnection::getSipmTemperatureFromHub(std::shared_ptr<S
     sipm->setTemperature(static_cast<float>(meanTemperature));
     double standardDeviationTemperature = gsl_stats_sd_m(
             temperatureArray, 1, temperatureList.size(), meanTemperature);
-    sipm->setTemperatureStandardDeviation(standardDeviationTemperature);
+    sipm->setTemperatureStandardDeviation(float(standardDeviationTemperature));
     return sipm;
 }
 
@@ -906,17 +858,52 @@ QString LanConnection::isSlabCorrect(Slab *slab) {
 
 QTcpSocket *LanConnection::getSocket() { return socket; }
 
-void LanConnection::initAndOnSlab(int slabId) {
+bool LanConnection::initAndOnSlab(quint16 slabId) {
     QString result = initSlab(slabId);
     if (result == "OK") {
         result = onSlab(slabId);
         if (result != "OK") {
             emit onFailed(slabId, result);
-            return;
+            return false;
         }
     } else {
         emit initFailed(slabId, result);
+        return false;
+    }
+    return true;
+}
+
+void LanConnection::initAndOnNewSlab(quint16 slabId) {
+    if(initAndOnSlab(slabId)) {
+        emit appendSlabToTableRequired(slabId);
+    }
+}
+
+void LanConnection::initAndOnExistingSlab(quint16 slabId) {
+
+    if(initAndOnSlab(slabId)) {
+        emit updateSlabToTableRequired(slabId);
+    }
+}
+
+void LanConnection::setMasterVoltage(Slab slab) {
+    QString result = setSlabVoltage(slab);
+    if (result != "OK") {
+        emit setMasterFailed(slab.getId(), result);
+        return;
+    } else {
+        emit setMasterSucceeded(slab.getId());
         return;
     }
-    emit initializationSucceeded(slabId);
+}
+
+void LanConnection::setSlaveVoltage(Slab slab) {
+    QString result = setSlabVoltage(slab);
+    if (result != "OK") {
+        emit setSlaveFailed(slab.getId(), result);
+        return;
+    } else {
+        emit setSlaveSucceeded(slab.getId());
+        return;
+    }
 }

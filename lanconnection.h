@@ -18,8 +18,8 @@ public:
     explicit LanConnection(QTcpSocket *socket, QObject *parent = nullptr);
 
 
-    static constexpr quint16 CURRENT_AVG_NUMBER {10};
-    static constexpr quint16 TEMPERATURE_AVG_NUMBER {5};
+    static constexpr quint16 CURRENT_AVG_NUMBER {1};
+    static constexpr quint16 TEMPERATURE_AVG_NUMBER {1};
     static const QJsonArray CLOSE;
 
 //    LanConnection(QTcpSocket* socket);
@@ -41,8 +41,9 @@ public:
     QString initSlab(quint16 slabId);
     QString onSlab(quint16 slabId);
     QString offSlab(quint16 slabId);
-    QString setSlabVoltage(Slab *slab);
+    QString setSlabVoltage(Slab& slab);
     QTcpSocket* getSocket();
+    bool initAndOnSlab(quint16 slabId);
 
 signals:
     void connectionFailed(QString message);
@@ -52,14 +53,23 @@ signals:
     void slabReadingCompleted(Slab slab);
     void onFailed(quint16 slabId, QString message);
     void initFailed(quint16 slabId, QString message);
-    void initializationSucceeded(quint16 slabId);
+    void offFailed(quint16 slabId, QString message);
+    void appendSlabToTableRequired(quint16 slabId);
+    void updateSlabToTableRequired(quint16 slabId);
     void slabDataRetrieved(Slab slab);
+    void setMasterFailed(quint16 slabId, QString message);
+    void setSlaveFailed(quint16 slabId, QString message);
+    void setMasterSucceeded(quint16 slabId);
+    void setSlaveSucceeded(quint16 slabId);
 public slots:
     void connect(QString ipAddress, quint16 port);
     void closeConnection();
-    void initAndOnSlab(int slabId);
+    void initAndOnNewSlab(quint16 slabId);
+    void initAndOnExistingSlab(quint16 slabId);
     void getSlab(quint16 slabId, AfeType afeType);
     void updateSlab(quint16 slabId);
+    void setMasterVoltage(Slab slab);
+    void setSlaveVoltage(Slab slab);
 
 
 
@@ -84,8 +94,8 @@ private:
     static QString isSlabCorrect(Slab* slab);
     std::shared_ptr<Sipm> getSipmVoltagFromHub(std::shared_ptr<Sipm> simp, QJsonArray command);
     std::shared_ptr<Sipm> getSipmAmperageFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command, quint16 avgNumber);
-    std::shared_ptr<Sipm> getSipmTemperatureFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command, quint16 avgNumber);
-    bool readSlab(Slab& slab, quint16 slabId, AfeType afeType);
+    std::shared_ptr<Sipm> getSipmTemperatureFromHub(std::shared_ptr<Sipm> sipm, const QJsonArray& command, quint16 avgNumber);
+    bool readSlab(Slab &slab, AfeType afeType);
 };
 
 #endif // LANCONNECTION_H
