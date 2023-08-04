@@ -7,6 +7,7 @@
 #include <QSvgRenderer>
 #include <QThread>
 #include <QTimer>
+#include <QDateTime>
 #include <utility>
 
 #include "./ui_widget.h"
@@ -16,10 +17,10 @@
 const QString Widget::LAN_CONNECTION_LABEL_TEXT = "Connected to IP: ";
 const QString Widget::USB_CONNECTION_LABEL_TEXT = "Connected to serial port: ";
 const QStringList Widget::HEADERS{
-        "Slab No.", "Status", "Type", "Set SiPM Volt.", "U[V]", "I[nA]", "T[C]"};
+        "Slab No.", "Status", "Power", "Type", "Set SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
 
 Widget::Widget(LanConnection *lanConnection, QWidget *parent)
-        : QWidget(parent), lanConnection(lanConnection), ui(new Ui::Widget) {
+    : QWidget(parent), lanConnection(lanConnection), ui(new Ui::Widget) {
     ui->setupUi(this);
     ui->pushButtonBack->hide();
     ui->groupBoxLanConnection->hide();
@@ -27,7 +28,7 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     ui->groupBoxDetectionSlabs->hide();
     ui->connectionLabel->hide();
     ui->pushButtonDisconnect->hide();
-    model = new DetectorTableModel(&Widget::HEADERS, this);
+    model = new DetectorTableModel(Widget::HEADERS, this);
     setMasterSignalMapper = new QSignalMapper(this);
     onMasterSignalMapper = new QSignalMapper(this);
     offMasterSignalMapper = new QSignalMapper(this);
@@ -41,14 +42,26 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     ui->slabsTableView->setShowGrid(false);
     ui->slabsTableView->setAlternatingRowColors(true);
     ui->slabsTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->slabsTableView->setMinimumSize(QSize(0,0));
+    ui->slabsTableView->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+    ui->groupBoxDetectionSlabs->setMinimumSize(QSize(0,0));
+    ui->groupBoxDetectionSlabs->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 
     QHeaderView *verticalHeader = ui->slabsTableView->verticalHeader();
     verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
     verticalHeader->setDefaultSectionSize(48);
+    verticalHeader->setStretchLastSection(false);
 
     serial = new QSerialPort(this);
 
     settings = new QSettings("TJ3", "MCORD_GUI");
+
+    file.setFileName("test.txt");
+
+    if(!file.open(QFile::WriteOnly | QFile::Text)){
+        QMessageBox::warning(this, "Error", "File not open");
+    }
+    outTextData.setDevice(&file);
 
     auto *updateTableTimer = new QTimer(this);
     connect(updateTableTimer, &QTimer::timeout, this, &Widget::tableUpdate);
@@ -95,6 +108,7 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(lanConnection, &LanConnection::setMasterSucceeded, lanConnection, &LanConnection::updateSlab);
     connect(this, &Widget::setSlaveVoltageRequired, lanConnection, &LanConnection::setSlaveVoltage);
     connect(lanConnection, &LanConnection::setSlaveSucceeded, lanConnection, &LanConnection::updateSlab);
+    connect(lanConnection, &LanConnection::slabDataRetrieved, this, &Widget::saveSlabToFile);
 }
 
 Widget::~Widget() {
@@ -136,6 +150,8 @@ Widget::~Widget() {
 
     delete ui;
     ui = nullptr;
+
+    file.close();
 }
 
 void Widget::showSlabsAfterLanConnection(const QString& ipAddress) {
@@ -337,8 +353,8 @@ void Widget::detectionSlabsBackClicked() {
     //    ui->lineEditAddSlab->hide();
 }
 
-void Widget::appendSlabToModel(Slab slab) {
-//  qDebug() << slab.getMaster();
+void Widget::setMasterStatusColor(Slab &slab)
+{
     if (slab.getMaster()->getStatus() != "OK") {
         slab.getMaster()->setStatusColor(StatusColor::Red);
     } else if (slab.getMaster()->getMeasuredVoltage() > 0) {
@@ -350,7 +366,10 @@ void Widget::appendSlabToModel(Slab slab) {
     } else {
         slab.getMaster()->setStatusColor(StatusColor::Transparent);
     }
+}
 
+void Widget::setSlaveStatusColor(Slab & slab)
+{
     if (slab.getSlave()->getStatus() != "OK") {
         slab.getSlave()->setStatusColor(StatusColor::Red);
     } else if (slab.getSlave()->getMeasuredVoltage() > 0) {
@@ -362,21 +381,29 @@ void Widget::appendSlabToModel(Slab slab) {
     } else {
         slab.getSlave()->setStatusColor(StatusColor::Transparent);
     }
+}
 
+void Widget::appendSlabToModel(Slab slab) {
     QString result = model->appendSlab(slab);
     QString message;
     if (result != "OK") {
         message = "Adding detection slab error";
         QMessageBox::information(this, message, result);
+    } else {
+        setMasterStatusColor(slab);
+        setSlaveStatusColor(slab);
     }
 }
 
 void Widget::updateSlabInModel(Slab slab) {
-    QString result = model->updateSlab(std::move(slab));
+    QString result = model->updateSlab(slab);
     QString message;
     if (result != "OK") {
         message = "Updating detection slab error";
         QMessageBox::information(this, message, result);
+    } else{
+        setMasterStatusColor(slab);
+        setSlaveStatusColor(slab);
     }
 }
 
@@ -727,6 +754,22 @@ void Widget::tableUpdate() {
     for (quint16 slabId: slabIds) {
         emit slabUpdateRequired(slabId);
     }
+}
+
+void Widget::saveSlabToFile(Slab slab)
+{
+
+    outTextData << QDateTime::currentDateTimeUtc().toString() << '\t'
+                << slab.getId() << '\t'
+                << slab.getMaster()->getSetVoltage() << '\t'
+                << slab.getMaster()->getMeasuredVoltage() << '\t'
+                << slab.getMaster()->getCurrent() << '\t'
+                << slab.getMaster()->getTemperature() << '\t'
+                << slab.getSlave()->getSetVoltage() << '\t'
+                << slab.getSlave()->getMeasuredVoltage() << '\t'
+                << slab.getSlave()->getCurrent() << '\t'
+                << slab.getSlave()->getTemperature() << '\t'
+                << '\n';
 }
 
 

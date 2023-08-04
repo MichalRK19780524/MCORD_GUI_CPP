@@ -9,7 +9,7 @@ DetectorTableModel::DetectorTableModel(QObject *parent)
         : QAbstractTableModel(parent), slabs(new QList<Slab>), setId(new QSet<quint16>) {
 }
 
-DetectorTableModel::DetectorTableModel(const QStringList *headers, QObject *parent) : QAbstractTableModel(parent),
+DetectorTableModel::DetectorTableModel(const QStringList headers, QObject *parent) : QAbstractTableModel(parent),
                                                                                       headers(headers),
                                                                                       slabs(new QList<Slab>),
                                                                                       setId(new QSet<quint16>) {}
@@ -21,21 +21,21 @@ QVariant DetectorTableModel::headerData(int section, Qt::Orientation orientation
     if (orientation == Qt::Horizontal) {
         switch (section) {
             case 0 :
-                return QString("Slab No.");
+                return headers[0];
             case 1 :
-                return QString("Type");
+                return headers[1];
             case 2:
-                return QString("Status");
+                return headers[2];
             case 3:
-                return QString("Set SiPM Volt.");
+                return headers[3];
             case 4:
-                return QString("Power");
+                return headers[4];
             case 5:
-                return QString("U[V]");
+                return headers[5];
             case 6:
-                return QString("I[nA]");
+                return headers[6];
             case 7:
-                return QString("T[C]");
+                return headers[7];
         }
     }
     return QVariant();
@@ -87,17 +87,17 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const {
                 } else {
                     return slab.getId();
                 }
-
             case 1:
+                var.setValue(sipm->getStatusColor());
+                return var;
+            case 2:
+                return QString();
+            case 3:
                 if (row % 2 == 0) {
                     return QString("Master");
                 } else {
                     return QString("Slave");
                 }
-            case 2:
-                var.setValue(sipm->getStatusColor());
-                return var;
-            case 3:
             case 4:
                 return QString();
             case 5:
@@ -127,10 +127,9 @@ QString DetectorTableModel::appendSlab(Slab slab) {
 }
 
 QString DetectorTableModel::updateSlab(Slab slab) {
-    const int rowIndex = 2 * slabs->size();
-    beginInsertRows(QModelIndex(), rowIndex, rowIndex + 1);
-    slabs->replace(findSlabPosition(slab.getId()), slab);
-    endInsertRows();
+    int slabPosition = findSlabPosition(slab.getId());
+    slabs->replace(slabPosition, slab);
+    emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition + 1, columnCount() - 1));
     emit slabUpdated(slab.getId());
     return "OK";
 }

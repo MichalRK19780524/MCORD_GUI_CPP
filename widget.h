@@ -8,6 +8,7 @@
 #include <QStringList>
 #include <QSignalMapper>
 #include <QSettings>
+#include <QFile>
 
 //#include "detectionslabswidget.h"
 #include "lanconnection.h"
@@ -58,11 +59,19 @@ public:
 
     void addPowerWidgets();
 
-    static constexpr int SET_COLUMN_INDEX = 3;
-    static constexpr int POWER_COLUMN_INDEX = 4;
+    static constexpr int SET_COLUMN_INDEX = 4;
+    static constexpr int POWER_COLUMN_INDEX = 2;
+    static constexpr int STATUS_COLOR_COLUMN_INDEX = 1;
+    
+
 
 private:
     void showDetectonSlabs(const QString& labelName, Connection connection);
+
+    void setMasterStatusColor(Slab &slab);
+
+    void setSlaveStatusColor(Slab &slab);
+
 //    QString appendSlabToModel(int slabId);
 
 //    QString initAndOnNewSlab(int slabId);
@@ -149,6 +158,8 @@ private slots:
     void refreshSlab(quint16 id);
 
     void tableUpdate();
+
+    void saveSlabToFile(Slab slab);
 private:
     Ui::Widget *ui;
 
@@ -165,6 +176,8 @@ private:
     State state = State::DISCONNECTED;
     QHash<quint8, SlabState> slabStates;
     QSettings *settings = nullptr;
+    QFile file;
+    QTextStream outTextData;
 
 
     static constexpr quint16 PORT = 5555;

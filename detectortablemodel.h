@@ -12,7 +12,7 @@ class DetectorTableModel : public QAbstractTableModel
 
 public:
     explicit DetectorTableModel(QObject *parent = nullptr);
-    explicit DetectorTableModel(const QStringList *headers, QObject *parent = nullptr);
+    explicit DetectorTableModel(const QStringList headers, QObject *parent = nullptr);
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
@@ -48,7 +48,7 @@ public:
 private:
   QList<Slab> *slabs = nullptr;
   QSet<quint16> *setId = nullptr;
-  const QStringList *headers = nullptr;
+  const QStringList headers;
   static QPixmap createPixmapFromSvgFile(QString path, int width, int height);
 
 signals:

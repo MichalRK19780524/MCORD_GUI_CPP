@@ -1,5 +1,6 @@
 #include "statusicondelegate.h"
 #include "statuscolor.h"
+#include "widget.h"
 
 #include<QPainter>
 #include <QSvgRenderer>
@@ -12,13 +13,12 @@ const QString StatusIconDelegate::RED_DIODE {":/images/red_circle.svg"};
 StatusIconDelegate::StatusIconDelegate(QObject *parent)
     : QStyledItemDelegate{parent}
 {
-
 }
 
 
 void StatusIconDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    if (index.column() == 2)
+    if (index.column() == Widget::STATUS_COLOR_COLUMN_INDEX)
     {
         QSvgRenderer renderer;
         StatusColor statusColor = index.data().value<StatusColor>();
