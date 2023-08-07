@@ -56,7 +56,10 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
 
     settings = new QSettings("TJ3", "MCORD_GUI");
 
-    file.setFileName("test.txt");
+
+    file.setFileName(QString("result ") + QDateTime::currentDateTime().toString() + ".txt");
+
+    ui->lineEditLan->text();
 
     if(!file.open(QFile::WriteOnly | QFile::Text)){
         QMessageBox::warning(this, "Error", "File not open");
@@ -85,7 +88,7 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this,&Widget::setSlaveVoltageClicked);
     connect(offSlaveSignalMapper, &QSignalMapper::mappedInt, this,&Widget::offSlaveClicked);
     connect(this, &Widget::connectLan, lanConnection, &LanConnection::connect);
-    connect(lanConnection, &LanConnection::connectionSucceeded, this, &Widget::showSlabsAfterLanConnection);
+    connect(lanConnection, &LanConnection::connectionSucceeded, this, &Widget::actionsAfterLanConnection);
     connect(this, &Widget::closeLanConnection, lanConnection, &LanConnection::closeConnection);
     connect(lanConnection, &LanConnection::writingError, this, &Widget::writingErrorLanHandler);
     connect(this, &Widget::slabRequired, lanConnection, &LanConnection::getSlab);
@@ -154,12 +157,16 @@ Widget::~Widget() {
     file.close();
 }
 
-void Widget::showSlabsAfterLanConnection(const QString& ipAddress) {
+void Widget::actionsAfterLanConnection(const QString& ipAddress) {
     state = State::LAN_CONNECTED;
     settings->beginGroup("IP address");
     settings->setValue("LAN address", ipAddress);
     settings->endGroup();
     ui->pushButtonDisconnect->hide();
+    outTextData << "MCORD HUB ip address: " << ipAddress << '\n';
+    outTextData << "Date" << '\t' << "Id" << '\t' << "Master Set Voltage" << '\t' << "Master Measured Voltage" << '\t'
+                << "Master Current" << '\t' << "Master Temperature" << '\t' << "Slave Set Voltage" << '\t'
+                << "Slave Measured Voltage" << '\t' << "Slave Current" << '\t' << "Slave Temperature" << '\n';
     showDetectonSlabs(LAN_CONNECTION_LABEL_TEXT + ipAddress, Connection::LAN);
 }
 
@@ -411,7 +418,6 @@ void Widget::addWidgetsToTable(quint16 id) {
     addSetWidgets();
     addPowerWidgets();
     if (state == State::LAN_SLAB_DETECTING) {
-
         slabStates[id] = SlabState::Detected;
     } else if (state == State::LAN_SLAB_INITIALIZING) {
         int rowCount = ui->slabsTableView->model()->rowCount();
@@ -759,7 +765,7 @@ void Widget::tableUpdate() {
 void Widget::saveSlabToFile(Slab slab)
 {
 
-    outTextData << QDateTime::currentDateTimeUtc().toString() << '\t'
+    outTextData << QDateTime::currentDateTime().toString() << '\t'
                 << slab.getId() << '\t'
                 << slab.getMaster()->getSetVoltage() << '\t'
                 << slab.getMaster()->getMeasuredVoltage() << '\t'

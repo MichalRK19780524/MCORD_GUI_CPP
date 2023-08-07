@@ -139,7 +139,7 @@ private slots:
 
     void offSlaveClicked(int slabId);
 
-    void showSlabsAfterLanConnection(const QString& ipAddress);
+    void actionsAfterLanConnection(const QString& ipAddress);
 
     void appendSlabToModel(Slab slab);
 
