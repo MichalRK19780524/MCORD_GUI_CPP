@@ -37,6 +37,8 @@ Q_OBJECT
         ONE_SLAB_USB,
         LAN_SLAB_DETECTING,
         LAN_SLAB_INITIALIZING,
+        LAN_SLAB_SETTING,
+        LAN_SLAB_OFF,
         ERROR
     };
 
@@ -44,7 +46,9 @@ Q_OBJECT
         Detected,
         On,
         Off,
-        Set,
+        SetMaster,
+        SetSlave,
+        SetAll,
         Error
     };
 

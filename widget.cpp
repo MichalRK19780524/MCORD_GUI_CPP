@@ -365,7 +365,7 @@ void Widget::setMasterStatusColor(Slab &slab)
     if (slab.getMaster()->getStatus() != "OK") {
         slab.getMaster()->setStatusColor(StatusColor::Red);
     } else if (slab.getMaster()->getMeasuredVoltage() > 0) {
-        if (slabStates.value(slab.getId()) == SlabState::Set) {
+        if (slabStates.value(slab.getId()) == SlabState::SetMaster || slabStates.value(slab.getId()) == SlabState::SetAll) {
             slab.getMaster()->setStatusColor(StatusColor::Green);
         } else {
             slab.getMaster()->setStatusColor(StatusColor::Yellow);
@@ -380,7 +380,7 @@ void Widget::setSlaveStatusColor(Slab & slab)
     if (slab.getSlave()->getStatus() != "OK") {
         slab.getSlave()->setStatusColor(StatusColor::Red);
     } else if (slab.getSlave()->getMeasuredVoltage() > 0) {
-        if (slabStates.value(slab.getId()) == SlabState::Set) {
+        if (slabStates.value(slab.getId()) == SlabState::SetSlave || slabStates.value(slab.getId()) == SlabState::SetAll) {
             slab.getSlave()->setStatusColor(StatusColor::Green);
         } else {
             slab.getSlave()->setStatusColor(StatusColor::Yellow);
@@ -423,12 +423,10 @@ void Widget::addWidgetsToTable(quint16 id) {
         int rowCount = ui->slabsTableView->model()->rowCount();
         QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
         QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
-        masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(
-                QString::number(Sipm::INITIAL_VOLTAGE));
+        masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
         QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
         QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
-        slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(
-                QString::number(Sipm::INITIAL_VOLTAGE));
+        slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
         slabStates[id] = SlabState::On;
     }
     ui->slabsTableView->show();
@@ -632,19 +630,31 @@ void Widget::writingErrorLanHandler(const QJsonArray &command) {
 }
 
 void Widget::setMasterVoltageClicked(int slabId) {
+    state = State::LAN_SLAB_SETTING;
     Slab slab = model->findSlab(slabId);
     QWidget *setWidget = ui->slabsTableView->indexWidget(model->findIndexOfMasterSlabSetButton(slabId));
     QString setVoltageText = setWidget->findChildren<QLineEdit*>().at(0)->text();
     slab.getMaster()->setSetVoltage(setVoltageText.toFloat());
+    if(slabStates[slabId] != SlabState::SetSlave && slabStates[slabId] != SlabState::SetAll){
+        slabStates[slabId] = SlabState::SetMaster;
+    } else {
+        slabStates[slabId] = SlabState::SetAll;
+    }
     emit setMasterVoltageRequired(slab);
 }
 
 // TO DO zdebagować jak zmienia się model podczas wywoływania tej funkcji
 void Widget::setSlaveVoltageClicked(int slabId) {
+    state = State::LAN_SLAB_SETTING;
         Slab slab = model->findSlab(slabId);
         QWidget *setWidget = ui->slabsTableView->indexWidget(model->findIndexOfSlaveSlabSetButton(slabId));
         QString setVoltageText = setWidget->findChildren<QLineEdit*>().at(0)->text();
         slab.getSlave()->setSetVoltage(setVoltageText.toFloat());
+        if(slabStates[slabId] != SlabState::SetMaster && slabStates[slabId] != SlabState::SetAll){
+            slabStates[slabId] = SlabState::SetSlave;
+        } else {
+            slabStates[slabId] = SlabState::SetAll;
+        }
         emit setSlaveVoltageRequired(slab);
 //        QString result = lanConnection->setSlabVoltage(slab);
 //        QString message;
@@ -685,6 +695,7 @@ void Widget::onSlaveClicked(int slabId) {
 }
 
 void Widget::offMasterClicked(int slabId) {
+    state = State::LAN_SLAB_OFF;
     Slab slab = model->findSlab(slabId);
     slab.getMaster()->setStatusColor(StatusColor::Transparent);
 //        QString result = lanConnection->offSlab(slabId);
@@ -764,10 +775,23 @@ void Widget::tableUpdate() {
 
 void Widget::saveSlabToFile(Slab slab)
 {
-
-    outTextData << QDateTime::currentDateTime().toString() << '\t'
-                << slab.getId() << '\t'
-                << slab.getMaster()->getSetVoltage() << '\t'
+    int id = slab.getId();
+    outTextData << QDateTime::currentDateTime().toString() << '\t' << id << '\t';
+    if(slabStates[id] == SlabState::SetMaster || slabStates[id] == SlabState::On)
+    {
+        outTextData << slab.getMaster()->getSetVoltage() << '\t'
+                << slab.getMaster()->getMeasuredVoltage() << '\t'
+                << slab.getMaster()->getCurrent() << '\t'
+                << slab.getMaster()->getTemperature() << '\t'
+                << "Null" << '\t'
+                << slab.getSlave()->getMeasuredVoltage() << '\t'
+                << slab.getSlave()->getCurrent() << '\t'
+                << slab.getSlave()->getTemperature() << '\t'
+                << '\n';
+    }
+    else if(slabStates[id] == SlabState::SetSlave || slabStates[id] == SlabState::On)
+    {
+        outTextData << slab.getMaster()->getSetVoltage() << '\t'
                 << slab.getMaster()->getMeasuredVoltage() << '\t'
                 << slab.getMaster()->getCurrent() << '\t'
                 << slab.getMaster()->getTemperature() << '\t'
@@ -776,6 +800,27 @@ void Widget::saveSlabToFile(Slab slab)
                 << slab.getSlave()->getCurrent() << '\t'
                 << slab.getSlave()->getTemperature() << '\t'
                 << '\n';
+    } else if(slabStates[id] == SlabState::SetAll || slabStates[id] == SlabState::On){
+        outTextData << "Null" << '\t'
+                    << slab.getMaster()->getMeasuredVoltage() << '\t'
+                    << slab.getMaster()->getCurrent() << '\t'
+                    << slab.getMaster()->getTemperature() << '\t'
+                    << slab.getSlave()->getSetVoltage() << '\t'
+                    << slab.getSlave()->getMeasuredVoltage() << '\t'
+                    << slab.getSlave()->getCurrent() << '\t'
+                    << slab.getSlave()->getTemperature() << '\t'
+                    << '\n';
+    } else {
+        outTextData << "Null" << '\t'
+                    << slab.getMaster()->getMeasuredVoltage() << '\t'
+                    << slab.getMaster()->getCurrent() << '\t'
+                    << slab.getMaster()->getTemperature() << '\t'
+                    << "Null" << '\t'
+                    << slab.getSlave()->getMeasuredVoltage() << '\t'
+                    << slab.getSlave()->getCurrent() << '\t'
+                    << slab.getSlave()->getTemperature() << '\t'
+                    << '\n';
+    }
 }
 
 

@@ -9,9 +9,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1081</width>
+    <width>1140</width>
     <height>677</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1140</width>
+    <height>0</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MCORD Detector Control System</string>
