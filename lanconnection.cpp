@@ -888,6 +888,7 @@ void LanConnection::initAndOnExistingSlab(quint16 slabId) {
 
 void LanConnection::setMasterVoltage(Slab slab) {
     QString result = setSlabVoltage(slab);
+    qDebug() << "Slab in LanConnection::setMasterVoltage: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Master Voltage: " << slab.getMaster()->getSetVoltage();
     if (result != "OK") {
         emit setMasterFailed(slab.getId(), result);
         return;

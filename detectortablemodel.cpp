@@ -78,6 +78,7 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const {
 
     if (role == Qt::DisplayRole) {
         QVariant var;
+        float measuredVoltage;
         switch (index.column()) {
             int id;
             case 0:
@@ -101,11 +102,16 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const {
             case 4:
                 return QString();
             case 5:
-                return sipm->getMeasuredVoltage();
+                measuredVoltage = sipm->getMeasuredVoltage();
+                if(measuredVoltage < 1.0){
+                    return QString("Off");
+                } else {
+                    return QString::number(measuredVoltage, 'f', 2);
+                }
             case 6:
-                return sipm->getCurrent();
+                return QString::number(sipm->getCurrent(), 'f', 1);
             case 7:
-                return sipm->getTemperature();
+                return QString::number(sipm->getTemperature(), 'f', 2);
         }
     }
     return QVariant();
@@ -127,6 +133,7 @@ QString DetectorTableModel::appendSlab(Slab slab) {
 }
 
 QString DetectorTableModel::updateSlab(Slab slab) {
+    qDebug() << "Slab in DetectorTableModel::updateSlab: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Master Voltage: " << slab.getMaster()->getSetVoltage();
     int slabPosition = findSlabPosition(slab.getId());
     slabs->replace(slabPosition, slab);
     emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition + 1, columnCount() - 1));

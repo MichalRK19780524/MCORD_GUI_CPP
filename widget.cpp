@@ -527,6 +527,7 @@ void Widget::setMasterVoltageClicked(int slabId) {
     } else {
         slabStates[slabId] = SlabState::SetAll;
     }
+    qDebug() << "Slab in Widget::setMasterVoltageClicked: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Master Voltage: " << slab.getMaster()->getSetVoltage();
     emit setMasterVoltageRequired(slab);
 }
 
