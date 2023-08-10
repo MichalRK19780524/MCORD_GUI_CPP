@@ -173,10 +173,10 @@ private:
     DetectorTableModel *model = nullptr;
     QSignalMapper *setMasterSignalMapper = nullptr;
     QSignalMapper *setSlaveSignalMapper = nullptr;
-    QSignalMapper *onMasterSignalMapper = nullptr;
-    QSignalMapper *onSlaveSignalMapper = nullptr;
-    QSignalMapper *offMasterSignalMapper = nullptr;
-    QSignalMapper *offSlaveSignalMapper = nullptr;
+    QSignalMapper *onSignalMapper = nullptr;
+//    QSignalMapper *onSlaveSignalMapper = nullptr;
+    QSignalMapper *offSignalMapper = nullptr;
+//    QSignalMapper *offSlaveSignalMapper = nullptr;
     State state = State::DISCONNECTED;
     QHash<quint8, SlabState> slabStates;
     QSettings *settings = nullptr;

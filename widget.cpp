@@ -30,12 +30,10 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     ui->pushButtonDisconnect->hide();
     model = new DetectorTableModel(Widget::HEADERS, this);
     setMasterSignalMapper = new QSignalMapper(this);
-    onMasterSignalMapper = new QSignalMapper(this);
-    offMasterSignalMapper = new QSignalMapper(this);
+    onSignalMapper = new QSignalMapper(this);
+    offSignalMapper = new QSignalMapper(this);
 
     setSlaveSignalMapper = new QSignalMapper(this);
-    onSlaveSignalMapper = new QSignalMapper(this);
-    offSlaveSignalMapper = new QSignalMapper(this);
 
     ui->slabsTableView->setModel(model);
     ui->slabsTableView->setItemDelegate(new StatusIconDelegate());
@@ -81,11 +79,9 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this,&Widget::disconnected);
     connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this,&Widget::connectionError);
     connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this,&Widget::setMasterVoltageClicked);
-    connect(onMasterSignalMapper,&QSignalMapper::mappedInt, this, &Widget::onMasterClicked);
-    connect(onSlaveSignalMapper,&QSignalMapper::mappedInt, this, &Widget::onSlaveClicked);
-    connect(offMasterSignalMapper, &QSignalMapper::mappedInt, this,&Widget::offMasterClicked);
+    connect(onSignalMapper,&QSignalMapper::mappedInt, this, &Widget::onMasterClicked);
+    connect(offSignalMapper, &QSignalMapper::mappedInt, this,&Widget::offMasterClicked);
     connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this,&Widget::setSlaveVoltageClicked);
-    connect(offSlaveSignalMapper, &QSignalMapper::mappedInt, this,&Widget::offSlaveClicked);
     connect(this, &Widget::connectLan, lanConnection, &LanConnection::connect);
     connect(lanConnection, &LanConnection::connectionSucceeded, this, &Widget::actionsAfterLanConnection);
     connect(this, &Widget::closeLanConnection, lanConnection, &LanConnection::closeConnection);
@@ -135,20 +131,14 @@ Widget::~Widget() {
     delete setMasterSignalMapper;
     setMasterSignalMapper = nullptr;
 
-    delete onMasterSignalMapper;
-    onMasterSignalMapper = nullptr;
+    delete onSignalMapper;
+    onSignalMapper = nullptr;
 
-    delete offMasterSignalMapper;
-    offMasterSignalMapper = nullptr;
+    delete offSignalMapper;
+    offSignalMapper = nullptr;
 
     delete setSlaveSignalMapper;
     setSlaveSignalMapper = nullptr;
-
-    delete onSlaveSignalMapper;
-    onSlaveSignalMapper = nullptr;
-
-    delete offSlaveSignalMapper;
-    offSlaveSignalMapper = nullptr;
 
     delete ui;
     ui = nullptr;
@@ -208,8 +198,6 @@ void Widget::nextClicked() {
             QString ipRange =
                     "(([ 0]+)|([ 0]*[0-9] *)|([0-9][0-9] )|([ "
                     "0][0-9][0-9])|(1[0-9][0-9])|([2][0-4][0-9])|(25[0-5]))";
-            // You may want to use QRegularExpression for new code with Qt 5 (not
-            // mandatory).
             QRegularExpression ipRegex("^" + ipRange + "\\." + ipRange + "\\." +
                                        ipRange + "\\." + ipRange + "$");
             auto *ipValidator = new QRegularExpressionValidator(ipRegex, this);
@@ -448,47 +436,28 @@ void Widget::addSetWidgets() {
 }
 
 void Widget::addPowerWidgets() {
-    auto *powerWidgetMaster = new QWidget();
-    auto *powerOnButtonMaster = new QPushButton("On", powerWidgetMaster);
-    auto *powerOffButtonMaster = new QPushButton("Off", powerWidgetMaster);
-    auto *powerLayoutMaster = new QHBoxLayout(powerWidgetMaster);
+    auto *powerWidget = new QWidget();
+    auto *powerOnButton = new QPushButton("On", powerWidget);
+    auto *powerOffButton = new QPushButton("Off", powerWidget);
+    auto *powerLayout = new QHBoxLayout(powerWidget);
 
-    powerLayoutMaster->addWidget(powerOnButtonMaster);
-    int masterRow = model->rowCount() - 2;
-    int masterSlabId = model->data(model->index(masterRow, 0)).toInt();
+    powerLayout->addWidget(powerOnButton);
+    int row = model->rowCount() - 2;
+    int slabId = model->data(model->index(row, 0)).toInt();
 
-    QModelIndex masterPowerIndex = model->index(masterRow, POWER_COLUMN_INDEX);
-    powerLayoutMaster->addWidget(powerOffButtonMaster);
-    ui->slabsTableView->setIndexWidget(masterPowerIndex, powerWidgetMaster);
+    QModelIndex powerIndex = model->index(row, POWER_COLUMN_INDEX);
+    powerLayout->addWidget(powerOffButton);
+    ui->slabsTableView->setIndexWidget(powerIndex, powerWidget);
+//    ui->slabsTableView->setSpan(row, POWER_COLUMN_INDEX, row + 1, POWER_COLUMN_INDEX);
 
-    connect(powerOnButtonMaster, &QPushButton::clicked, onMasterSignalMapper,
+
+    connect(powerOnButton, &QPushButton::clicked, onSignalMapper,
             static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-    onMasterSignalMapper->setMapping(powerOnButtonMaster, masterSlabId);
+    onSignalMapper->setMapping(powerOnButton, slabId);
 
-    connect(powerOffButtonMaster, &QPushButton::clicked, offMasterSignalMapper,
+    connect(powerOffButton, &QPushButton::clicked, offSignalMapper,
             static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-    offMasterSignalMapper->setMapping(powerOffButtonMaster, masterSlabId);
-
-    auto *powerWidgetSlave = new QWidget();
-    auto *powerOnButtonSlave = new QPushButton("On", powerWidgetSlave);
-    auto *powerOffButtonSlave = new QPushButton("Off", powerWidgetSlave);
-    auto *powerLayoutSlave = new QHBoxLayout(powerWidgetSlave);
-    powerLayoutSlave->addWidget(powerOnButtonSlave);
-
-    int slaveRow = model->rowCount() - 1;
-    int slaveSlabId = model->data(model->index(slaveRow, 0)).toInt();
-
-    QModelIndex slavePowerIndex = model->index(slaveRow, POWER_COLUMN_INDEX);
-    powerLayoutSlave->addWidget(powerOffButtonSlave);
-    ui->slabsTableView->setIndexWidget(slavePowerIndex, powerWidgetSlave);
-
-    connect(powerOnButtonSlave, &QPushButton::clicked, onSlaveSignalMapper,
-            static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-    onSlaveSignalMapper->setMapping(powerOnButtonSlave, slaveSlabId);
-
-    connect(powerOffButtonSlave, &QPushButton::clicked, offSlaveSignalMapper,
-            static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-    offSlaveSignalMapper->setMapping(powerOffButtonSlave, slaveSlabId);
+    offSignalMapper->setMapping(powerOffButton, slabId);
 }
 
 void Widget::detectSlab() {
