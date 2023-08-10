@@ -89,23 +89,23 @@ signals:
 
     void closeLanConnection();
 
-    void slabRequired(quint16 slabId, AfeType afeType);
+    void slabRequired(Slab slab, AfeType afeType);
 
-    void slabUpdateRequired(quint16 slabId);
+    void slabUpdateRequired(Slab slab);
 
-    void initializationRequired(quint16 slabId);
+    void initializationRequired(Slab slab);
 
     void setMasterVoltageRequired(Slab slab);
 
     void setSlaveVoltageRequired(Slab slab);
 
-    void onMasterRequired(quint16 slabId);
+    void onRequired(Slab slab);
 
-    void offMasterRequired(quint16 slabId);
+    void offRequired(Slab slab);
 
-    void onSlaveRequired(quint16 slabId);
+    void onSlaveRequired(Slab slab);
 
-    void offSlaveRequired(quint16 slabId);
+    void offSlaveRequired(Slab slab);
 
 
 
@@ -135,13 +135,13 @@ private slots:
 
     void setSlaveVoltageClicked(int slabId);
 
-    void onMasterClicked(int slabId);
+    void onClicked(int slabId);
 
-    void onSlaveClicked(int slabId);
+//    void onSlaveClicked(int slabId);
 
-    void offMasterClicked(int slabId);
+    void offClicked(int slabId);
 
-    void offSlaveClicked(int slabId);
+//    void offSlaveClicked(int slabId);
 
     void actionsAfterLanConnection(const QString& ipAddress);
 
@@ -159,7 +159,7 @@ private slots:
 
     void setSlaveFailedLanHandler(quint16 id, const QString &message);
 
-    void refreshSlab(quint16 id);
+    void refreshSlab(Slab slab);
 
     void tableUpdate();
 

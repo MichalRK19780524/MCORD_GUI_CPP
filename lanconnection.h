@@ -38,12 +38,12 @@ public:
     QString downloadMeasuredVoltage(Slab& slab, AfeType afeType);
     QString downloadMeasuredCurrent(Slab& slab, AfeType afeType, quint16 avgNumber);
     QString downloadMeasuredTemperature(Slab& slab, AfeType afeType, quint16 avgNumber);
-    QString initSlab(quint16 slabId);
-    QString onSlab(quint16 slabId);
-    QString offSlab(quint16 slabId);
+    QString initSlab(Slab& slab);
+    QString onSlab(Slab slab);
+    QString offSlab(Slab slab);
     QString setSlabVoltage(Slab& slab);
     QTcpSocket* getSocket();
-    bool initAndOnSlab(quint16 slabId);
+    bool initAndOnSlab(Slab slab);
 
 signals:
     void connectionFailed(QString message);
@@ -54,20 +54,20 @@ signals:
     void onFailed(quint16 slabId, QString message);
     void initFailed(quint16 slabId, QString message);
     void offFailed(quint16 slabId, QString message);
-    void appendSlabToTableRequired(quint16 slabId);
-    void updateSlabToTableRequired(quint16 slabId);
+    void appendSlabToTableRequired(Slab slab);
+    void updateSlabToTableRequired(Slab slab);
     void slabDataRetrieved(Slab slab);
     void setMasterFailed(quint16 slabId, QString message);
     void setSlaveFailed(quint16 slabId, QString message);
-    void setMasterSucceeded(quint16 slabId);
-    void setSlaveSucceeded(quint16 slabId);
+    void setMasterSucceeded(Slab slab);
+    void setSlaveSucceeded(Slab slab);
 public slots:
     void connect(QString ipAddress, quint16 port);
     void closeConnection();
-    void initAndOnNewSlab(quint16 slabId);
-    void initAndOnExistingSlab(quint16 slabId);
-    void getSlab(quint16 slabId, AfeType afeType);
-    void updateSlab(quint16 slabId);
+    void initAndOnNewSlab(Slab slab);
+    void initAndOnExistingSlab(Slab slab);
+    void getSlab(Slab slab, AfeType afeType);
+    void updateSlab(Slab slab);
     void setMasterVoltage(Slab slab);
     void setSlaveVoltage(Slab slab);
 

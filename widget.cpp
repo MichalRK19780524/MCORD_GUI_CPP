@@ -79,8 +79,8 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this,&Widget::disconnected);
     connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this,&Widget::connectionError);
     connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this,&Widget::setMasterVoltageClicked);
-    connect(onSignalMapper,&QSignalMapper::mappedInt, this, &Widget::onMasterClicked);
-    connect(offSignalMapper, &QSignalMapper::mappedInt, this,&Widget::offMasterClicked);
+    connect(onSignalMapper,&QSignalMapper::mappedInt, this, &Widget::onClicked);
+    connect(offSignalMapper, &QSignalMapper::mappedInt, this,&Widget::offClicked);
     connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this,&Widget::setSlaveVoltageClicked);
     connect(this, &Widget::connectLan, lanConnection, &LanConnection::connect);
     connect(lanConnection, &LanConnection::connectionSucceeded, this, &Widget::actionsAfterLanConnection);
@@ -91,9 +91,9 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(lanConnection, &LanConnection::slabDataRetrieved, this, &Widget::updateSlabInModel);
     connect(model, &DetectorTableModel::slabAppended, this, &Widget::addWidgetsToTable);
     connect(this, &Widget::initializationRequired, lanConnection, &LanConnection::initAndOnNewSlab);
-    connect(this, &Widget::onMasterRequired, lanConnection, &LanConnection::initAndOnExistingSlab);
-    connect(this, &Widget::offMasterRequired, lanConnection, &LanConnection::offSlab);
-    connect(this, &Widget::onSlaveRequired, lanConnection, &LanConnection::initAndOnExistingSlab);
+    connect(this, &Widget::onRequired, lanConnection, &LanConnection::initAndOnExistingSlab);
+    connect(this, &Widget::offRequired, lanConnection, &LanConnection::offSlab);
+//    connect(this, &Widget::onSlaveRequired, lanConnection, &LanConnection::initAndOnExistingSlab);
     connect(this, &Widget::offSlaveRequired, lanConnection, &LanConnection::offSlab);
     connect(lanConnection, &LanConnection::initFailed, this, &Widget::initFailedLanHandler);
     connect(lanConnection, &LanConnection::onFailed, this, &Widget::onFailedLanHandler);
@@ -466,7 +466,8 @@ void Widget::detectSlab() {
     ui->pushButtonDetect->setDisabled(true);
     ui->pushButtonOn->setDisabled(true);
     ui->pushButtonDetectionSlabBack->setDisabled(true);
-    emit slabRequired(slabId, AfeType::Both);
+    Slab slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+    emit slabRequired(slab, AfeType::Both);
 }
 
 void Widget::detectAndOnSlab() {
@@ -475,7 +476,8 @@ void Widget::detectAndOnSlab() {
     ui->pushButtonDetect->setDisabled(true);
     ui->pushButtonOn->setDisabled(true);
     ui->pushButtonDetectionSlabBack->setDisabled(true);
-    emit initializationRequired(slabId);
+    Slab slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+    emit initializationRequired(slab);
 }
 
 void Widget::writingErrorLanHandler(const QJsonArray &command) {
@@ -515,37 +517,37 @@ void Widget::setSlaveVoltageClicked(int slabId) {
         emit setSlaveVoltageRequired(slab);
 }
 
-void Widget::onMasterClicked(int slabId) {
+void Widget::onClicked(int slabId) {
     state = State::LAN_SLAB_INITIALIZING;
     Slab slab = model->findSlab(slabId);
     slab.getMaster()->setStatusColor(StatusColor::Yellow);
     slabStates[slabId] = SlabState::On;
-    emit onMasterRequired(slabId);
+    emit onRequired(slab);
 }
 
-void Widget::onSlaveClicked(int slabId) {
-    state = State::LAN_SLAB_INITIALIZING;
-    Slab slab = model->findSlab(slabId);
-    slab.getSlave()->setStatusColor(StatusColor::Yellow);
-    slabStates[slabId] = SlabState::On;
-    emit onSlaveRequired(slabId);
-}
+//void Widget::onSlaveClicked(int slabId) {
+//    state = State::LAN_SLAB_INITIALIZING;
+//    Slab slab = model->findSlab(slabId);
+//    slab.getSlave()->setStatusColor(StatusColor::Yellow);
+//    slabStates[slabId] = SlabState::On;
+//    emit onSlaveRequired(slabId);
+//}
 
-void Widget::offMasterClicked(int slabId) {
+void Widget::offClicked(int slabId) {
     state = State::LAN_SLAB_OFF;
     Slab slab = model->findSlab(slabId);
     slab.getMaster()->setStatusColor(StatusColor::Transparent);
     slabStates[slabId] = SlabState::Off;
-    emit offMasterRequired(slabId);
+    emit offRequired(slab);
 }
 
-void Widget::offSlaveClicked(int slabId) {
-    state = State::LAN_SLAB_OFF;
-    Slab slab = model->findSlab(slabId);
-    slab.getSlave()->setStatusColor(StatusColor::Transparent);
-    slabStates[slabId] = SlabState::Off;
-    emit offSlaveRequired(slabId);
-}
+//void Widget::offSlaveClicked(int slabId) {
+//    state = State::LAN_SLAB_OFF;
+//    Slab slab = model->findSlab(slabId);
+//    slab.getSlave()->setStatusColor(StatusColor::Transparent);
+//    slabStates[slabId] = SlabState::Off;
+//    emit offSlaveRequired(slab);
+//}
 
 void Widget::initFailedLanHandler(quint16 id, const QString &message) {
     QMessageBox::critical(this, "Init slab error", QString("Slab: ") + id + "Message: " + message);
@@ -563,14 +565,15 @@ void Widget::onFailedLanHandler(quint16 id, const QString &message) {
     QMessageBox::critical(this, "On slab error", QString("Slab: ") + id + "Message: " + message);
 }
 
-void Widget::refreshSlab(quint16 id) {
-    emit slabRequired(id, AfeType::Both);
+void Widget::refreshSlab(Slab slab) {
+    emit slabRequired(slab, AfeType::Both);
 }
 
 void Widget::tableUpdate() {
-    QSet<quint16> slabIds = *model->getSetId();
+    QSet<quint16> slabIds = *(model->getSetId());
     for (quint16 slabId: slabIds) {
-        emit slabUpdateRequired(slabId);
+        Slab   slab = model->findSlab(slabId);
+        emit slabUpdateRequired(slab);
     }
 }
 

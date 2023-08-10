@@ -236,15 +236,13 @@ bool LanConnection::readSlab(Slab &slab, AfeType afeType) {
     return true;
 }
 
-void LanConnection::getSlab(quint16 slabId, AfeType afeType) {
-    Slab slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+void LanConnection::getSlab(Slab slab, AfeType afeType) {
     if (readSlab(slab, afeType)) {
         emit slabReadingCompleted(slab);
     }
 }
 
-void LanConnection::updateSlab(quint16 slabId) {
-    Slab slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+void LanConnection::updateSlab(Slab slab) {
     if (readSlab(slab, AfeType::Both)) {
         emit slabDataRetrieved(slab);
     }
@@ -297,8 +295,8 @@ void LanConnection::updateSlab(quint16 slabId) {
 //    }
 //}
 
-QString LanConnection::initSlab(quint16 slabId) {
-    QJsonArray command = {INIT_COMMAND, slabId};
+QString LanConnection::initSlab(Slab& slab) {
+    QJsonArray command = {INIT_COMMAND, slab.getId()};
 
     if (socket->isOpen()) {
         qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
@@ -378,8 +376,8 @@ QString LanConnection::initSlab(quint16 slabId) {
 //    }
 //}
 
-QString LanConnection::onSlab(quint16 slabId) {
-    QJsonArray command = {ON_COMMAND, slabId};
+QString LanConnection::onSlab(Slab slab) {
+    QJsonArray command = {ON_COMMAND, slab.getId()};
 
     if (socket->isOpen()) {
         qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
@@ -460,8 +458,8 @@ QString LanConnection::onSlab(quint16 slabId) {
 //    }
 //}
 
-QString LanConnection::offSlab(quint16 slabId) {
-    QJsonArray command = {OFF_COMMAND, slabId};
+QString LanConnection::offSlab(Slab slab) {
+    QJsonArray command = {OFF_COMMAND, slab.getId()};
     QString message;
 
     if (socket->isOpen()) {
@@ -479,26 +477,26 @@ QString LanConnection::offSlab(quint16 slabId) {
                     QString status = jsonDocument.array().at(0).toString();
                     if (status.isNull() || status.compare("OK") != 0) {
                         message = "Error while executing the command to turn off the SiPM voltage";
-                        emit offFailed(slabId, message);
+                        emit offFailed(slab.getId(), message);
                         return message;
                     } else {
-                        emit updateSlabToTableRequired(slabId);;
+                        emit updateSlabToTableRequired(slab);;
                         return "OK";
                     }
                 } else {
                     message = "Error reading the result of the SiPM voltage turn off command";
-                    emit offFailed(slabId, message);
+                    emit offFailed(slab.getId(), message);
                     return message;
                 }
             } else {
                 message = "Error processing the SiPM power off command";
-                emit offFailed(slabId, message);
+                emit offFailed(slab.getId(), message);
                 return message;
             }
         }
     } else {
         message = "Faild to open TCP socket";
-        emit offFailed(slabId, message);
+        emit offFailed(slab.getId(), message);
         return message;
     }
 }
@@ -858,31 +856,31 @@ QString LanConnection::isSlabCorrect(Slab *slab) {
 
 QTcpSocket *LanConnection::getSocket() { return socket; }
 
-bool LanConnection::initAndOnSlab(quint16 slabId) {
-    QString result = initSlab(slabId);
+bool LanConnection::initAndOnSlab(Slab slab) {
+    QString result = initSlab(slab);
     if (result == "OK") {
-        result = onSlab(slabId);
+        result = onSlab(slab);
         if (result != "OK") {
-            emit onFailed(slabId, result);
+            emit onFailed(slab.getId(), result);
             return false;
         }
     } else {
-        emit initFailed(slabId, result);
+        emit initFailed(slab.getId(), result);
         return false;
     }
     return true;
 }
 
-void LanConnection::initAndOnNewSlab(quint16 slabId) {
-    if(initAndOnSlab(slabId)) {
-        emit appendSlabToTableRequired(slabId);
+void LanConnection::initAndOnNewSlab(Slab slab) {
+    if(initAndOnSlab(slab)) {
+        emit appendSlabToTableRequired(slab);
     }
 }
 
-void LanConnection::initAndOnExistingSlab(quint16 slabId) {
+void LanConnection::initAndOnExistingSlab(Slab slab) {
 
-    if(initAndOnSlab(slabId)) {
-        emit updateSlabToTableRequired(slabId);
+    if(initAndOnSlab(slab)) {
+        emit updateSlabToTableRequired(slab);
     }
 }
 
@@ -893,7 +891,7 @@ void LanConnection::setMasterVoltage(Slab slab) {
         emit setMasterFailed(slab.getId(), result);
         return;
     } else {
-        emit setMasterSucceeded(slab.getId());
+        emit setMasterSucceeded(slab);
         return;
     }
 }
@@ -904,7 +902,7 @@ void LanConnection::setSlaveVoltage(Slab slab) {
         emit setSlaveFailed(slab.getId(), result);
         return;
     } else {
-        emit setSlaveSucceeded(slab.getId());
+        emit setSlaveSucceeded(slab);
         return;
     }
 }
