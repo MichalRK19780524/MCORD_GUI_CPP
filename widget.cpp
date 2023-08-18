@@ -329,31 +329,39 @@ void Widget::detectionSlabsBackClicked() {
 
 void Widget::setMasterStatusColor(Slab &slab)
 {
-    if (slab.getMaster()->getStatus() != "OK") {
-        slab.getMaster()->setStatusColor(StatusColor::Red);
-    } else if (slab.getMaster()->getMeasuredVoltage() > 0) {
+    std::shared_ptr<Sipm> masterSipm = slab.getMaster();
+    if (masterSipm->getStatus() != "OK" || masterSipm->getMeasuredVoltage() < Widget::MINIMAL_VOLTAGE) {
+        masterSipm->setStatusColor(StatusColor::Red);
+    } else if (masterSipm->getMeasuredVoltage() >= Widget::MINIMAL_VOLTAGE
+                && masterSipm->getMeasuredVoltage() < Widget::MINIMAL_OPERATIONAL_VOLTAGE){
+        masterSipm->setStatusColor(StatusColor::Yellow);
+        /*(slab.getMaster()->getMeasuredVoltage() > 0) {
         if (slabStates.value(slab.getId()) == SlabState::SetMaster || slabStates.value(slab.getId()) == SlabState::SetAll) {
-            slab.getMaster()->setStatusColor(StatusColor::Green);
+            masterSipm->setStatusColor(StatusColor::Green);
         } else {
-            slab.getMaster()->setStatusColor(StatusColor::Yellow);
-        }
+            masterSipm->setStatusColor(StatusColor::Yellow);
+        }*/
     } else {
-        slab.getMaster()->setStatusColor(StatusColor::Transparent);
+//        masterSipm->setStatusColor(StatusColor::Transparent);
+        masterSipm->setStatusColor(StatusColor::Green);
     }
 }
 
 void Widget::setSlaveStatusColor(Slab & slab)
 {
-    if (slab.getSlave()->getStatus() != "OK") {
-        slab.getSlave()->setStatusColor(StatusColor::Red);
-    } else if (slab.getSlave()->getMeasuredVoltage() > 0) {
-        if (slabStates.value(slab.getId()) == SlabState::SetSlave || slabStates.value(slab.getId()) == SlabState::SetAll) {
-            slab.getSlave()->setStatusColor(StatusColor::Green);
-        } else {
-            slab.getSlave()->setStatusColor(StatusColor::Yellow);
-        }
+    std::shared_ptr<Sipm> slaveSipm = slab.getSlave();
+    if (slaveSipm->getStatus() != "OK" || slaveSipm->getMeasuredVoltage() < Widget::MINIMAL_VOLTAGE) {
+        slaveSipm->setStatusColor(StatusColor::Red);
+    } else if (slaveSipm->getMeasuredVoltage() >= Widget::MINIMAL_VOLTAGE && slaveSipm->getMeasuredVoltage() < Widget::MINIMAL_OPERATIONAL_VOLTAGE) {
+//        if (slabStates.value(slab.getId()) == SlabState::SetSlave || slabStates.value(slab.getId()) == SlabState::SetAll) {
+//            slaveSipm->setStatusColor(StatusColor::Green);
+//        } else {
+//            slaveSipm->setStatusColor(StatusColor::Yellow);
+//        }
+        slaveSipm->setStatusColor(StatusColor::Yellow);
     } else {
-        slab.getSlave()->setStatusColor(StatusColor::Transparent);
+//        slaveSipm->setStatusColor(StatusColor::Transparent);
+        slaveSipm->setStatusColor(StatusColor::Green);
     }
 }
 
