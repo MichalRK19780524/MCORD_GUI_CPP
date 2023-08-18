@@ -17,7 +17,7 @@ public:
     Sipm();
     Sipm(quint16 rawSetVoltage, float setVoltage, float measuredVoltage, quint16 rawTemperature, float temperature, quint16 rawCurrent, float current);
 
-    static constexpr float INITIAL_VOLTAGE = 53.0;
+    static constexpr float INITIAL_VOLTAGE = 50.0f;
 
     quint16 getRawSetVoltage() const;
     void setRawSetVoltage(quint16 newRawSetVoltage);

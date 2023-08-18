@@ -34,7 +34,7 @@ public:
      * \return an empty string if the connection was successful, otherwise an error message informing about the reason for which the connection failed
      */
 
-
+    QString downloadSetVoltage(Slab& slab, AfeType afeType);
     QString downloadMeasuredVoltage(Slab& slab, AfeType afeType);
     QString downloadMeasuredCurrent(Slab& slab, AfeType afeType, quint16 avgNumber);
     QString downloadMeasuredTemperature(Slab& slab, AfeType afeType, quint16 avgNumber);
@@ -77,6 +77,8 @@ private:
     static const QString HUB_RESPONSE;
     static const QString DOWNLOAD_MASTER_VOLTAGE_COMMAND;
     static const QString DOWNLOAD_SLAVE_VOLTAGE_COMMAND;
+    static const QString DOWNLOAD_MASTER_SET_VOLTAGE_COMMAND;
+    static const QString DOWNLOAD_SLAVE_SET_VOLTAGE_COMMAND;
     static const QString DOWNLOAD_MASTER_CURRENT_COMMAND;
     static const QString DOWNLOAD_SLAVE_CURRENT_COMMAND;
     static const QString DOWNLOAD_MASTER_TEMPERATURE_COMMAND;
@@ -93,6 +95,7 @@ private:
 
     static QString isSlabCorrect(Slab* slab);
     std::shared_ptr<Sipm> getSipmVoltagFromHub(std::shared_ptr<Sipm> simp, QJsonArray command);
+    std::shared_ptr<Sipm> getSetSipmVoltagFromHub(std::shared_ptr<Sipm> simp, QJsonArray command);
     std::shared_ptr<Sipm> getSipmAmperageFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command, quint16 avgNumber);
     std::shared_ptr<Sipm> getSipmTemperatureFromHub(std::shared_ptr<Sipm> sipm, const QJsonArray& command, quint16 avgNumber);
     bool readSlab(Slab &slab, AfeType afeType);

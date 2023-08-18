@@ -384,15 +384,27 @@ void Widget::updateSlabInModel(Slab slab) {
 void Widget::addWidgetsToTable(quint16 id) {
     addSetWidgets();
     addPowerWidgets();
+    int rowCount = ui->slabsTableView->model()->rowCount();
+    QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
+    QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+    QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
+    QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
     if (state == State::LAN_SLAB_DETECTING) {
+        float masterSetVoltage = model->findSlab(id).getMaster()->getSetVoltage();
+        float slaveSetVoltage = model->findSlab(id).getSlave()->getSetVoltage();
+        if(masterSetVoltage != 0.0f){
+            masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(masterSetVoltage));
+        } else {
+            masterSetWidget->findChildren<QLineEdit *>().at(0)->setText("");
+        }
+        if(slaveSetVoltage != 0.0f){
+            slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(slaveSetVoltage));
+        } else {
+            slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText("");
+        }
         slabStates[id] = SlabState::Detected;
     } else if (state == State::LAN_SLAB_INITIALIZING) {
-        int rowCount = ui->slabsTableView->model()->rowCount();
-        QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
-        QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
         masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
-        QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
-        QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
         slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
         slabStates[id] = SlabState::On;
     }
