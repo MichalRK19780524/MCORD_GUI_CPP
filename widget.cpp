@@ -33,9 +33,12 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     setMasterSignalMapper = new QSignalMapper(this);
     onSignalMapper = new QSignalMapper(this);
     offSignalMapper = new QSignalMapper(this);
-
     setSlaveSignalMapper = new QSignalMapper(this);
 
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window, Qt::darkRed);
+    setAutoFillBackground(true);
+    setPalette(pal);
     ui->slabsTableView->setModel(model);
     ui->slabsTableView->setItemDelegate(new StatusIconDelegate());
     ui->slabsTableView->setShowGrid(false);
@@ -556,39 +559,28 @@ void Widget::onClicked(int slabId) {
     Slab slab = model->findSlab(slabId);
     slab.getMaster()->setStatusColor(StatusColor::Yellow);
     slabStates[slabId] = SlabState::On;
-    int rowCount = ui->slabsTableView->model()->rowCount();
-    QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
+    QModelIndex masterSetIndex = model->findIndexOfMasterSlabSetButton(slabId);
     QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
-    QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
+    QModelIndex slaveSetIndex = model->findIndexOfSlaveSlabSetButton(slabId);
     QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
     masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
     slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
     emit onRequired(slab);
 }
 
-//void Widget::onSlaveClicked(int slabId) {
-//    state = State::LAN_SLAB_INITIALIZING;
-//    Slab slab = model->findSlab(slabId);
-//    slab.getSlave()->setStatusColor(StatusColor::Yellow);
-//    slabStates[slabId] = SlabState::On;
-//    emit onSlaveRequired(slabId);
-//}
-
 void Widget::offClicked(int slabId) {
     state = State::LAN_SLAB_OFF;
     Slab slab = model->findSlab(slabId);
     slab.getMaster()->setStatusColor(StatusColor::Transparent);
     slabStates[slabId] = SlabState::Off;
+    QModelIndex masterSetIndex = model->findIndexOfMasterSlabSetButton(slabId);
+    QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+    QModelIndex slaveSetIndex = model->findIndexOfSlaveSlabSetButton(slabId);
+    QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
+    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText("");
+    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText("");
     emit offRequired(slab);
 }
-
-//void Widget::offSlaveClicked(int slabId) {
-//    state = State::LAN_SLAB_OFF;
-//    Slab slab = model->findSlab(slabId);
-//    slab.getSlave()->setStatusColor(StatusColor::Transparent);
-//    slabStates[slabId] = SlabState::Off;
-//    emit offSlaveRequired(slab);
-//}
 
 void Widget::initFailedLanHandler(quint16 id, const QString &message) {
     QMessageBox::critical(this, "Init slab error", QString("Slab: ") + id + "Message: " + message);
