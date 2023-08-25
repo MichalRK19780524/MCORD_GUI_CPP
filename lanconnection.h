@@ -59,8 +59,12 @@ signals:
     void slabDataRetrieved(Slab slab);
     void setMasterFailed(quint16 slabId, QString message);
     void setSlaveFailed(quint16 slabId, QString message);
+    void onHubFailed(QString message);
+    void offHubFailed(QString message);
     void setMasterSucceeded(Slab slab);
     void setSlaveSucceeded(Slab slab);
+    void onHubSucceeded();
+    void offHubSucceeded();
 public slots:
     void connect(QString ipAddress, quint16 port);
     void closeConnection();
@@ -70,7 +74,8 @@ public slots:
     void updateSlab(Slab slab);
     void setMasterVoltage(Slab slab);
     void setSlaveVoltage(Slab slab);
-
+    void onHub();
+    void offHub();
 
 
 private:
@@ -87,6 +92,8 @@ private:
     static const QString ON_COMMAND;
     static const QString OFF_COMMAND;
     static const QString SET_VOLTAGE_COMMAND;
+    static const QString ON_HUB_COMMAND;
+    static const QString OFF_HUB_COMMAND;
     static constexpr quint16 CONNECTING_TIME = 2000;
     static constexpr quint16 READ_READY_LAN_TIME = 10000;
     static constexpr quint16 BYTES_WRITEN_LAN_TIME = 2000;

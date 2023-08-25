@@ -26,17 +26,17 @@ const QString LanConnection::DOWNLOAD_MASTER_TEMPERATURE_COMMAND{
 const QString LanConnection::DOWNLOAD_SLAVE_TEMPERATURE_COMMAND{
         "get_temperature_degree_slave"};
 const QString LanConnection::INIT_COMMAND{"init"};
-const QString LanConnection::ON_COMMAND{"hvon"};
-const QString LanConnection::OFF_COMMAND{"hvoff"};
+//const QString LanConnection::ON_COMMAND{"hvon"};
+//const QString LanConnection::OFF_COMMAND{"hvoff"};
+const QString LanConnection::ON_COMMAND{"slabOn"};
+const QString LanConnection::OFF_COMMAND{"slabOff"};
 const QString LanConnection::SET_VOLTAGE_COMMAND{"setdac"};
+const QString LanConnection::ON_HUB_COMMAND{"hubOn"};
+const QString LanConnection::OFF_HUB_COMMAND{"hubOff"};
 
 LanConnection::LanConnection(QTcpSocket *socket, QObject *parent)
         : socket(socket) {}
 
-// LanConnection::LanConnection()
-//{
-//     socket = new QTcpSocket();
-// }
 
 LanConnection::~LanConnection() {
     if (socket->waitForBytesWritten(1000)) {
@@ -288,53 +288,7 @@ void LanConnection::updateSlab(Slab slab) {
         emit slabDataRetrieved(slab);
     }
 }
-// QString LanConnection::initSlab(quint16 slabId)
-//{
-//     QJsonArray command = {INIT_COMMAND, slabId};
 
-//    if(socket->isOpen())
-//    {
-//        qint64 result =
-//        socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//        if(result <= 0)
-//        {
-//            return "Failed to send initialization command";
-//        }
-//        else
-//        {
-//            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//            {
-//                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//                {
-
-//                    QJsonDocument jsonDocument =
-//                    QJsonDocument::fromJson(socket->readAll()); QString status
-//                    = jsonDocument.array().at(0).toString();
-//                    if(status.isNull() || status.compare("OK") != 0)
-//                    {
-//                        return "Error while executing initialization command";
-//                    }
-//                    else
-//                    {
-//                        return "OK";
-//                    }
-//                }
-//                else
-//                {
-//                    return "Error reading the result of the initialization
-//                    command";
-//                }
-//            }
-//            else
-//            {
-//                return "Error processing initialization command";
-//            }
-//        }
-//    }
-//    {
-//        return "Faild to open TCP socket";
-//    }
-//}
 
 QString LanConnection::initSlab(Slab& slab) {
     QJsonArray command = {INIT_COMMAND, slab.getId()};
@@ -364,58 +318,10 @@ QString LanConnection::initSlab(Slab& slab) {
                 return "Error processing initialization command";
             }
         }
+    } else {
+        return "Failed to open TCP socket";
     }
-    { return "Failed to open TCP socket"; }
 }
-
-// QString LanConnection::onSlab(quint16 slabId)
-//{
-//     QJsonArray command = {ON_COMMAND, slabId};
-
-//    if(socket->isOpen())
-//    {
-//        qint64 result =
-//        socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//        if(result <= 0)
-//        {
-//            return "Failed to send the command to turn on the SiPM voltage";
-//        }
-//        else
-//        {
-//            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//            {
-//                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//                {
-
-//                    QJsonDocument jsonDocument =
-//                    QJsonDocument::fromJson(socket->readAll()); QString status
-//                    = jsonDocument.array().at(0).toString();
-//                    if(status.isNull() || status.compare("OK") != 0)
-//                    {
-//                        return "Error while executing the command to turn on
-//                        the SiPM voltage";
-//                    }
-//                    else
-//                    {
-//                        return "OK";
-//                    }
-//                }
-//                else
-//                {
-//                    return "Error reading the result of the SiPM voltage turn
-//                    on command";
-//                }
-//            }
-//            else
-//            {
-//                return "Error processing the SiPM power on command";
-//            }
-//        }
-//    }
-//    {
-//        return "Faild to open TCP socket";
-//    }
-//}
 
 QString LanConnection::onSlab(Slab slab) {
     QJsonArray command = {ON_COMMAND, slab.getId()};
@@ -446,58 +352,11 @@ QString LanConnection::onSlab(Slab slab) {
                 return "Error processing the SiPM power on command";
             }
         }
+    } else {
+        return "Faild to open TCP socket";
     }
-    { return "Faild to open TCP socket"; }
 }
 
-// QString LanConnection::offSlab(quint16 slabId)
-//{
-//     QJsonArray command = {OFF_COMMAND, slabId};
-
-//    if(socket->isOpen())
-//    {
-//        qint64 result =
-//        socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//        if(result <= 0)
-//        {
-//            return "Failed to send the command to turn off the SiPM voltage";
-//        }
-//        else
-//        {
-//            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//            {
-//                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//                {
-
-//                    QJsonDocument jsonDocument =
-//                    QJsonDocument::fromJson(socket->readAll()); QString status
-//                    = jsonDocument.array().at(0).toString();
-//                    if(status.isNull() || status.compare("OK") != 0)
-//                    {
-//                        return "Error while executing the command to turn off
-//                        the SiPM voltage";
-//                    }
-//                    else
-//                    {
-//                        return "OK";
-//                    }
-//                }
-//                else
-//                {
-//                    return "Error reading the result of the SiPM voltage turn
-//                    off command";
-//                }
-//            }
-//            else
-//            {
-//                return "Error processing the SiPM power off command";
-//            }
-//        }
-//    }
-//    {
-//        return "Faild to open TCP socket";
-//    }
-//}
 
 QString LanConnection::offSlab(Slab slab) {
     QJsonArray command = {OFF_COMMAND, slab.getId()};
@@ -573,103 +432,6 @@ QString LanConnection::downloadMeasuredVoltage(Slab &slab, AfeType afeType) {
         return "Faild to open TCP socket";
     }
 }
-
-// Sipm* LanConnection::getSipmVoltagFromHub(Sipm* simp, QJsonArray command)
-//{
-//             qint64 result =
-//             socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//             if(result <= 0)
-//             {
-//                 simp->setStatus("Failed to send voltage reading command");
-//                 return simp;
-//             }
-
-//            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//            {
-//                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//                {
-
-//                    QJsonDocument jsonDocument =
-//                    QJsonDocument::fromJson(socket->readAll()); QString status
-//                    = jsonDocument.array().at(0).toString();
-//                    if(status.isNull() || status.compare("OK") != 0)
-//                    {
-//                        if(status.isEmpty())
-//                        {
-//                            result =
-//                            socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//                            if(result <= 0)
-//                            {
-//                                simp->setStatus("Failed to send voltage
-//                                reading command");
-////                                emit
-//                                return simp;
-//                            }
-
-//                            if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//                            {
-//                                if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//                                {
-//                                    QJsonDocument jsonDocument =
-//                                    QJsonDocument::fromJson(socket->readAll());
-//                                    QString status =
-//                                    jsonDocument.array().at(0).toString();
-//                                    if(status.isNull() || status.compare("OK")
-//                                    != 0)
-//                                    {
-//                                        simp->setStatus("Error reading voltage
-//                                        from SiPM"); return simp;
-//                                    }
-//                                    else
-//                                    {
-//                                        float voltage =
-//                                        jsonDocument.array().at(1).toDouble();
-//                                        simp->setMeasuredVoltage(voltage);
-//                                        simp->setStatus("OK");
-//                                        return simp;
-//                                    }
-//                                }
-//                                else
-//                                {
-//                                    simp->setStatus("Error reading voltage
-//                                    from SiPM"); return simp;
-//                                }
-//                            }
-//                            else
-//                            {
-//                                simp->setStatus("Voltage read from SiPM
-//                                command failed"); return simp;
-//                            }
-
-//                        }
-//                        else
-//                        {
-//                            simp->setStatus("Error reading voltage from
-//                            SiPM"); return simp;
-//                        }
-
-//                    }
-//                    else
-//                    {
-//                        float voltage = jsonDocument.array().at(1).toDouble();
-//                        simp->setMeasuredVoltage(voltage);
-//                        simp->setStatus("OK");
-//                        return simp;
-//                    }
-
-//                }
-//                else
-//                {
-//                    simp->setStatus("Voltage reading from SiPM failed");
-//                    return simp;
-//                }
-//            }
-//            else
-//            {
-//                simp->setStatus("Voltage read from SiPM command failed");
-//                return simp;
-//            }
-//}
 
 std::shared_ptr<Sipm> LanConnection::getSipmVoltagFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command) {
     qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
@@ -804,61 +566,6 @@ std::shared_ptr<Sipm> LanConnection::getSetSipmVoltagFromHub(std::shared_ptr<Sip
     }
 }
 
-// Sipm *LanConnection::getSipmAmperageFromHub(Sipm *simp, QJsonArray command,
-// quint16 avgNumber)
-//{
-//     QList<double> amperageList;
-//     amperageList.reserve(avgNumber);
-//     for(int i = 0; i < avgNumber; ++i)
-//     {
-//         qint64 result =
-//         socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-//         if(result <= 0)
-//         {
-//             simp->setStatus("Failed to send amperage reading command");
-//             return simp;
-//         }
-
-//        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
-//        {
-//            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
-//            {
-//                QJsonDocument jsonDocument =
-//                QJsonDocument::fromJson(socket->readAll()); QString status =
-//                jsonDocument.array().at(0).toString(); if(status.isNull() ||
-//                status.compare("OK") != 0)
-//                {
-//                    simp->setStatus("Error reading amperage from SiPM");
-//                    return simp;
-//                }
-//                else
-//                {
-//                    double amperage = jsonDocument.array().at(1).toDouble();
-//                    amperageList.append(amperage);
-//                }
-//            }
-//            else
-//            {
-//                simp->setStatus("Error reading amperage from SiPM");
-//                return simp;
-//            }
-//        }
-//        else
-//        {
-//            simp->setStatus("Amperage read from SiPM command failed");
-//            return simp;
-//        }
-//    }
-
-//    const double* amperageArray = amperageList.constData();
-//    double meanAmperage = gsl_stats_mean(amperageArray, 1,
-//    amperageList.size()); double meanNanoAmperage = meanAmperage * 1E9;
-//    simp->setCurrent(static_cast<float>(meanNanoAmperage));
-//    double standardDeviationAmperage = gsl_stats_sd_m(amperageArray, 1,
-//    amperageList.size(), meanAmperage);
-//    simp->setCurrentStandardDeviation(standardDeviationAmperage);
-//    return simp;
-//}
 
 std::shared_ptr<Sipm> LanConnection::getSipmAmperageFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command,
                                                             quint16 avgNumber) {
@@ -1011,6 +718,112 @@ void LanConnection::setSlaveVoltage(Slab slab) {
         return;
     } else {
         emit setSlaveSucceeded(slab);
+        return;
+    }
+}
+
+void LanConnection::onHub()
+{
+    QString result{""};
+    QJsonArray command {ON_HUB_COMMAND};
+    if(socket->isOpen())
+    {
+        qint64 writtingResult =
+            socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
+        if(writtingResult <= 0)
+        {
+            result = "Failed to send voltage setting command";
+        }
+        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+        {
+            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+            {
+                QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                QString status = jsonDocument.array().at(0).toString();
+                if(status.isNull() || status.compare("OK") != 0)
+                {
+                    result = "Error turning on voltage to Hub";
+                }
+                else
+                {
+                    result = status;
+                }
+            }
+            else
+            {
+                result = "Error processingturning on voltage to Hub";
+
+            }
+        }
+        else
+        {
+            result = "Error processing turning on voltage to Hub";
+        }
+    }
+    else
+    {
+        result = "Faild to open TCP socket";
+    }
+
+    if (result != "OK") {
+        emit onHubFailed(result);
+        return;
+    } else {
+        emit onHubSucceeded();
+        return;
+    }
+}
+
+void LanConnection::offHub()
+{
+    QString result{""};
+    QJsonArray command {OFF_HUB_COMMAND};
+    if(socket->isOpen())
+    {
+        qint64 writtingResult =
+            socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+        qDebug() << command;
+        if(writtingResult <= 0)
+        {
+            result = "Failed to send voltage setting command";
+        }
+        if(socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME))
+        {
+            if(socket->waitForReadyRead(READ_READY_LAN_TIME))
+            {
+                QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+                QString status = jsonDocument.array().at(0).toString();
+                if(status.isNull() || status.compare("OK") != 0)
+                {
+                    result = "Error turning off voltage to Hub";
+                }
+                else
+                {
+                    result = status;
+                }
+            }
+            else
+            {
+                result = "Error processing turning off voltage to Hub";
+
+            }
+        }
+        else
+        {
+            result = "Error processing turning off voltage to Hub";
+        }
+    }
+    else
+    {
+        result = "Faild to open TCP socket";
+    }
+
+    if (result != "OK") {
+        emit offHubFailed(result);
+        return;
+    } else {
+        emit offHubSucceeded();
         return;
     }
 }

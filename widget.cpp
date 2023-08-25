@@ -28,6 +28,7 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     ui->groupBoxDetectionSlabs->hide();
     ui->connectionLabel->hide();
     ui->pushButtonDisconnect->hide();
+    ui->hubWidget->hide();
     model = new DetectorTableModel(Widget::HEADERS, this);
     setMasterSignalMapper = new QSignalMapper(this);
     onSignalMapper = new QSignalMapper(this);
@@ -68,20 +69,22 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(updateTableTimer, &QTimer::timeout, this, &Widget::tableUpdate);
     updateTableTimer->start(UPDATE_TABLE_TIME);
 
-    connect(ui->pushButtonNext, &QPushButton::clicked, this,&Widget::nextClicked);
-    connect(ui->pushButtonBack, &QPushButton::clicked, this,&Widget::backClicked);
-    connect(ui->pushButtonDisconnect, &QPushButton::clicked, this,&Widget::disconnectClicked);
-    connect(ui->pushButtonDetectionSlabsNext, &QPushButton::clicked, this,&Widget::slabNumberSelection);
-    connect(ui->pushButtonDetectionSlabBack, &QPushButton::clicked, this,&Widget::detectionSlabsBackClicked);
-    connect(ui->pushButtonDetect, &QPushButton::clicked, this,&Widget::detectSlab);
-    connect(ui->pushButtonOn, &QPushButton::clicked, this,&Widget::detectAndOnSlab);
-    connect(ui->pushButtonBackSlabsChoice, &QPushButton::clicked, this,&Widget::disconnectClicked /*&Widget::backSlabsChoiceClicked*/);
-    connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this,&Widget::disconnected);
-    connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this,&Widget::connectionError);
-    connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this,&Widget::setMasterVoltageClicked);
+    connect(ui->pushButtonNext, &QPushButton::clicked, this, &Widget::nextClicked);
+    connect(ui->pushButtonBack, &QPushButton::clicked, this, &Widget::backClicked);
+    connect(ui->pushButtonDisconnect, &QPushButton::clicked, this, &Widget::disconnectClicked);
+    connect(ui->pushButtonDetectionSlabsNext, &QPushButton::clicked, this, &Widget::slabNumberSelection);
+    connect(ui->pushButtonDetectionSlabBack, &QPushButton::clicked, this, &Widget::detectionSlabsBackClicked);
+    connect(ui->pushButtonDetect, &QPushButton::clicked, this, &Widget::detectSlab);
+    connect(ui->pushButtonOn, &QPushButton::clicked, this, &Widget::detectAndOnSlab);
+    connect(ui->pushButtonBackSlabsChoice, &QPushButton::clicked, this, &Widget::disconnectClicked /*&Widget::backSlabsChoiceClicked*/);
+    connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
+    connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this, &Widget::connectionError);
+    connect(ui->pushButtonHubOn, &QPushButton::clicked, lanConnection, &LanConnection::onHub);
+    connect(ui->pushButtonHubOff, &QPushButton::clicked, lanConnection, &LanConnection::offHub);
+    connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setMasterVoltageClicked);
     connect(onSignalMapper,&QSignalMapper::mappedInt, this, &Widget::onClicked);
-    connect(offSignalMapper, &QSignalMapper::mappedInt, this,&Widget::offClicked);
-    connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this,&Widget::setSlaveVoltageClicked);
+    connect(offSignalMapper, &QSignalMapper::mappedInt, this, &Widget::offClicked);
+    connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setSlaveVoltageClicked);
     connect(this, &Widget::connectLan, lanConnection, &LanConnection::connect);
     connect(lanConnection, &LanConnection::connectionSucceeded, this, &Widget::actionsAfterLanConnection);
     connect(this, &Widget::closeLanConnection, lanConnection, &LanConnection::closeConnection);
@@ -152,6 +155,7 @@ void Widget::actionsAfterLanConnection(const QString& ipAddress) {
     settings->setValue("LAN address", ipAddress);
     settings->endGroup();
     ui->pushButtonDisconnect->hide();
+    ui->hubWidget->show();
     outTextData << "MCORD HUB ip address: " << ipAddress << '\n';
     outTextData << "Date" << '\t' << "Id" << '\t' << "Master Set Voltage" << '\t' << "Master Measured Voltage" << '\t'
                 << "Master Current" << '\t' << "Master Temperature" << '\t' << "Slave Set Voltage" << '\t'
@@ -500,6 +504,16 @@ void Widget::detectAndOnSlab() {
     emit initializationRequired(slab);
 }
 
+//void Widget::onHubClicked()
+//{
+
+//}
+
+//void Widget::offHubClicked()
+//{
+
+//}
+
 void Widget::writingErrorLanHandler(const QJsonArray &command) {
     if (command[0].toString() == LanConnection::CLOSE[0].toString()) {
         QMessageBox::critical(this, "LAN error",
@@ -542,6 +556,13 @@ void Widget::onClicked(int slabId) {
     Slab slab = model->findSlab(slabId);
     slab.getMaster()->setStatusColor(StatusColor::Yellow);
     slabStates[slabId] = SlabState::On;
+    int rowCount = ui->slabsTableView->model()->rowCount();
+    QModelIndex masterSetIndex = model->index(rowCount - 2, SET_COLUMN_INDEX);
+    QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+    QModelIndex slaveSetIndex = model->index(rowCount - 1, SET_COLUMN_INDEX);
+    QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
+    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
     emit onRequired(slab);
 }
 

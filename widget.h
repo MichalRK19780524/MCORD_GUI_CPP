@@ -131,6 +131,10 @@ private slots:
 
     void detectAndOnSlab();
 
+//    void onHubClicked();
+
+//    void offHubClicked();
+
     void writingErrorLanHandler(const QJsonArray& command);
 
     void setMasterVoltageClicked(int slabId);
