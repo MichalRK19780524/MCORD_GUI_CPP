@@ -46,6 +46,7 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     ui->slabsTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->slabsTableView->setMinimumSize(QSize(0,0));
     ui->slabsTableView->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+//    ui->slabsTableView->setColumnWidth(0, 5);
     ui->groupBoxDetectionSlabs->setMinimumSize(QSize(0,0));
     ui->groupBoxDetectionSlabs->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 

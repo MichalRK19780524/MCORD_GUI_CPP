@@ -114,6 +114,15 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const {
                 return QString::number(sipm->getTemperature(), 'f', 2);
         }
     }
+
+    if(role == Qt::TextAlignmentRole){
+        if(index.column() == 0 || index.column() == 3){
+            return Qt::AlignCenter;
+        } else if(index.column() == 5 || index.column() == 6 || index.column() == 7){
+            return Qt::AlignRight;
+        }
+    }
+
     return QVariant();
 }
 
