@@ -3,6 +3,7 @@
 #include <QTcpSocket>
 #include <QThread>
 #include <gsl/gsl_statistics.h>
+#include <QMessageBox>
 
 #include "afetype.h"
 #include "lanconnection.h"

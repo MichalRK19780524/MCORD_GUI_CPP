@@ -83,7 +83,8 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
     connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this, &Widget::connectionError);
     connect(ui->pushButtonHubOn, &QPushButton::clicked, lanConnection, &LanConnection::onHub);
-    connect(ui->pushButtonHubOff, &QPushButton::clicked, lanConnection, &LanConnection::offHub);
+    connect(ui->pushButtonHubOff, &QPushButton::clicked, this, &Widget::offHubClicked);
+    connect(this, &Widget::hubShutdownConfirmed, lanConnection, &LanConnection::offHub);
     connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this, &Widget::setMasterVoltageClicked);
     connect(onSignalMapper,&QSignalMapper::mappedInt, this, &Widget::onClicked);
     connect(offSignalMapper, &QSignalMapper::mappedInt, this, &Widget::offClicked);
@@ -512,10 +513,15 @@ void Widget::detectAndOnSlab() {
 
 //}
 
-//void Widget::offHubClicked()
-//{
-
-//}
+void Widget::offHubClicked()
+{
+    if(QMessageBox::Yes == QMessageBox::warning(this,
+                                                 "Warning", "Are you sure you want to power down the HUB?\n"
+                                                 "If you do this, you will turn off all slabs connected to it.",
+                                                 QMessageBox::Yes | QMessageBox::No)){
+        emit hubShutdownConfirmed();
+    }
+}
 
 void Widget::writingErrorLanHandler(const QJsonArray &command) {
     if (command[0].toString() == LanConnection::CLOSE[0].toString()) {

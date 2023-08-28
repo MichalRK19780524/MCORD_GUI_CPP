@@ -109,6 +109,8 @@ signals:
 
     void offSlaveRequired(Slab slab);
 
+    void hubShutdownConfirmed();
+
 
 
 private slots:
@@ -133,7 +135,7 @@ private slots:
 
 //    void onHubClicked();
 
-//    void offHubClicked();
+    void offHubClicked();
 
     void writingErrorLanHandler(const QJsonArray& command);
 
