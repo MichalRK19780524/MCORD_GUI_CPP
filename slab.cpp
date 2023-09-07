@@ -10,7 +10,7 @@ const std::unique_ptr<QMutex> Slab::mutex(new QMutex);
 //{
 //}
 
-Slab::Slab(int id, std::shared_ptr<Sipm> master, std::shared_ptr<Sipm> slave):
+Slab::Slab(int id, const std::shared_ptr<Sipm>& master, const std::shared_ptr<Sipm>& slave):
   id(id),
   master(std::move(master)),
   slave(std::move(slave))
@@ -88,3 +88,8 @@ Slab &Slab::operator=(const Slab &slab) {
 //Slab::~Slab() {
 //  QMutexLocker locker(mutex.get());
 //}
+
+Slab::Slab(qint16 id, std::shared_ptr<Sipm> master, std::shared_ptr<Sipm> slave) : id(id),
+    master(master),
+    slave(slave)
+{}

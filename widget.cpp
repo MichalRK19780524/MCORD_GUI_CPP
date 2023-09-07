@@ -16,11 +16,10 @@
 
 const QString Widget::LAN_CONNECTION_LABEL_TEXT = "Connected to IP: ";
 const QString Widget::USB_CONNECTION_LABEL_TEXT = "Connected to serial port: ";
-const QStringList Widget::HEADERS{
-        "Slab No.", "Status", "Power", "Type", "Set SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
+
 
 Widget::Widget(LanConnection *lanConnection, QWidget *parent)
-    : QWidget(parent), lanConnection(lanConnection), ui(new Ui::Widget) {
+    : BaseWidget(lanConnection, parent), ui(new Ui::Widget) {
     ui->setupUi(this);
     ui->pushButtonBack->hide();
     ui->groupBoxLanConnection->hide();
@@ -313,12 +312,17 @@ void Widget::slabNumberSelection() {
     ui->radioButtonOneSlab->setEnabled(false);
     ui->radioButtonManySlabs->setEnabled(false);
     ui->pushButtonDetectionSlabsNext->hide();
-    ui->pushButtonBackSlabsChoice->hide();
     if (ui->radioButtonOneSlab->isChecked()) {
+        ui->pushButtonBackSlabsChoice->hide();
         ui->widgetAddOneSlab->show();
         //        ui->labelAddSlab->show();
         //        ui->lineEditAddSlab->show();
         //        ui->pushButtonDetect->show();
+    } else if(ui->radioButtonManySlabs->isChecked()){
+        manySlabsAtOnceDialog = new ManySlabsAtOnce(lanConnection, this);
+        manySlabsAtOnceDialog->show();
+    } else {
+        qDebug() << "Internal error in slabNumberSelection";
     }
     ui->pushButtonDetectionSlabBack->show();
 }
@@ -344,14 +348,7 @@ void Widget::setMasterStatusColor(Slab &slab)
     } else if (masterSipm->getMeasuredVoltage() >= Widget::MINIMAL_VOLTAGE
                 && masterSipm->getMeasuredVoltage() < Widget::MINIMAL_OPERATIONAL_VOLTAGE){
         masterSipm->setStatusColor(StatusColor::Yellow);
-        /*(slab.getMaster()->getMeasuredVoltage() > 0) {
-        if (slabStates.value(slab.getId()) == SlabState::SetMaster || slabStates.value(slab.getId()) == SlabState::SetAll) {
-            masterSipm->setStatusColor(StatusColor::Green);
-        } else {
-            masterSipm->setStatusColor(StatusColor::Yellow);
-        }*/
     } else {
-//        masterSipm->setStatusColor(StatusColor::Transparent);
         masterSipm->setStatusColor(StatusColor::Green);
     }
 }
@@ -362,14 +359,8 @@ void Widget::setSlaveStatusColor(Slab & slab)
     if (slaveSipm->getStatus() != "OK" || slaveSipm->getMeasuredVoltage() < Widget::MINIMAL_VOLTAGE) {
         slaveSipm->setStatusColor(StatusColor::Red);
     } else if (slaveSipm->getMeasuredVoltage() >= Widget::MINIMAL_VOLTAGE && slaveSipm->getMeasuredVoltage() < Widget::MINIMAL_OPERATIONAL_VOLTAGE) {
-//        if (slabStates.value(slab.getId()) == SlabState::SetSlave || slabStates.value(slab.getId()) == SlabState::SetAll) {
-//            slaveSipm->setStatusColor(StatusColor::Green);
-//        } else {
-//            slaveSipm->setStatusColor(StatusColor::Yellow);
-//        }
         slaveSipm->setStatusColor(StatusColor::Yellow);
     } else {
-//        slaveSipm->setStatusColor(StatusColor::Transparent);
         slaveSipm->setStatusColor(StatusColor::Green);
     }
 }
@@ -433,14 +424,14 @@ void Widget::addWidgetsToTable(quint16 id) {
 }
 
 void Widget::addSetWidgets() {
-    auto *setVoltageWidgetMaster = new QWidget();
+    auto *setVoltageWidgetMaster = new QWidget(this);
     auto *setVoltageLineEditMaster = new QLineEdit(setVoltageWidgetMaster);
     auto *setVoltageButtonMaster = new QPushButton("Set", setVoltageWidgetMaster);
     auto *setVoltageLayoutMaster = new QHBoxLayout(setVoltageWidgetMaster);
     setVoltageLayoutMaster->addWidget(setVoltageLineEditMaster);
     setVoltageLayoutMaster->addWidget(setVoltageButtonMaster);
 
-    auto *setVoltageWidgetSlave = new QWidget();
+    auto *setVoltageWidgetSlave = new QWidget(this);
     auto *setVoltageLineEditSlave = new QLineEdit(setVoltageWidgetSlave);
     auto *setVoltageButtonSlave =
             new QPushButton("Set", setVoltageWidgetSlave);
@@ -465,7 +456,7 @@ void Widget::addSetWidgets() {
 }
 
 void Widget::addPowerWidgets() {
-    auto *powerWidget = new QWidget();
+    auto *powerWidget = new QWidget(this);
     auto *powerOnButton = new QPushButton("On", powerWidget);
     auto *powerOffButton = new QPushButton("Off", powerWidget);
     auto *powerLayout = new QHBoxLayout(powerWidget);

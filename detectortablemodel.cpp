@@ -9,10 +9,18 @@ DetectorTableModel::DetectorTableModel(QObject *parent)
         : QAbstractTableModel(parent), slabs(new QList<Slab>), setId(new QSet<quint16>) {
 }
 
-DetectorTableModel::DetectorTableModel(const QStringList headers, QObject *parent) : QAbstractTableModel(parent),
-                                                                                      headers(headers),
-                                                                                      slabs(new QList<Slab>),
-                                                                                      setId(new QSet<quint16>) {}
+DetectorTableModel::DetectorTableModel(const QStringList headers, QObject *parent)
+    : QAbstractTableModel(parent), headers(headers), slabs(new QList<Slab>), setId(new QSet<quint16>) {
+
+}
+
+DetectorTableModel::DetectorTableModel(const QStringList headers, std::size_t capacity, QObject *parent)
+    : QAbstractTableModel(parent), headers(headers), slabs(new QList<Slab>), setId(new QSet<quint16>)
+{
+    for(std::size_t i = 0; i < capacity; ++i){
+        slabs->append(Slab(-1, std::make_shared<Sipm>(), std::make_shared<Sipm>()));
+    }
+}
 
 QVariant DetectorTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (role != Qt::DisplayRole) {
@@ -147,6 +155,14 @@ QString DetectorTableModel::updateSlab(Slab slab) {
     slabs->replace(slabPosition, slab);
     emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition + 1, columnCount() - 1));
     emit slabUpdated(slab.getId());
+    return "OK";
+}
+
+QString DetectorTableModel::replaceSlab(quint8 position, Slab slab)
+{
+    slabs->replace(position, slab);
+    setId->insert(slab.getId());
+    emit dataChanged(index(2 * position, 0), index(2 * position + 1, columnCount() - 1));
     return "OK";
 }
 

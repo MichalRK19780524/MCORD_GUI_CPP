@@ -34,14 +34,19 @@ set(PROJECT_SOURCES
         detectortablemodel.cpp
         statusicondelegate.h
         statusicondelegate.cpp
+        manyslabsatonce.h
+        manyslabsatonce.cpp
         images.qrc
         widget.ui
+        manyslabsatonce.ui
     )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(MCORD_GUI_CPP
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        manyslabsatonce.h manyslabsatonce.cpp manyslabsatonce.ui
+        basewidget.h basewidget.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET MCORD_GUI_CPP APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

@@ -161,14 +161,14 @@
             <item>
              <widget class="QPushButton" name="pushButtonHubOn">
               <property name="text">
-               <string>On Hub</string>
+               <string>On HV Hub</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="pushButtonHubOff">
               <property name="text">
-               <string>Off Hub</string>
+               <string>Off HV Hub</string>
               </property>
              </widget>
             </item>

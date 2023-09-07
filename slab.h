@@ -26,7 +26,9 @@ public:
 
     static const std::unique_ptr<QMutex> mutex;
 
-    Slab(int id, std::shared_ptr<Sipm> master, std::shared_ptr<Sipm> slave);
+    Slab(int id, const std::shared_ptr<Sipm> &master, const std::shared_ptr<Sipm> &slave);
+
+    Slab(qint16 id, std::shared_ptr<Sipm> master, std::shared_ptr<Sipm> slave);
 
     [[nodiscard]] int getId() const;
 //  void setId(quint16 newId);
@@ -36,7 +38,7 @@ public:
     [[nodiscard]] std::shared_ptr<Sipm> &getSlave();
 
 private:
-    quint16 id = 0;
+    qint16 id = -1;
     std::shared_ptr<Sipm> master;
     std::shared_ptr<Sipm> slave;
 };

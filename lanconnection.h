@@ -55,8 +55,10 @@ signals:
     void initFailed(quint16 slabId, QString message);
     void offFailed(quint16 slabId, QString message);
     void appendSlabToTableRequired(Slab slab);
+    void appendManySlabsToTableRequired(QList<Slab> slabs);
     void updateSlabToTableRequired(Slab slab);
     void slabDataRetrieved(Slab slab);
+    void manySlabsDataRetrieved(QList<Slab> slabs);
     void setMasterFailed(quint16 slabId, QString message);
     void setSlaveFailed(quint16 slabId, QString message);
     void onHubFailed(QString message);
@@ -69,9 +71,11 @@ public slots:
     void connect(QString ipAddress, quint16 port);
     void closeConnection();
     void initAndOnNewSlab(Slab slab);
+    void initAndOnManySlabs(QList<Slab> slabs);
     void initAndOnExistingSlab(Slab slab);
     void getSlab(Slab slab, AfeType afeType);
     void updateSlab(Slab slab);
+    void updateManySlabs(QList<Slab> slabs);
     void setMasterVoltage(Slab slab);
     void setSlaveVoltage(Slab slab);
     void onHub();

@@ -13,6 +13,7 @@ class DetectorTableModel : public QAbstractTableModel
 public:
     explicit DetectorTableModel(QObject *parent = nullptr);
     explicit DetectorTableModel(const QStringList headers, QObject *parent = nullptr);
+    explicit DetectorTableModel(const QStringList headers, size_t capacity, QObject *parent = nullptr);
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
@@ -24,6 +25,8 @@ public:
     QString appendSlab(Slab slab);
 
     QString updateSlab(Slab slab);
+
+    QString replaceSlab(quint8 position,  Slab slab);
 
     QModelIndex findIndexOfMasterSlabSetButton(quint16 slabId);
     QModelIndex findIndexOfSlaveSlabSetButton(quint16 slabId);

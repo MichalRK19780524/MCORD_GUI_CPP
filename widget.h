@@ -12,13 +12,14 @@
 
 //#include "detectionslabswidget.h"
 #include "lanconnection.h"
-#include "detectortablemodel.h"
+#include "manyslabsatonce.h"
+#include "basewidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 QT_END_NAMESPACE
 
-class Widget : public QWidget {
+class Widget : public BaseWidget {
 Q_OBJECT
 
     enum class Connection : size_t {
@@ -42,19 +43,7 @@ Q_OBJECT
         ERROR
     };
 
-    enum class SlabState : size_t {
-        Detected,
-        On,
-        Off,
-        SetMaster,
-        SetSlave,
-        SetAll,
-        Error
-    };
 
-    [[maybe_unused]] static inline size_t qHash(SlabState &key, uint seed) {
-        return ::qHash(static_cast<size_t>(key), seed);
-    }
 
 public:
     explicit Widget(LanConnection *lanConnection, QWidget *parent = nullptr);
@@ -63,11 +52,7 @@ public:
 
     void addPowerWidgets();
 
-    static constexpr int SET_COLUMN_INDEX = 4;
-    static constexpr int POWER_COLUMN_INDEX = 2;
-    static constexpr int STATUS_COLOR_COLUMN_INDEX = 1;
-    static constexpr float MINIMAL_VOLTAGE = 47.0f;
-    static constexpr float MINIMAL_OPERATIONAL_VOLTAGE = 50.5f;
+
     
 
 
@@ -175,10 +160,9 @@ private slots:
 private:
     Ui::Widget *ui;
 
-    LanConnection *lanConnection = nullptr;
+
     QSerialPort *serial = nullptr;
 //    DetectionSlabsWidget *detectionSlabsWidget = nullptr;
-    DetectorTableModel *model = nullptr;
     QSignalMapper *setMasterSignalMapper = nullptr;
     QSignalMapper *setSlaveSignalMapper = nullptr;
     QSignalMapper *onSignalMapper = nullptr;
@@ -190,15 +174,11 @@ private:
     QSettings *settings = nullptr;
     QFile file;
     QTextStream outTextData;
+    ManySlabsAtOnce* manySlabsAtOnceDialog;
 
-
-    static constexpr quint16 PORT = 5555;
-    static constexpr quint16 READ_READY_SERIAL_TIME = 5000;
-    static constexpr int UPDATE_TABLE_TIME = 10000;
     static const QString HUB_RESPONSE;
     static const QString LAN_CONNECTION_LABEL_TEXT;
     static const QString USB_CONNECTION_LABEL_TEXT;
-    static const QStringList HEADERS;
     static const QJsonArray CLOSE;
 
     void addSetWidgets();

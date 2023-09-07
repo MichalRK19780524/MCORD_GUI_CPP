@@ -290,6 +290,21 @@ void LanConnection::updateSlab(Slab slab) {
     }
 }
 
+void LanConnection::updateManySlabs(QList<Slab> slabs)
+{
+
+    bool status{true};
+    for(Slab slab: slabs){
+        if(!status){
+            break;
+        }
+        if(slab.getId() != -1){
+            status ^= readSlab(slab, AfeType::Both);
+        }
+    }
+    emit manySlabsDataRetrieved(slabs);
+}
+
 
 QString LanConnection::initSlab(Slab& slab) {
     QJsonArray command = {INIT_COMMAND, slab.getId()};
@@ -690,6 +705,20 @@ bool LanConnection::initAndOnSlab(Slab slab) {
 void LanConnection::initAndOnNewSlab(Slab slab) {
     if(initAndOnSlab(slab)) {
         emit appendSlabToTableRequired(slab);
+    }
+}
+
+void LanConnection::initAndOnManySlabs(QList<Slab> slabs)
+{
+    bool state{true};
+    for(Slab slab: slabs){
+        if(slab.getId() != -1){
+            state ^= initAndOnSlab(slab);
+            state ^= readSlab(slab, AfeType::Both);
+        }
+    }
+    if(state){
+        emit appendManySlabsToTableRequired(slabs);
     }
 }
 
