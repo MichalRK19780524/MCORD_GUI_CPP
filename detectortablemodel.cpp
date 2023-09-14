@@ -152,7 +152,9 @@ QString DetectorTableModel::appendSlab(Slab slab) {
 QString DetectorTableModel::updateSlab(Slab slab) {
     qDebug() << "Slab in DetectorTableModel::updateSlab: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Master Voltage: " << slab.getMaster()->getSetVoltage();
     int slabPosition = findSlabPosition(slab.getId());
-    slabs->replace(slabPosition, slab);
+    if(slabs->size() > 0){
+        slabs->replace(slabPosition, slab);
+    }
     emit dataChanged(index(2 * slabPosition, 0), index(2 * slabPosition + 1, columnCount() - 1));
     emit slabUpdated(slab.getId());
     return "OK";
@@ -161,7 +163,10 @@ QString DetectorTableModel::updateSlab(Slab slab) {
 QString DetectorTableModel::replaceSlab(quint8 position, Slab slab)
 {
     slabs->replace(position, slab);
-    setId->insert(slab.getId());
+    int id = slab.getId();
+    if(id != -1){
+        setId->insert(id);
+    }
     emit dataChanged(index(2 * position, 0), index(2 * position + 1, columnCount() - 1));
     return "OK";
 }

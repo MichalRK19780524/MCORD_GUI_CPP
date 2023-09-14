@@ -39,8 +39,8 @@ public:
     QString downloadMeasuredCurrent(Slab& slab, AfeType afeType, quint16 avgNumber);
     QString downloadMeasuredTemperature(Slab& slab, AfeType afeType, quint16 avgNumber);
     QString initSlab(Slab& slab);
-    QString onSlab(Slab slab);
-    QString offSlab(Slab slab);
+    QString onSlab(const Slab& slab);
+    QString offSlab(const Slab& slab);
     QString setSlabVoltage(Slab& slab);
     QTcpSocket* getSocket();
     bool initAndOnSlab(Slab slab);
@@ -56,15 +56,20 @@ signals:
     void offFailed(quint16 slabId, QString message);
     void appendSlabToTableRequired(Slab slab);
     void appendManySlabsToTableRequired(QList<Slab> slabs);
+    void updateManySlabsToTableRequired(QList<Slab> slabs);
     void updateSlabToTableRequired(Slab slab);
     void slabDataRetrieved(Slab slab);
     void manySlabsDataRetrieved(QList<Slab> slabs);
     void setMasterFailed(quint16 slabId, QString message);
     void setSlaveFailed(quint16 slabId, QString message);
+    void setManySlabsFailed(QList<int> ids, QStringList results);
+    void offManySlabsFailed(QList<int> ids, QStringList results);
     void onHubFailed(QString message);
     void offHubFailed(QString message);
     void setMasterSucceeded(Slab slab);
     void setSlaveSucceeded(Slab slab);
+    void setManySlabsSucceeded(QList<Slab> slabs);
+    void offManySlabsSucceeded(QList<Slab> slabs);
     void onHubSucceeded();
     void offHubSucceeded();
 public slots:
@@ -72,6 +77,8 @@ public slots:
     void closeConnection();
     void initAndOnNewSlab(Slab slab);
     void initAndOnManySlabs(QList<Slab> slabs);
+    void offManySlabs(QList<Slab> slabs);
+    void setManySlabs(QList<Slab> slabs);
     void initAndOnExistingSlab(Slab slab);
     void getSlab(Slab slab, AfeType afeType);
     void updateSlab(Slab slab);

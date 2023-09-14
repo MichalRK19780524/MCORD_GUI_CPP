@@ -14,7 +14,7 @@ public:
     static constexpr int SET_COLUMN_INDEX = 4;
     static constexpr int POWER_COLUMN_INDEX = 2;
     static constexpr int STATUS_COLOR_COLUMN_INDEX = 1;
-    static constexpr int SET_ID_INDEX = 0;
+    static constexpr int ID_COLUMN_INDEX = 0;
     static constexpr float MINIMAL_VOLTAGE = 47.0f;
     static constexpr float MINIMAL_OPERATIONAL_VOLTAGE = 50.5f;
     static constexpr int UPDATE_TABLE_TIME = 10000;

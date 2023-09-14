@@ -4,6 +4,7 @@
 #include <QThread>
 #include <gsl/gsl_statistics.h>
 #include <QMessageBox>
+#include <QStringList>
 
 #include "afetype.h"
 #include "lanconnection.h"
@@ -299,7 +300,7 @@ void LanConnection::updateManySlabs(QList<Slab> slabs)
             break;
         }
         if(slab.getId() != -1){
-            status ^= readSlab(slab, AfeType::Both);
+            status &= readSlab(slab, AfeType::Both);
         }
     }
     emit manySlabsDataRetrieved(slabs);
@@ -339,7 +340,7 @@ QString LanConnection::initSlab(Slab& slab) {
     }
 }
 
-QString LanConnection::onSlab(Slab slab) {
+QString LanConnection::onSlab(const Slab& slab) {
     QJsonArray command = {ON_COMMAND, slab.getId()};
 
     if (socket->isOpen()) {
@@ -374,7 +375,7 @@ QString LanConnection::onSlab(Slab slab) {
 }
 
 
-QString LanConnection::offSlab(Slab slab) {
+QString LanConnection::offSlab(const Slab& slab) {
     QJsonArray command = {OFF_COMMAND, slab.getId()};
     QString message;
 
@@ -708,13 +709,12 @@ void LanConnection::initAndOnNewSlab(Slab slab) {
     }
 }
 
-void LanConnection::initAndOnManySlabs(QList<Slab> slabs)
-{
+void LanConnection::initAndOnManySlabs(QList<Slab> slabs){
     bool state{true};
     for(Slab slab: slabs){
         if(slab.getId() != -1){
-            state ^= initAndOnSlab(slab);
-            state ^= readSlab(slab, AfeType::Both);
+            state &= initAndOnSlab(slab);
+            state &= readSlab(slab, AfeType::Both);
         }
     }
     if(state){
@@ -722,8 +722,49 @@ void LanConnection::initAndOnManySlabs(QList<Slab> slabs)
     }
 }
 
-void LanConnection::initAndOnExistingSlab(Slab slab) {
+void LanConnection::offManySlabs(QList<Slab> slabs){
+    bool state{true};
+    QList<int> ids;
+    QStringList results;
+    for(const Slab& slab: slabs){
+        int id = slab.getId();
+        ids.append(id);
+        if(id != -1){
+            QString result = offSlab(slab);
+            results.append(result);
+            state &= (result == "OK");
+        }
+        if(!state){
+            emit offManySlabsFailed(ids, results);
+        } else {
+            emit offManySlabsSucceeded(slabs);
+        }
+    }
+}
 
+void LanConnection::setManySlabs(QList<Slab> slabs){
+    bool state{true};
+    QList<int> ids;
+    QStringList results;
+    for(Slab slab: slabs){
+        int id = slab.getId();
+        ids.append(id);
+        if(id != -1){
+            QString result = setSlabVoltage(slab);
+            results.append(result);
+            state &= (result == "OK");
+        }
+    }
+    if(!state){
+        emit setManySlabsFailed(ids, results);
+        return;
+    } else {
+        emit setManySlabsSucceeded(slabs);
+        return;
+    }
+}
+
+void LanConnection::initAndOnExistingSlab(Slab slab) {
     if(initAndOnSlab(slab)) {
         emit updateSlabToTableRequired(slab);
     }

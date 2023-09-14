@@ -35,8 +35,11 @@ private:
     void addIdWidgets();
     void setMasterStatusColor(Slab &slab);
     void setSlaveStatusColor(Slab &slab);
+    QList<Slab> takeSlabsIds();
 private slots:
     void onAllClicked();
+    void setAllClicked();
+    void offAllClicked();
     void appendManySlabsToModel(QList<Slab> slabs);
     void tableUpdate();
     void updateSlabInModel(Slab slab);
@@ -44,6 +47,8 @@ private slots:
 
 signals:
     void initializationManySlabsRequired(QList<Slab> slabs);
+    void offManySlabsRequired(QList<Slab> slabs);
+    void setManySlabsRequired(QList<Slab> slabs);
     void manySlabsUpdateRequired(QList<Slab> slabs);
 };
 

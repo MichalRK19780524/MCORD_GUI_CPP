@@ -30,6 +30,17 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QWidget *parent) 
     ui->slabsTableView->setMinimumSize(QSize(0,0));
     ui->slabsTableView->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 
+
+    QPalette labelPalette = ui->labelSection->palette();
+    labelPalette.setColor(QPalette::WindowText, Qt::white);
+    ui->labelIp->setAutoFillBackground(true);
+    ui->labelSection->setAutoFillBackground(true);
+    ui->groupBoxDetectionSlabs->setAutoFillBackground(true);
+//    palette.setColor(ui->pLabel->foregroundRole(), Qt::yellow);
+    ui->labelSection->setPalette(labelPalette);
+    ui->labelIp->setPalette(labelPalette);
+    ui->groupBoxDetectionSlabs->setPalette(labelPalette);
+
     QHeaderView *verticalHeader = ui->slabsTableView->verticalHeader();
     verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
     verticalHeader->setDefaultSectionSize(48);
@@ -39,12 +50,19 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QWidget *parent) 
     connect(this, &ManySlabsAtOnce::initializationManySlabsRequired, lanConnection, &LanConnection::initAndOnManySlabs);
     connect(lanConnection, &LanConnection::appendManySlabsToTableRequired, this, &ManySlabsAtOnce::appendManySlabsToModel);
 
-//    auto *updateTableTimer = new QTimer(this);
-//    connect(updateTableTimer, &QTimer::timeout, this, &ManySlabsAtOnce::tableUpdate);
-//    updateTableTimer->start(BaseWidget::UPDATE_TABLE_TIME);
+    connect(ui->pushButtonSetAll, &QPushButton::clicked, this, &ManySlabsAtOnce::setAllClicked);
+    connect(this, &ManySlabsAtOnce::setManySlabsRequired, lanConnection, &LanConnection::setManySlabs);
+    connect(lanConnection, &LanConnection::updateManySlabsToTableRequired, this, &ManySlabsAtOnce::updateManySlabsInModel);
 
-//    connect(this, &ManySlabsAtOnce::manySlabsUpdateRequired, lanConnection, &LanConnection::updateManySlabs);
-//    connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManySlabsInModel);
+    connect(ui->pushButtonOffAll, &QPushButton::clicked, this, &ManySlabsAtOnce::offAllClicked);
+    connect(this, &ManySlabsAtOnce::offManySlabsRequired, lanConnection, &LanConnection::offManySlabs);
+
+    auto *updateTableTimer = new QTimer(this);
+    connect(updateTableTimer, &QTimer::timeout, this, &ManySlabsAtOnce::tableUpdate);
+    updateTableTimer->start(BaseWidget::UPDATE_TABLE_TIME);
+
+    connect(this, &ManySlabsAtOnce::manySlabsUpdateRequired, lanConnection, &LanConnection::updateManySlabs);
+    connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManySlabsInModel);
 
     addIdWidgets();
     addPowerWidgets();
@@ -103,13 +121,13 @@ void ManySlabsAtOnce::addSetWidgets() {
         ui->slabsTableView->setIndexWidget(masterSetIndex, setVoltageWidgetMaster);
         connect(setVoltageButtonMaster, &QPushButton::clicked, setMasterSignalMapper,
             static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-        int masterSlabId = model->data(model->index(i, BaseWidget::SET_ID_INDEX)).toInt();
+        int masterSlabId = model->data(model->index(i, BaseWidget::ID_COLUMN_INDEX)).toInt();
         setMasterSignalMapper->setMapping(setVoltageButtonMaster, masterSlabId);
 
         QModelIndex slaveSetIndex = model->index(i + 1, BaseWidget::SET_COLUMN_INDEX);
         ui->slabsTableView->setIndexWidget(slaveSetIndex, setVoltageWidgetSlave);
         connect(setVoltageButtonSlave, &QPushButton::clicked, setSlaveSignalMapper,static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-        int slaveSlabId = model->data(model->index(i + 1, BaseWidget::SET_ID_INDEX)).toInt();
+        int slaveSlabId = model->data(model->index(i + 1, BaseWidget::ID_COLUMN_INDEX)).toInt();
         setSlaveSignalMapper->setMapping(setVoltageButtonSlave, slaveSlabId);
     }
 }
@@ -120,7 +138,7 @@ void ManySlabsAtOnce::addIdWidgets(){
         auto *setIdLayout = new QHBoxLayout(this);
         setIdLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
         setIdLayout->setAlignment(Qt::AlignHCenter);
-        QModelIndex idIndex = model->index(i, BaseWidget::SET_ID_INDEX);
+        QModelIndex idIndex = model->index(i, BaseWidget::ID_COLUMN_INDEX);
         auto *setIdLineEditWidget = new QLineEdit(setIdWidget);
         setIdLineEditWidget->setMaximumWidth(100);
         setIdLayout->addWidget(setIdLineEditWidget);
@@ -128,12 +146,10 @@ void ManySlabsAtOnce::addIdWidgets(){
     }
 }
 
-void ManySlabsAtOnce::onAllClicked()
-{
+QList<Slab> ManySlabsAtOnce::takeSlabsIds(){
     QList<Slab> slabs;
     for (int i = 0; i < model->rowCount(); i+=2){
-//        int masterSlabId = model->data(model->index(i, BaseWidget::SET_ID_INDEX)).toInt();
-        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_ID_INDEX));
+        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
         QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
         bool ok;
         quint16 slabId = slabIdString.toUShort(&ok);
@@ -145,7 +161,51 @@ void ManySlabsAtOnce::onAllClicked()
         }
         slabs.append(slab);
     }
-    emit initializationManySlabsRequired(slabs);
+    return slabs;
+}
+
+void ManySlabsAtOnce::onAllClicked()
+{
+    emit initializationManySlabsRequired(takeSlabsIds());
+}
+
+void ManySlabsAtOnce::offAllClicked(){
+    emit offManySlabsRequired(takeSlabsIds());
+}
+
+void ManySlabsAtOnce::setAllClicked()
+{
+    QList<Slab> slabs;
+    bool okSet;
+    QString slabSetString = ui->lineEditSetAll->text();
+    float slabSet = slabSetString.toFloat(&okSet);
+    for (int i = 0; i < model->rowCount(); i+=2){
+        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
+        QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
+        bool okId;
+        quint16 slabId = slabIdString.toUShort(&okId);
+
+//        QWidget* masterSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_COLUMN_INDEX));
+//        QString masterSlabSetString = masterSlabSetWidget->findChild<QLineEdit*>()->text();
+//        bool okMasterSet;
+//        float masterSlabSet = masterSlabSetString.toFloat(&okMasterSet);
+
+//        QWidget* slaveSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i + 1, BaseWidget::SET_COLUMN_INDEX));
+//        QString slaveSlabSetString = slaveSlabSetWidget->findChild<QLineEdit*>()->text();
+//        bool okSlaveSet;
+//        float slaveSlabSet = masterSlabSetString.toFloat(&okSlaveSet);
+
+        Slab slab;
+        if(okId && okSet){
+            slab = Slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+            slab.getMaster()->setSetVoltage(slabSet);
+            slab.getSlave()->setSetVoltage(slabSet);
+        } else {
+            slab = Slab(-1, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+        }
+        slabs.append(slab);
+    }
+    emit setManySlabsRequired(slabs);
 }
 
 void ManySlabsAtOnce::appendManySlabsToModel(QList<Slab> slabs) {
