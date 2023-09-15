@@ -7,9 +7,9 @@
 #include "manyslabsatonce.h"
 #include "ui_manyslabsatonce.h"
 
-ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QWidget *parent) :
+ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settings, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ManySlabsAtOnce), base(new BaseWidget(lanConnection))
+    ui(new Ui::ManySlabsAtOnce), settings(settings), base(new BaseWidget(lanConnection))
 {
     ui->setupUi(this);
     model = new DetectorTableModel(Widget::HEADERS, 8, this);
@@ -17,6 +17,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QWidget *parent) 
     onSignalMapper = new QSignalMapper(this);
     offSignalMapper = new QSignalMapper(this);
     setSlaveSignalMapper = new QSignalMapper(this);
+    setIdSignalMapper = new QSignalMapper(this);
 
     QPalette pal = palette();
     pal.setColor(QPalette::Window, Qt::darkRed);
@@ -63,6 +64,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QWidget *parent) 
 
     connect(this, &ManySlabsAtOnce::manySlabsUpdateRequired, lanConnection, &LanConnection::updateManySlabs);
     connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManySlabsInModel);
+    connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
 
     addIdWidgets();
     addPowerWidgets();
@@ -141,8 +143,17 @@ void ManySlabsAtOnce::addIdWidgets(){
         QModelIndex idIndex = model->index(i, BaseWidget::ID_COLUMN_INDEX);
         auto *setIdLineEditWidget = new QLineEdit(setIdWidget);
         setIdLineEditWidget->setMaximumWidth(100);
+        settings->beginGroup("ids");
+            QString readId = settings->value(QString::number(i)).toString();
+        settings->endGroup();
+        if(!readId.isEmpty()){
+            setIdLineEditWidget->setText(readId);
+        }
         setIdLayout->addWidget(setIdLineEditWidget);
         ui->slabsTableView->setIndexWidget(idIndex, setIdWidget);
+
+        connect(setIdLineEditWidget, &QLineEdit::editingFinished, setIdSignalMapper,static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
+        setIdSignalMapper->setMapping(setIdLineEditWidget, i);
     }
 }
 
@@ -260,6 +271,16 @@ void ManySlabsAtOnce::updateManySlabsInModel(QList<Slab> slabs){
             setSlaveStatusColor(slab);
         }
     }
+}
+
+void ManySlabsAtOnce::idEditingFinished(int position)
+{
+    QModelIndex idIndex = model->index(position, BaseWidget::ID_COLUMN_INDEX);
+    QWidget* idWidget = ui->slabsTableView->indexWidget(idIndex);
+    QLineEdit* idLineEdit = idWidget->findChildren<QLineEdit *>().at(0);
+    settings->beginGroup("ids");
+        settings->setValue(QString::number(position), idLineEdit->text());
+    settings->endGroup();
 }
 
 void ManySlabsAtOnce::setMasterStatusColor(Slab &slab)

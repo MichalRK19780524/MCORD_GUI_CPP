@@ -156,7 +156,7 @@ Widget::~Widget() {
 void Widget::actionsAfterLanConnection(const QString& ipAddress) {
     state = State::LAN_CONNECTED;
     settings->beginGroup("IP address");
-    settings->setValue("LAN address", ipAddress);
+        settings->setValue("LAN address", ipAddress);
     settings->endGroup();
     ui->pushButtonDisconnect->hide();
     ui->hubWidget->show();
@@ -319,7 +319,7 @@ void Widget::slabNumberSelection() {
         //        ui->lineEditAddSlab->show();
         //        ui->pushButtonDetect->show();
     } else if(ui->radioButtonManySlabs->isChecked()){
-        manySlabsAtOnceDialog = new ManySlabsAtOnce(lanConnection, this);
+        manySlabsAtOnceDialog = new ManySlabsAtOnce(lanConnection, settings, this);
         manySlabsAtOnceDialog->show();
     } else {
         qDebug() << "Internal error in slabNumberSelection";
