@@ -28,6 +28,9 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     ui->connectionLabel->hide();
     ui->pushButtonDisconnect->hide();
     ui->hubWidget->hide();
+    ui->groupBoxSelectConnection->hide();
+    ui->pushButtonNext->hide();
+    ui->tabWidgetConnection->hide();
     model = new DetectorTableModel(Widget::HEADERS, this);
     setMasterSignalMapper = new QSignalMapper(this);
     onSignalMapper = new QSignalMapper(this);
@@ -79,7 +82,7 @@ Widget::Widget(LanConnection *lanConnection, QWidget *parent)
     connect(ui->pushButtonDetectionSlabBack, &QPushButton::clicked, this, &Widget::detectionSlabsBackClicked);
     connect(ui->pushButtonDetect, &QPushButton::clicked, this, &Widget::detectSlab);
     connect(ui->pushButtonOn, &QPushButton::clicked, this, &Widget::detectAndOnSlab);
-    connect(ui->pushButtonBackSlabsChoice, &QPushButton::clicked, this, &Widget::disconnectClicked /*&Widget::backSlabsChoiceClicked*/);
+//    connect(ui->pushButtonBackSlabsChoice, &QPushButton::clicked, this, &Widget::disconnectClicked /*&Widget::backSlabsChoiceClicked*/);
     connect(lanConnection->getSocket(), &QTcpSocket::disconnected, this, &Widget::disconnected);
     connect(lanConnection->getSocket(), &QTcpSocket::errorOccurred, this, &Widget::connectionError);
     connect(ui->pushButtonHubOn, &QPushButton::clicked, lanConnection, &LanConnection::onHub);
@@ -313,7 +316,7 @@ void Widget::slabNumberSelection() {
     ui->radioButtonManySlabs->setEnabled(false);
     ui->pushButtonDetectionSlabsNext->hide();
     if (ui->radioButtonOneSlab->isChecked()) {
-        ui->pushButtonBackSlabsChoice->hide();
+//        ui->pushButtonBackSlabsChoice->hide();
         ui->widgetAddOneSlab->show();
         //        ui->labelAddSlab->show();
         //        ui->lineEditAddSlab->show();
@@ -333,7 +336,7 @@ void Widget::detectionSlabsBackClicked() {
     ui->radioButtonOneSlab->show();
     ui->radioButtonManySlabs->show();
     ui->pushButtonDetectionSlabsNext->show();
-    ui->pushButtonBackSlabsChoice->show();
+//    ui->pushButtonBackSlabsChoice->show();
     ui->widgetAddOneSlab->hide();
     //    ui->labelAddSlab->hide();
     //    ui->pushButtonDetect->hide();

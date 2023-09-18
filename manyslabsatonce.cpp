@@ -8,9 +8,10 @@
 #include "ui_manyslabsatonce.h"
 
 ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QWidget *parent) :
-    QDialog(parent),
+    QWidget(),
     ui(new Ui::ManySlabsAtOnce), base(new BaseWidget(lanConnection))
 {
+//    setModal(false);
     ui->setupUi(this);
     model = new DetectorTableModel(Widget::HEADERS, 8, this);
     setMasterSignalMapper = new QSignalMapper(this);

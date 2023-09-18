@@ -12,7 +12,7 @@ namespace Ui {
 class ManySlabsAtOnce;
 }
 
-class ManySlabsAtOnce : public QDialog
+class ManySlabsAtOnce : public QWidget
 {
     Q_OBJECT
 
