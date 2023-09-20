@@ -47,6 +47,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         manyslabsatonce.h manyslabsatonce.cpp manyslabsatonce.ui
         basewidget.h basewidget.cpp
+        wizard.h wizard.cpp wizard.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET MCORD_GUI_CPP APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
