@@ -38,7 +38,7 @@ private:
     QList<Slab> takeSlabsIds();
 private slots:
     void onAllClicked();
-    void setAllClicked();
+//    void setAllClicked();
     void offAllClicked();
     void appendManySlabsToModel(QList<Slab> slabs);
     void tableUpdate();
