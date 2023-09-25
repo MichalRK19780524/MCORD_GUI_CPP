@@ -1,6 +1,7 @@
 #include <QWidget>
 #include <QMessageBox>
 #include <QTimer>
+#include <QLineEdit>
 
 #include "widget.h"
 #include "statusicondelegate.h"
@@ -32,6 +33,60 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settin
     ui->slabsTableView->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 
 
+    ui->slabsTableWidget->setShowGrid(false);
+    ui->slabsTableWidget->setColumnCount(Widget::HEADERS.size());
+    ui->slabsTableWidget->setHorizontalHeaderLabels(Widget::HEADERS);
+    ui->slabsTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->slabsTableWidget->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->slabsTableWidget->setRowCount(1);
+
+    ui->slabsTableWidget->setMinimumSize(QSize(0,0));
+    ui->slabsTableWidget->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+
+    auto *powerAllWidget = new QWidget(this);
+    auto *powerAllOnButton = new QPushButton("On All", powerAllWidget);
+    auto *powerAllOffButton = new QPushButton("Off All", powerAllWidget);
+    auto *powerAllLayout = new QHBoxLayout(powerAllWidget);
+    powerAllLayout->addWidget(powerAllOnButton);
+    powerAllLayout->addWidget(powerAllOffButton);
+    ui->slabsTableWidget->setCellWidget(0,2, powerAllWidget);
+
+    auto *setVoltageAllWidget = new QWidget(this);
+    auto *setVoltageAllLineEdit = new QLineEdit(setVoltageAllWidget);
+    auto *setVoltageAllButton = new QPushButton("Set All", setVoltageAllWidget);
+    auto *setVoltageAllLayout = new QHBoxLayout(setVoltageAllWidget);
+    setVoltageAllLayout->addWidget(setVoltageAllLineEdit);
+    setVoltageAllLayout->addWidget(setVoltageAllButton);
+    ui->slabsTableWidget->setCellWidget(0,4, setVoltageAllWidget);
+
+    auto *chartUWidget = new QWidget(this);
+    auto *chartULayout = new QHBoxLayout(chartUWidget);
+    auto *chartUButton = new QPushButton("Chart U[V]", chartUWidget);
+    chartULayout->addWidget(chartUButton, Qt::AlignCenter);
+
+    ui->slabsTableWidget->setCellWidget(0,5, chartUWidget);
+
+    auto *chartIWidget = new QWidget(this);
+    auto *chartILayout = new QHBoxLayout(chartIWidget);
+    auto *chartIButton = new QPushButton("Chart I[nA]", chartIWidget);
+    chartILayout->addWidget(chartIButton, Qt::AlignCenter);
+
+    ui->slabsTableWidget->setCellWidget(0,6, chartIWidget);
+
+    auto *chartTWidget = new QWidget(this);
+    auto *chartTLayout = new QHBoxLayout(chartTWidget);
+    auto *chartTButton = new QPushButton("Chart T[C]", chartTWidget);
+    chartTLayout->addWidget(chartTButton, Qt::AlignCenter);
+
+    ui->slabsTableWidget->setCellWidget(0,7, chartTWidget);
+
+    auto *consoleWidget = new QWidget(this);
+    auto *consoleLayout = new QHBoxLayout(consoleWidget);
+    auto *consoleButton = new QPushButton("Console", consoleWidget);
+    consoleLayout->addWidget(consoleButton, Qt::AlignCenter);
+
+    ui->slabsTableWidget->setCellWidget(0,1, consoleWidget);
+
     QPalette labelPalette = ui->labelSection->palette();
     labelPalette.setColor(QPalette::WindowText, Qt::white);
     ui->labelIp->setAutoFillBackground(true);
@@ -47,15 +102,18 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settin
     verticalHeader->setDefaultSectionSize(48);
     verticalHeader->setStretchLastSection(true);
 
-    connect(ui->pushButtonOnAll, &QPushButton::clicked, this, &ManySlabsAtOnce::onAllClicked);
+    showMaximized();
+
+    connect(ui->onHvHubPushButton, &QPushButton::clicked, lanConnection, &LanConnection::onHub);
+//    connect(ui->pushButtonOnAll, &QPushButton::clicked, this, &ManySlabsAtOnce::onAllClicked);
     connect(this, &ManySlabsAtOnce::initializationManySlabsRequired, lanConnection, &LanConnection::initAndOnManySlabs);
     connect(lanConnection, &LanConnection::appendManySlabsToTableRequired, this, &ManySlabsAtOnce::appendManySlabsToModel);
 
-    connect(ui->pushButtonSetAll, &QPushButton::clicked, this, &ManySlabsAtOnce::setAllClicked);
+//    connect(ui->pushButtonSetAll, &QPushButton::clicked, this, &ManySlabsAtOnce::setAllClicked);
     connect(this, &ManySlabsAtOnce::setManySlabsRequired, lanConnection, &LanConnection::setManySlabs);
     connect(lanConnection, &LanConnection::updateManySlabsToTableRequired, this, &ManySlabsAtOnce::updateManySlabsInModel);
 
-    connect(ui->pushButtonOffAll, &QPushButton::clicked, this, &ManySlabsAtOnce::offAllClicked);
+//    connect(ui->pushButtonOffAll, &QPushButton::clicked, this, &ManySlabsAtOnce::offAllClicked);
     connect(this, &ManySlabsAtOnce::offManySlabsRequired, lanConnection, &LanConnection::offManySlabs);
 
     auto *updateTableTimer = new QTimer(this);
@@ -184,17 +242,17 @@ void ManySlabsAtOnce::offAllClicked(){
     emit offManySlabsRequired(takeSlabsIds());
 }
 
-void ManySlabsAtOnce::setAllClicked()
-{
-    QList<Slab> slabs;
-    bool okSet;
-    QString slabSetString = ui->lineEditSetAll->text();
-    float slabSet = slabSetString.toFloat(&okSet);
-    for (int i = 0; i < model->rowCount(); i+=2){
-        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
-        QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
-        bool okId;
-        quint16 slabId = slabIdString.toUShort(&okId);
+//void ManySlabsAtOnce::setAllClicked()
+//{
+//    QList<Slab> slabs;
+//    bool okSet;
+//    QString slabSetString = ui->lineEditSetAll->text();
+//    float slabSet = slabSetString.toFloat(&okSet);
+//    for (int i = 0; i < model->rowCount(); i+=2){
+//        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
+//        QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
+//        bool okId;
+//        quint16 slabId = slabIdString.toUShort(&okId);
 
 //        QWidget* masterSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_COLUMN_INDEX));
 //        QString masterSlabSetString = masterSlabSetWidget->findChild<QLineEdit*>()->text();
@@ -206,18 +264,18 @@ void ManySlabsAtOnce::setAllClicked()
 //        bool okSlaveSet;
 //        float slaveSlabSet = masterSlabSetString.toFloat(&okSlaveSet);
 
-        Slab slab;
-        if(okId && okSet){
-            slab = Slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
-            slab.getMaster()->setSetVoltage(slabSet);
-            slab.getSlave()->setSetVoltage(slabSet);
-        } else {
-            slab = Slab(-1, std::make_shared<Sipm>(), std::make_shared<Sipm>());
-        }
-        slabs.append(slab);
-    }
-    emit setManySlabsRequired(slabs);
-}
+//        Slab slab;
+//        if(okId && okSet){
+//            slab = Slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+//            slab.getMaster()->setSetVoltage(slabSet);
+//            slab.getSlave()->setSetVoltage(slabSet);
+//        } else {
+//            slab = Slab(-1, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+//        }
+//        slabs.append(slab);
+//    }
+//    emit setManySlabsRequired(slabs);
+//}
 
 void ManySlabsAtOnce::appendManySlabsToModel(QList<Slab> slabs) {
     for(quint8 i = 0; i < slabs.size(); ++i){

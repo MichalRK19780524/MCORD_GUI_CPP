@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1069</width>
-    <height>636</height>
+    <width>1206</width>
+    <height>796</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -65,6 +71,20 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="onHvHubPushButton">
+           <property name="text">
+            <string>On HV HUB</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="offHvHubPushButton">
+           <property name="text">
+            <string>Off HV HUB</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="pushButtonBackSlabsChoice">
            <property name="text">
             <string>Back</string>
@@ -76,53 +96,40 @@
       </item>
       <item>
        <widget class="QWidget" name="widget" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QPushButton" name="pushButtonOnAll">
-           <property name="text">
-            <string>On All</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButtonOffAll">
-           <property name="text">
-            <string>Off All</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="lineEditSetAll"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButtonSetAll">
-           <property name="text">
-            <string>Set All</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <layout class="QHBoxLayout" name="horizontalLayout"/>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="slabsTableWidget">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>2100</width>
+          <height>10</height>
+         </size>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderMinimumSectionSize">
+         <number>25</number>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>25</number>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QTableView" name="slabsTableView">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>1</horstretch>
-          <verstretch>1</verstretch>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
@@ -133,8 +140,8 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>100000</width>
-          <height>100000</height>
+          <width>1000000</width>
+          <height>1000000</height>
          </size>
         </property>
         <property name="sizeAdjustPolicy">

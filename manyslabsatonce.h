@@ -13,7 +13,7 @@ namespace Ui {
 class ManySlabsAtOnce;
 }
 
-class ManySlabsAtOnce : public QDialog
+class ManySlabsAtOnce : public QWidget
 {
     Q_OBJECT
 
@@ -41,7 +41,7 @@ private:
     QList<Slab> takeSlabsIds();
 private slots:
     void onAllClicked();
-    void setAllClicked();
+//    void setAllClicked();
     void offAllClicked();
     void appendManySlabsToModel(QList<Slab> slabs);
     void tableUpdate();

@@ -72,91 +72,92 @@ private:
 
 signals:
 
-    void connectLan(QString ipAddress, quint16 port);
+//    void connectLan(QString ipAddress, quint16 port);
 
-    void closeLanConnection();
+//    void closeLanConnection();
 
-    void slabRequired(Slab slab, AfeType afeType);
+//    void slabRequired(Slab slab, AfeType afeType);
 
-    void slabUpdateRequired(Slab slab);
+//    void slabUpdateRequired(Slab slab);
 
-    void initializationRequired(Slab slab);
+//    void initializationRequired(Slab slab);
 
-    void setMasterVoltageRequired(Slab slab);
+//    void setMasterVoltageRequired(Slab slab);
 
-    void setSlaveVoltageRequired(Slab slab);
+//    void setSlaveVoltageRequired(Slab slab);
 
-    void onRequired(Slab slab);
+//    void onRequired(Slab slab);
 
-    void offRequired(Slab slab);
+//    void offRequired(Slab slab);
 
-    void onSlaveRequired(Slab slab);
+//    void onSlaveRequired(Slab slab);
 
-    void offSlaveRequired(Slab slab);
+//    void offSlaveRequired(Slab slab);
 
-    void hubShutdownConfirmed();
+//    void hubShutdownConfirmed();
 
 
 
 private slots:
 
-    void nextClicked();
+//    void nextClicked();
 
-    void backClicked();
+//    void backClicked();
 
-    void disconnectClicked();
+//    void disconnectClicked();
 
-    void disconnected();
+//    void disconnected();
 
-    static void connectionError(QAbstractSocket::SocketError se);
+//    static void connectionError(QAbstractSocket::SocketError se);
 
     void slabNumberSelection();
+    void connectionTypeBackClicked();
 
-    void detectionSlabsBackClicked();
+//    void detectionSlabsBackClicked();
 
-    void detectSlab();
+//    void detectSlab();
 
-    void detectAndOnSlab();
+//    void detectAndOnSlab();
 
 //    void onHubClicked();
 
-    void offHubClicked();
+//    void offHubClicked();
 
-    void writingErrorLanHandler(const QJsonArray& command);
+//    void writingErrorLanHandler(const QJsonArray& command);
 
-    void setMasterVoltageClicked(int slabId);
+//    void setMasterVoltageClicked(int slabId);
 
-    void setSlaveVoltageClicked(int slabId);
+//    void setSlaveVoltageClicked(int slabId);
 
-    void onClicked(int slabId);
+//    void onClicked(int slabId);
 
 //    void onSlaveClicked(int slabId);
 
-    void offClicked(int slabId);
+//    void offClicked(int slabId);
 
 //    void offSlaveClicked(int slabId);
 
-    void actionsAfterLanConnection(const QString& ipAddress);
+//    void actionsAfterLanConnection(const QString& ipAddress);
 
-    void appendSlabToModel(Slab slab);
+//    void appendSlabToModel(Slab slab);
 
-    void updateSlabInModel(Slab slab);
+//    void updateSlabInModel(Slab slab);
 
-    void addWidgetsToTable(quint16 id);
+//    void addWidgetsToTable(quint16 id);
 
-    void initFailedLanHandler(quint16 id, const QString& message);
+//    void initFailedLanHandler(quint16 id, const QString& message);
 
-    void onFailedLanHandler(quint16 id, const QString& message);
+//    void onFailedLanHandler(quint16 id, const QString& message);
 
-    void setMasterFailedLanHandler(quint16 id, const QString &message);
+//    void setMasterFailedLanHandler(quint16 id, const QString &message);
 
-    void setSlaveFailedLanHandler(quint16 id, const QString &message);
+//    void setSlaveFailedLanHandler(quint16 id, const QString &message);
 
-    void refreshSlab(Slab slab);
+//    void refreshSlab(Slab slab);
 
-    void tableUpdate();
+//    void tableUpdate();
 
-    void saveSlabToFile(Slab slab);
+//    void saveSlabToFile(Slab slab);
 private:
     Ui::Widget *ui;
 
