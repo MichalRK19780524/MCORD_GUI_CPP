@@ -12,6 +12,9 @@ class Wizard : public QWizard
     Q_OBJECT
 
 public:
+    enum class Pages { Page_Intro, Page_Evaluate, Page_Register, Page_Details,
+           Page_Conclusion };
+
     explicit Wizard(QWidget *parent = nullptr);
     ~Wizard();
 
