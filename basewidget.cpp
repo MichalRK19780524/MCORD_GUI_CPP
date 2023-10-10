@@ -8,6 +8,11 @@
 const QStringList BaseWidget::HEADERS{
                                   "Slab No.", "Status", "Power", "Type", "Set SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
 
+LanConnection *BaseWidget::getLanConnection() const
+{
+    return lanConnection;
+}
+
 BaseWidget::BaseWidget(LanConnection *lanConnection, QWidget *parent)
     : QWidget{parent}, lanConnection{lanConnection}
 {

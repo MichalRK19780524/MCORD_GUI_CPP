@@ -44,6 +44,8 @@ public:
 
     void addSetWidgets();
 
+    LanConnection *getLanConnection() const;
+
 signals:
 
 };

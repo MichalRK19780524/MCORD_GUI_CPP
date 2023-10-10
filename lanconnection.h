@@ -17,7 +17,7 @@ public:
 //    LanConnection();
     explicit LanConnection(QTcpSocket *socket, QObject *parent = nullptr);
 
-
+    static constexpr quint16 PORT {5555};
     static constexpr quint16 CURRENT_AVG_NUMBER {1};
     static constexpr quint16 TEMPERATURE_AVG_NUMBER {1};
     static const QJsonArray CLOSE;
@@ -44,6 +44,7 @@ public:
     QString setSlabVoltage(Slab& slab);
     QTcpSocket* getSocket();
     bool initAndOnSlab(Slab slab);
+    QHostAddress getPeerAddress();
 
 signals:
     void connectionFailed(QString message);
@@ -73,7 +74,7 @@ signals:
     void onHubSucceeded();
     void offHubSucceeded();
 public slots:
-    void connect(QString ipAddress, quint16 port);
+    void connect(QString ipAddress, quint16 port = PORT);
     void closeConnection();
     void initAndOnNewSlab(Slab slab);
     void initAndOnManySlabs(QList<Slab> slabs);

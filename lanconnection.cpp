@@ -703,6 +703,15 @@ bool LanConnection::initAndOnSlab(Slab slab) {
     return true;
 }
 
+QHostAddress LanConnection::getPeerAddress()
+{
+    if(socket->isOpen()){
+        return socket->peerAddress();
+    } else {
+        return QHostAddress::Null;
+    }
+}
+
 void LanConnection::initAndOnNewSlab(Slab slab) {
     if(initAndOnSlab(slab)) {
         emit appendSlabToTableRequired(slab);

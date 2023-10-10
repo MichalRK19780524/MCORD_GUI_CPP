@@ -4,7 +4,8 @@
 #include <QWidget>
 #include <QDialog>
 #include <QSignalMapper>
-#include <QSettings>
+//#include <QSettings>
+#include <QFile>
 #include "detectortablemodel.h"
 #include "basewidget.h"
 //#include "lanconnection.h"
@@ -18,14 +19,18 @@ class ManySlabsAtOnce : public QWidget
     Q_OBJECT
 
 public:
-    explicit ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settings, QWidget *parent = nullptr);
+    explicit ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *settings,*/ QWidget *parent = nullptr);
     ~ManySlabsAtOnce() override;
 
 private:
     Ui::ManySlabsAtOnce *ui;
     BaseWidget* base;
     DetectorTableModel *model = nullptr;
-    QSettings *settings = nullptr;
+//    QSettings *settings = nullptr;
+    QFile file;
+    QTextStream textIds;
+
+    static QHash<QString, QList<int>> *hubsIds;
 
     QSignalMapper *setMasterSignalMapper = nullptr;
     QSignalMapper *setSlaveSignalMapper = nullptr;
@@ -39,9 +44,10 @@ private:
     void setMasterStatusColor(Slab &slab);
     void setSlaveStatusColor(Slab &slab);
     QList<Slab> takeSlabsIds();
+    QString getIpAddress();
 private slots:
     void onAllClicked();
-//    void setAllClicked();
+    void setAllClicked();
     void offAllClicked();
     void appendManySlabsToModel(QList<Slab> slabs);
     void tableUpdate();
@@ -54,6 +60,9 @@ signals:
     void offManySlabsRequired(QList<Slab> slabs);
     void setManySlabsRequired(QList<Slab> slabs);
     void manySlabsUpdateRequired(QList<Slab> slabs);
+    void closeLanConnection();
+    void readIdsFromFileError();
 };
+
 
 #endif // MANYSLABSATONCE_H

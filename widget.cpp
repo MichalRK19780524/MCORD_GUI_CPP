@@ -319,8 +319,8 @@ void Widget::slabNumberSelection() {
         //        ui->lineEditAddSlab->show();
         //        ui->pushButtonDetect->show();
     } else if(ui->radioButtonManySlabs->isChecked()){
-        manySlabsAtOnceDialog = new ManySlabsAtOnce(lanConnection, settings, this);
-        manySlabsAtOnceDialog->show();
+//        manySlabsAtOnceDialog = new ManySlabsAtOnce(lanConnection, settings, this);
+//        manySlabsAtOnceDialog->show();
     } else {
         qDebug() << "Internal error in slabNumberSelection";
     }

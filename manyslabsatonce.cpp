@@ -8,9 +8,11 @@
 #include "manyslabsatonce.h"
 #include "ui_manyslabsatonce.h"
 
-ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settings, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ManySlabsAtOnce), settings(settings), base(new BaseWidget(lanConnection))
+QHash<QString, QList<int>>* ManySlabsAtOnce::hubsIds = new QHash<QString, QList<int>>;
+
+ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *settings,*/ QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::ManySlabsAtOnce), /*settings(settings),*/ base(new BaseWidget(lanConnection))
 {
     ui->setupUi(this);
     model = new DetectorTableModel(Widget::HEADERS, 8, this);
@@ -45,6 +47,8 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settin
 
     auto *powerAllWidget = new QWidget(this);
     auto *powerAllOnButton = new QPushButton("On All", powerAllWidget);
+    connect(powerAllOnButton, &QPushButton::clicked, this, &ManySlabsAtOnce::onAllClicked);
+
     auto *powerAllOffButton = new QPushButton("Off All", powerAllWidget);
     auto *powerAllLayout = new QHBoxLayout(powerAllWidget);
     powerAllLayout->addWidget(powerAllOnButton);
@@ -54,6 +58,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settin
     auto *setVoltageAllWidget = new QWidget(this);
     auto *setVoltageAllLineEdit = new QLineEdit(setVoltageAllWidget);
     auto *setVoltageAllButton = new QPushButton("Set All", setVoltageAllWidget);
+    connect(setVoltageAllButton, &QPushButton::clicked, this, &ManySlabsAtOnce::setAllClicked);
     auto *setVoltageAllLayout = new QHBoxLayout(setVoltageAllWidget);
     setVoltageAllLayout->addWidget(setVoltageAllLineEdit);
     setVoltageAllLayout->addWidget(setVoltageAllButton);
@@ -105,11 +110,10 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settin
     showMaximized();
 
     connect(ui->onHvHubPushButton, &QPushButton::clicked, lanConnection, &LanConnection::onHub);
-//    connect(ui->pushButtonOnAll, &QPushButton::clicked, this, &ManySlabsAtOnce::onAllClicked);
+
     connect(this, &ManySlabsAtOnce::initializationManySlabsRequired, lanConnection, &LanConnection::initAndOnManySlabs);
     connect(lanConnection, &LanConnection::appendManySlabsToTableRequired, this, &ManySlabsAtOnce::appendManySlabsToModel);
 
-//    connect(ui->pushButtonSetAll, &QPushButton::clicked, this, &ManySlabsAtOnce::setAllClicked);
     connect(this, &ManySlabsAtOnce::setManySlabsRequired, lanConnection, &LanConnection::setManySlabs);
     connect(lanConnection, &LanConnection::updateManySlabsToTableRequired, this, &ManySlabsAtOnce::updateManySlabsInModel);
 
@@ -124,14 +128,45 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QSettings *settin
     connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManySlabsInModel);
     connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
 
+    file.setFileName("current_slab_ids.txt");
+    if(!file.open(QFile::ReadWrite | QFile::Text)){
+        QMessageBox::warning(this, "Error", "File not open");
+    }
+    static QRegularExpression regex("\\s+");
+    textIds.setDevice(&file);
+    while(!textIds.atEnd()){
+        textIds.readLine();
+        QString hubIpAddress = textIds.readLine();
+        QString idsSeries = textIds.readLine();
+        QStringList idsStrings = idsSeries.split(regex);
+        QList<int> idList;
+        for(const QString &id : idsStrings){
+            bool ok;
+            idList.append(id.toInt(&ok));
+            if(!ok){
+                qDebug() << "Reading Ids From File Error";
+//                emit readIdsFromFileError(); //Chyba nie zadziała
+                break;
+            }
+        }
+        hubsIds->insert(hubIpAddress, idList);
+    }
+
     addIdWidgets();
     addPowerWidgets();
     addSetWidgets();
+
 }
 
 ManySlabsAtOnce::~ManySlabsAtOnce()
 {
+    emit closeLanConnection();
+
     delete ui;
+    ui = nullptr;
+
+    delete model;
+    model = nullptr;
 }
 
 void ManySlabsAtOnce::addPowerWidgets() {
@@ -193,6 +228,22 @@ void ManySlabsAtOnce::addSetWidgets() {
 }
 
 void ManySlabsAtOnce::addIdWidgets(){
+    QString ipAddress = getIpAddress();
+    QHash<QString, QList<int>>::iterator idsIterator;
+    if(!ipAddress.isNull()){
+        idsIterator = hubsIds->find(ipAddress);
+    } else {
+        idsIterator = hubsIds->end();
+    }
+
+    QList<int> testList;
+    QList<int>::iterator idListIterator = testList.end();
+    if(idsIterator != hubsIds->end()){
+        idListIterator = idsIterator->begin();
+    } /*else {
+        idListIterator = idsIterator->end();
+    }*/
+
     for (int i = 0; i < model->rowCount(); i+=2) {
         auto *setIdWidget = new QWidget(this);
         auto *setIdLayout = new QHBoxLayout(this);
@@ -201,12 +252,17 @@ void ManySlabsAtOnce::addIdWidgets(){
         QModelIndex idIndex = model->index(i, BaseWidget::ID_COLUMN_INDEX);
         auto *setIdLineEditWidget = new QLineEdit(setIdWidget);
         setIdLineEditWidget->setMaximumWidth(100);
-        settings->beginGroup("ids");
-            QString readId = settings->value(QString::number(i)).toString();
-        settings->endGroup();
-        if(!readId.isEmpty()){
-            setIdLineEditWidget->setText(readId);
+        if(idListIterator != testList.end()){
+            QString id = QString::number(*idListIterator++);
+            setIdLineEditWidget->setText(id);
         }
+
+//        settings->beginGroup("ids");
+//            QString readId = settings->value(QString::number(i)).toString();
+//        settings->endGroup();
+//        if(!readId.isEmpty()){
+//            setIdLineEditWidget->setText(readId);
+//        }
         setIdLayout->addWidget(setIdLineEditWidget);
         ui->slabsTableView->setIndexWidget(idIndex, setIdWidget);
 
@@ -233,6 +289,16 @@ QList<Slab> ManySlabsAtOnce::takeSlabsIds(){
     return slabs;
 }
 
+QString ManySlabsAtOnce::getIpAddress()
+{
+    QHostAddress ipAddress = base->getLanConnection()->getPeerAddress();
+    if(ipAddress == QHostAddress::Null){
+        return QString();
+    } else {
+        return ipAddress.toString();
+    }
+}
+
 void ManySlabsAtOnce::onAllClicked()
 {
     emit initializationManySlabsRequired(takeSlabsIds());
@@ -242,17 +308,18 @@ void ManySlabsAtOnce::offAllClicked(){
     emit offManySlabsRequired(takeSlabsIds());
 }
 
-//void ManySlabsAtOnce::setAllClicked()
-//{
-//    QList<Slab> slabs;
-//    bool okSet;
-//    QString slabSetString = ui->lineEditSetAll->text();
-//    float slabSet = slabSetString.toFloat(&okSet);
-//    for (int i = 0; i < model->rowCount(); i+=2){
-//        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
-//        QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
-//        bool okId;
-//        quint16 slabId = slabIdString.toUShort(&okId);
+void ManySlabsAtOnce::setAllClicked()
+{
+    QList<Slab> slabs;
+    bool okSet;
+    QWidget *setVoltageAllWidget = ui->slabsTableWidget->cellWidget(0,4);
+    QString slabSetAllString = setVoltageAllWidget->findChild<QLineEdit*>()->text();//ui->lineEditSetAll->text();
+    float slabSet = slabSetAllString.toFloat(&okSet);
+    for (int i = 0; i < model->rowCount(); i+=2){
+        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
+        QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
+        bool okId;
+        quint16 slabId = slabIdString.toUShort(&okId);
 
 //        QWidget* masterSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_COLUMN_INDEX));
 //        QString masterSlabSetString = masterSlabSetWidget->findChild<QLineEdit*>()->text();
@@ -264,18 +331,18 @@ void ManySlabsAtOnce::offAllClicked(){
 //        bool okSlaveSet;
 //        float slaveSlabSet = masterSlabSetString.toFloat(&okSlaveSet);
 
-//        Slab slab;
-//        if(okId && okSet){
-//            slab = Slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
-//            slab.getMaster()->setSetVoltage(slabSet);
-//            slab.getSlave()->setSetVoltage(slabSet);
-//        } else {
-//            slab = Slab(-1, std::make_shared<Sipm>(), std::make_shared<Sipm>());
-//        }
-//        slabs.append(slab);
-//    }
-//    emit setManySlabsRequired(slabs);
-//}
+        Slab slab;
+        if(okId && okSet){
+            slab = Slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+            slab.getMaster()->setSetVoltage(slabSet);
+            slab.getSlave()->setSetVoltage(slabSet);
+        } else {
+            slab = Slab(-1, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+        }
+        slabs.append(slab);
+    }
+    emit setManySlabsRequired(slabs);
+}
 
 void ManySlabsAtOnce::appendManySlabsToModel(QList<Slab> slabs) {
     for(quint8 i = 0; i < slabs.size(); ++i){
@@ -336,9 +403,9 @@ void ManySlabsAtOnce::idEditingFinished(int position)
     QModelIndex idIndex = model->index(position, BaseWidget::ID_COLUMN_INDEX);
     QWidget* idWidget = ui->slabsTableView->indexWidget(idIndex);
     QLineEdit* idLineEdit = idWidget->findChildren<QLineEdit *>().at(0);
-    settings->beginGroup("ids");
-        settings->setValue(QString::number(position), idLineEdit->text());
-    settings->endGroup();
+//    settings->beginGroup("ids");
+//        settings->setValue(QString::number(position), idLineEdit->text());
+//    settings->endGroup();
 }
 
 void ManySlabsAtOnce::setMasterStatusColor(Slab &slab)
