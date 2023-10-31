@@ -47,13 +47,18 @@ private:
     QString getIpAddress();
 private slots:
     void onAllClicked();
+    void onClicked(int slabId);
+    void setMasterVoltageClicked(int slabId);
+    void setSlaveVoltageClicked(int slabId);
     void setAllClicked();
+    void offClicked(int slabId);
     void offAllClicked();
     void appendManySlabsToModel(QList<Slab> slabs);
     void tableUpdate();
     void updateSlabInModel(Slab slab);
     void updateManySlabsInModel(QList<Slab> slab);
     void idEditingFinished(int position);
+    void loadIdNumbers(QString ipAddress);
 
 signals:
     void initializationManySlabsRequired(QList<Slab> slabs);
@@ -62,6 +67,10 @@ signals:
     void manySlabsUpdateRequired(QList<Slab> slabs);
     void closeLanConnection();
     void readIdsFromFileError();
+    void onRequired(Slab slab);
+    void offRequired(Slab slab);
+    void setMasterVoltageRequired(Slab slab);
+    void setSlaveVoltageRequired(Slab slab);
 };
 
 

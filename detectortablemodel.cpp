@@ -194,6 +194,16 @@ QModelIndex DetectorTableModel::findIndexOfSlaveSlabSetButton(quint16 slabId) {
     return index(2 * slabPosition + 1, Widget::SET_COLUMN_INDEX);
 }
 
+QModelIndex DetectorTableModel::findIndexOfMasterRowSetButton(quint8 rowId)
+{
+    return index(2*(rowId/2), Widget::SET_COLUMN_INDEX);
+}
+
+QModelIndex DetectorTableModel::findIndexOfSlaveRowSetButton(quint8 rowId)
+{
+    return index(2*(rowId/2) + 1, Widget::SET_COLUMN_INDEX);
+}
+
 QModelIndex DetectorTableModel::findIndexOfMasterSlabOnButton(quint16 slabId) {
     int slabPosition = findSlabPosition(slabId);
     return index(2 * slabPosition, Widget::POWER_COLUMN_INDEX);

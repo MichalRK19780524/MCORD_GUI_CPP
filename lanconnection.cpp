@@ -41,6 +41,7 @@ LanConnection::LanConnection(QTcpSocket *socket, QObject *parent)
 
 
 LanConnection::~LanConnection() {
+    this->closeConnection();
     if (socket->waitForBytesWritten(1000)) {
         socket->close();
     }
@@ -90,6 +91,7 @@ void LanConnection::closeConnection() {
         } else {
             if (socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME)) {
                 socket->close();
+                qDebug() << "Closed connection";
             } else {
                 emit writingError(CLOSE);
             }
@@ -256,11 +258,11 @@ QString LanConnection::downloadMeasuredTemperature(Slab &slab, AfeType afeType,
 bool LanConnection::readSlab(Slab &slab, AfeType afeType) {
     QString result;
 
-    result = downloadSetVoltage(slab, afeType);
-    if (result != "OK") {
-        emit readingError(result);
-        return false;
-    }
+//    result = downloadSetVoltage(slab, afeType);
+//    if (result != "OK") {
+//        emit readingError(result);
+//        return false;
+//    }
     result = downloadMeasuredVoltage(slab, afeType);
     if (result != "OK") {
         emit readingError(result);
@@ -452,7 +454,7 @@ QString LanConnection::downloadMeasuredVoltage(Slab &slab, AfeType afeType) {
 
 std::shared_ptr<Sipm> LanConnection::getSipmVoltagFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command) {
     qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-    qDebug() << command;
+//    qDebug() << command;
     if (result <= 0) {
         emit writingError(command);
     }
@@ -519,7 +521,7 @@ std::shared_ptr<Sipm> LanConnection::getSipmVoltagFromHub(std::shared_ptr<Sipm> 
 std::shared_ptr<Sipm> LanConnection::getSetSipmVoltagFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command)
 {
     qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-    qDebug() << command;
+//    qDebug() << command;
     if (result <= 0) {
         emit writingError(command);
     }
@@ -590,7 +592,7 @@ std::shared_ptr<Sipm> LanConnection::getSipmAmperageFromHub(std::shared_ptr<Sipm
     amperageList.reserve(avgNumber);
     for (int i = 0; i < avgNumber; ++i) {
         qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-        qDebug() << command;
+//        qDebug() << command;
         if (result <= 0) {
             emit writingError(command);
         }
@@ -632,7 +634,7 @@ std::shared_ptr<Sipm> LanConnection::getSipmTemperatureFromHub(std::shared_ptr<S
     temperatureList.reserve(avgNumber);
     for (int i = 0; i < avgNumber; ++i) {
         qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
-        qDebug() << command;
+//        qDebug() << command;
         if (result <= 0) {
             emit writingError(command);
         }
@@ -793,6 +795,7 @@ void LanConnection::setMasterVoltage(Slab slab) {
 
 void LanConnection::setSlaveVoltage(Slab slab) {
     QString result = setSlabVoltage(slab);
+    qDebug() << "Slab in LanConnection::setSlaveVoltage: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Slave Voltage: " << slab.getMaster()->getSetVoltage();
     if (result != "OK") {
         emit setSlaveFailed(slab.getId(), result);
         return;

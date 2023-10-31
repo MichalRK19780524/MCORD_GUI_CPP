@@ -31,6 +31,9 @@ public:
     QModelIndex findIndexOfMasterSlabSetButton(quint16 slabId);
     QModelIndex findIndexOfSlaveSlabSetButton(quint16 slabId);
 
+    QModelIndex findIndexOfMasterRowSetButton(quint8 rowId);
+    QModelIndex findIndexOfSlaveRowSetButton(quint8 rowId);
+
     QModelIndex findIndexOfMasterSlabOnButton(quint16 slabId);
     QModelIndex findIndexOfSlaveSlabOnButton(quint16 slabId);
 

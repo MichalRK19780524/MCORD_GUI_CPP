@@ -151,6 +151,7 @@ Widget::~Widget() {
     ui = nullptr;
 
     file.close();
+    lanConnection->closeConnection();
 }
 
 void Widget::actionsAfterLanConnection(const QString& ipAddress) {

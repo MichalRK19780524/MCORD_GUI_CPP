@@ -50,6 +50,8 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
     connect(powerAllOnButton, &QPushButton::clicked, this, &ManySlabsAtOnce::onAllClicked);
 
     auto *powerAllOffButton = new QPushButton("Off All", powerAllWidget);
+    connect(powerAllOffButton, &QPushButton::clicked, this, &ManySlabsAtOnce::offAllClicked);
+
     auto *powerAllLayout = new QHBoxLayout(powerAllWidget);
     powerAllLayout->addWidget(powerAllOnButton);
     powerAllLayout->addWidget(powerAllOffButton);
@@ -110,6 +112,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
     showMaximized();
 
     connect(ui->onHvHubPushButton, &QPushButton::clicked, lanConnection, &LanConnection::onHub);
+    connect(ui->offHvHubPushButton, &QPushButton::clicked, lanConnection, &LanConnection::offHub);
 
     connect(this, &ManySlabsAtOnce::initializationManySlabsRequired, lanConnection, &LanConnection::initAndOnManySlabs);
     connect(lanConnection, &LanConnection::appendManySlabsToTableRequired, this, &ManySlabsAtOnce::appendManySlabsToModel);
@@ -117,7 +120,6 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
     connect(this, &ManySlabsAtOnce::setManySlabsRequired, lanConnection, &LanConnection::setManySlabs);
     connect(lanConnection, &LanConnection::updateManySlabsToTableRequired, this, &ManySlabsAtOnce::updateManySlabsInModel);
 
-//    connect(ui->pushButtonOffAll, &QPushButton::clicked, this, &ManySlabsAtOnce::offAllClicked);
     connect(this, &ManySlabsAtOnce::offManySlabsRequired, lanConnection, &LanConnection::offManySlabs);
 
     auto *updateTableTimer = new QTimer(this);
@@ -126,8 +128,22 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
 
     connect(this, &ManySlabsAtOnce::manySlabsUpdateRequired, lanConnection, &LanConnection::updateManySlabs);
     connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManySlabsInModel);
-    connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
+//    connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
 
+    connect(lanConnection, &LanConnection::connectionSucceeded, this, &ManySlabsAtOnce::loadIdNumbers);
+
+    connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::setMasterVoltageClicked);
+    connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::setSlaveVoltageClicked);
+    connect(onSignalMapper,&QSignalMapper::mappedInt, this, &ManySlabsAtOnce::onClicked);
+    connect(offSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::offClicked);
+
+    connect(this, &ManySlabsAtOnce::onRequired, lanConnection, &LanConnection::initAndOnExistingSlab);
+    connect(this, &ManySlabsAtOnce::offRequired, lanConnection, &LanConnection::offSlab);
+    connect(this, &ManySlabsAtOnce::setMasterVoltageRequired, lanConnection, &LanConnection::setMasterVoltage);
+    connect(this, &ManySlabsAtOnce::setSlaveVoltageRequired, lanConnection, &LanConnection::setSlaveVoltage);
+    connect(this, &ManySlabsAtOnce::destroyed, lanConnection , &LanConnection::deleteLater);
+
+//TO DO zastanowić się, czy nie przenieść wczytywania z pliku w inne miejsce
     file.setFileName("current_slab_ids.txt");
     if(!file.open(QFile::ReadWrite | QFile::Text)){
         QMessageBox::warning(this, "Error", "File not open");
@@ -177,7 +193,7 @@ void ManySlabsAtOnce::addPowerWidgets() {
         auto *powerLayout = new QHBoxLayout(powerWidget);
 
         powerLayout->addWidget(powerOnButton);
-        int slabId = model->data(model->index(i, 0)).toInt();
+//        int slabId = model->data(model->index(i, 0)).toInt();
 
         QModelIndex powerIndex = model->index(i, BaseWidget::POWER_COLUMN_INDEX);
         powerLayout->addWidget(powerOffButton);
@@ -187,11 +203,11 @@ void ManySlabsAtOnce::addPowerWidgets() {
 
         connect(powerOnButton, &QPushButton::clicked, onSignalMapper,
                 static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-        onSignalMapper->setMapping(powerOnButton, slabId);
+        onSignalMapper->setMapping(powerOnButton, i);
 
         connect(powerOffButton, &QPushButton::clicked, offSignalMapper,
                 static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-        offSignalMapper->setMapping(powerOffButton, slabId);
+        offSignalMapper->setMapping(powerOffButton, i);
     }
 }
 
@@ -216,46 +232,29 @@ void ManySlabsAtOnce::addSetWidgets() {
         ui->slabsTableView->setIndexWidget(masterSetIndex, setVoltageWidgetMaster);
         connect(setVoltageButtonMaster, &QPushButton::clicked, setMasterSignalMapper,
             static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-        int masterSlabId = model->data(model->index(i, BaseWidget::ID_COLUMN_INDEX)).toInt();
-        setMasterSignalMapper->setMapping(setVoltageButtonMaster, masterSlabId);
+//        int masterSlabId = model->data(model->index(i, BaseWidget::ID_COLUMN_INDEX)).toInt();
+        setMasterSignalMapper->setMapping(setVoltageButtonMaster, i);
 
         QModelIndex slaveSetIndex = model->index(i + 1, BaseWidget::SET_COLUMN_INDEX);
         ui->slabsTableView->setIndexWidget(slaveSetIndex, setVoltageWidgetSlave);
         connect(setVoltageButtonSlave, &QPushButton::clicked, setSlaveSignalMapper,static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-        int slaveSlabId = model->data(model->index(i + 1, BaseWidget::ID_COLUMN_INDEX)).toInt();
-        setSlaveSignalMapper->setMapping(setVoltageButtonSlave, slaveSlabId);
+//        int slaveSlabId = model->data(model->index(i + 1, BaseWidget::ID_COLUMN_INDEX)).toInt();
+        setSlaveSignalMapper->setMapping(setVoltageButtonSlave, i + 1);
     }
 }
 
 void ManySlabsAtOnce::addIdWidgets(){
-    QString ipAddress = getIpAddress();
-    QHash<QString, QList<int>>::iterator idsIterator;
-    if(!ipAddress.isNull()){
-        idsIterator = hubsIds->find(ipAddress);
-    } else {
-        idsIterator = hubsIds->end();
-    }
 
-    QList<int> testList;
-    QList<int>::iterator idListIterator = testList.end();
-    if(idsIterator != hubsIds->end()){
-        idListIterator = idsIterator->begin();
-    } /*else {
-        idListIterator = idsIterator->end();
-    }*/
 
     for (int i = 0; i < model->rowCount(); i+=2) {
         auto *setIdWidget = new QWidget(this);
-        auto *setIdLayout = new QHBoxLayout(this);
-        setIdLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
-        setIdLayout->setAlignment(Qt::AlignHCenter);
         QModelIndex idIndex = model->index(i, BaseWidget::ID_COLUMN_INDEX);
         auto *setIdLineEditWidget = new QLineEdit(setIdWidget);
-        setIdLineEditWidget->setMaximumWidth(100);
-        if(idListIterator != testList.end()){
-            QString id = QString::number(*idListIterator++);
-            setIdLineEditWidget->setText(id);
-        }
+        auto *setIdPushButtonWidget = new QPushButton("Set",setIdWidget);
+        auto *setIdLayout = new QHBoxLayout(setIdWidget);
+//        setIdLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+//        setIdLayout->setAlignment(Qt::AlignHCenter);
+//        setIdLineEditWidget->setMaximumWidth(100);
 
 //        settings->beginGroup("ids");
 //            QString readId = settings->value(QString::number(i)).toString();
@@ -264,6 +263,7 @@ void ManySlabsAtOnce::addIdWidgets(){
 //            setIdLineEditWidget->setText(readId);
 //        }
         setIdLayout->addWidget(setIdLineEditWidget);
+        setIdLayout->addWidget(setIdPushButtonWidget);
         ui->slabsTableView->setIndexWidget(idIndex, setIdWidget);
 
         connect(setIdLineEditWidget, &QLineEdit::editingFinished, setIdSignalMapper,static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
@@ -301,10 +301,37 @@ QString ManySlabsAtOnce::getIpAddress()
 
 void ManySlabsAtOnce::onAllClicked()
 {
+    for (int i = 0; i < model->rowCount(); i+=2){
+        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
+        QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
+        bool okId;
+        slabIdString.toUShort(&okId);
+        if(okId){
+            QWidget* masterSetVoltageWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_COLUMN_INDEX));
+            masterSetVoltageWidget->findChild<QLineEdit*>()->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+
+            QWidget* slaveSetVoltageWidget = ui->slabsTableView->indexWidget(model->index(i + 1, BaseWidget::SET_COLUMN_INDEX));
+            slaveSetVoltageWidget->findChild<QLineEdit*>()->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+        }
+    }
+
     emit initializationManySlabsRequired(takeSlabsIds());
 }
 
 void ManySlabsAtOnce::offAllClicked(){
+    for (int i = 0; i < model->rowCount(); i+=2){
+        QWidget* masterSlabIdWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::ID_COLUMN_INDEX));
+        QString slabIdString = masterSlabIdWidget->findChild<QLineEdit*>()->text();
+        bool okId;
+        slabIdString.toUShort(&okId);
+        if(okId){
+            QWidget* masterSetVoltageWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_COLUMN_INDEX));
+            masterSetVoltageWidget->findChild<QLineEdit*>()->setText("");
+
+            QWidget* slaveSetVoltageWidget = ui->slabsTableView->indexWidget(model->index(i + 1, BaseWidget::SET_COLUMN_INDEX));
+            slaveSetVoltageWidget->findChild<QLineEdit*>()->setText("");
+        }
+    }
     emit offManySlabsRequired(takeSlabsIds());
 }
 
@@ -321,27 +348,39 @@ void ManySlabsAtOnce::setAllClicked()
         bool okId;
         quint16 slabId = slabIdString.toUShort(&okId);
 
-//        QWidget* masterSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_COLUMN_INDEX));
-//        QString masterSlabSetString = masterSlabSetWidget->findChild<QLineEdit*>()->text();
-//        bool okMasterSet;
-//        float masterSlabSet = masterSlabSetString.toFloat(&okMasterSet);
-
-//        QWidget* slaveSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i + 1, BaseWidget::SET_COLUMN_INDEX));
-//        QString slaveSlabSetString = slaveSlabSetWidget->findChild<QLineEdit*>()->text();
-//        bool okSlaveSet;
-//        float slaveSlabSet = masterSlabSetString.toFloat(&okSlaveSet);
-
         Slab slab;
         if(okId && okSet){
             slab = Slab(slabId, std::make_shared<Sipm>(), std::make_shared<Sipm>());
             slab.getMaster()->setSetVoltage(slabSet);
             slab.getSlave()->setSetVoltage(slabSet);
+
+            QWidget* masterSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i, BaseWidget::SET_COLUMN_INDEX));
+            masterSlabSetWidget->findChild<QLineEdit*>()->setText(slabSetAllString);
+
+            QWidget* slaveSlabSetWidget = ui->slabsTableView->indexWidget(model->index(i + 1, BaseWidget::SET_COLUMN_INDEX));
+            slaveSlabSetWidget->findChild<QLineEdit*>()->setText(slabSetAllString);
         } else {
             slab = Slab(-1, std::make_shared<Sipm>(), std::make_shared<Sipm>());
         }
         slabs.append(slab);
     }
     emit setManySlabsRequired(slabs);
+}
+
+void ManySlabsAtOnce::offClicked(int rowId)
+{    
+    QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
+    int slabId = model->data(index).toInt();
+    Slab slab = model->findSlab(slabId);
+    //    slab.getMaster()->setStatusColor(StatusColor::Transparent);
+    //    slabStates[slabId] = SlabState::On;
+    QModelIndex masterSetIndex = model->findIndexOfMasterRowSetButton(rowId);
+    QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+    QModelIndex slaveSetIndex = model->findIndexOfSlaveRowSetButton(rowId);
+    QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
+    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText("");
+    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText("");
+    emit offRequired(slab);
 }
 
 void ManySlabsAtOnce::appendManySlabsToModel(QList<Slab> slabs) {
@@ -405,7 +444,41 @@ void ManySlabsAtOnce::idEditingFinished(int position)
     QLineEdit* idLineEdit = idWidget->findChildren<QLineEdit *>().at(0);
 //    settings->beginGroup("ids");
 //        settings->setValue(QString::number(position), idLineEdit->text());
-//    settings->endGroup();
+    //    settings->endGroup();
+}
+
+void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){
+    QList<int> idList = hubsIds->value(ipAddress);
+
+    for(int i = 0; i < idList.size(); ++i){
+        int id = idList[i];
+        Slab slab(id, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+        model->replaceSlab(i, slab);
+    }
+//    QString ipAddress = getIpAddress();
+    QHash<QString, QList<int>>::iterator idsIterator;
+    if(!ipAddress.isNull()){
+        idsIterator = hubsIds->find(ipAddress);
+    } else {
+        idsIterator = hubsIds->end();
+    }
+
+    QList<int>::iterator idListIterator;
+    QList<int>::iterator idListEndIterator;
+    if(idsIterator != hubsIds->end()){
+        idListIterator = idsIterator->begin();
+        idListEndIterator = idsIterator->end();
+        for (int i = 0; i < model->rowCount(); i+=2){
+            if(idListIterator != idListEndIterator){
+                QString id = QString::number(*idListIterator);
+                QModelIndex idIndex = model->index(i, BaseWidget::ID_COLUMN_INDEX);
+                QWidget* idWidget = ui->slabsTableView->indexWidget(idIndex);
+                QLineEdit* idLineEdit = idWidget->findChildren<QLineEdit *>().at(0);
+                idLineEdit->setText(id);
+                ++idListIterator;
+            }
+        }
+    }
 }
 
 void ManySlabsAtOnce::setMasterStatusColor(Slab &slab)
@@ -431,4 +504,51 @@ void ManySlabsAtOnce::setSlaveStatusColor(Slab &slab)
     } else {
         slaveSipm->setStatusColor(StatusColor::Green);
     }
+}
+
+void ManySlabsAtOnce::onClicked(int rowId) {
+    QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
+    int slabId = model->data(index).toInt();
+    Slab slab = model->findSlab(slabId);
+//    slab.getMaster()->setStatusColor(StatusColor::Yellow);
+//    slabStates[slabId] = SlabState::On;
+    QModelIndex masterSetIndex = model->findIndexOfMasterRowSetButton(rowId);
+    QWidget *masterSetWidget = ui->slabsTableView->indexWidget(masterSetIndex);
+    QModelIndex slaveSetIndex = model->findIndexOfSlaveRowSetButton(rowId);
+    QWidget *slaveSetWidget = ui->slabsTableView->indexWidget(slaveSetIndex);
+    masterSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+    slaveSetWidget->findChildren<QLineEdit *>().at(0)->setText(QString::number(Sipm::INITIAL_VOLTAGE));
+    emit onRequired(slab);
+}
+
+void ManySlabsAtOnce::setMasterVoltageClicked(int rowId)
+{
+    QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
+    int slabId = model->data(index).toInt();
+    Slab slab = model->findSlab(slabId);
+    QWidget *setWidget = ui->slabsTableView->indexWidget(model->findIndexOfMasterSlabSetButton(slabId));
+    QString setVoltageText = setWidget->findChildren<QLineEdit*>().at(0)->text();
+    bool ok;
+    float masterVoltage = setVoltageText.toFloat(&ok);
+    if(ok){
+        slab.getMaster()->setSetVoltage(masterVoltage);
+    }
+    qDebug() << "Slab in Widget::setMasterVoltageClicked: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Master Voltage: " << slab.getMaster()->getSetVoltage();
+    emit setMasterVoltageRequired(slab);
+}
+
+void ManySlabsAtOnce::setSlaveVoltageClicked(int rowId)
+{
+    QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
+    int slabId = model->data(index).toInt();
+    Slab slab = model->findSlab(slabId);
+    QWidget *setWidget = ui->slabsTableView->indexWidget(model->findIndexOfSlaveSlabSetButton(slabId));
+    QString setVoltageText = setWidget->findChildren<QLineEdit*>().at(0)->text();
+    bool ok;
+    float slaveVoltage = setVoltageText.toFloat(&ok);
+    if(ok){
+        slab.getSlave()->setSetVoltage(slaveVoltage);
+    }
+    qDebug() << "Slab in Widget::setMasterVoltageClicked: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Master Voltage: " << slab.getMaster()->getSetVoltage();
+    emit setSlaveVoltageRequired(slab);
 }
