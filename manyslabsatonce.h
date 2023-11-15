@@ -45,6 +45,7 @@ private:
     void setSlaveStatusColor(Slab &slab);
     QList<Slab> takeSlabsIds();
     QString getIpAddress();
+
 private slots:
     void onAllClicked();
     void onClicked(int slabId);
@@ -59,6 +60,7 @@ private slots:
     void updateManySlabsInModel(QList<Slab> slab);
     void idEditingFinished(int position);
     void loadIdNumbers(QString ipAddress);
+    void loadSetVoltages(QPair<QVariantHash, QVariantHash> voltages);
 
 signals:
     void initializationManySlabsRequired(QList<Slab> slabs);
@@ -71,6 +73,7 @@ signals:
     void offRequired(Slab slab);
     void setMasterVoltageRequired(Slab slab);
     void setSlaveVoltageRequired(Slab slab);
+    void loadIdNumbersSucceded();
 };
 
 

@@ -19,6 +19,8 @@ const QString LanConnection::DOWNLOAD_MASTER_SET_VOLTAGE_COMMAND{
         "get_master_set_voltage"};
 const QString LanConnection::DOWNLOAD_SLAVE_SET_VOLTAGE_COMMAND{
         "get_slave_set_voltage"};
+const QString LanConnection::DOWNLOAD_ALL_SET_VOLTAGE_COMMAND{
+        "get_all_set_voltage"};
 const QString LanConnection::DOWNLOAD_MASTER_CURRENT_COMMAND{
         "get_master_amperage"};
 const QString LanConnection::DOWNLOAD_SLAVE_CURRENT_COMMAND{
@@ -585,6 +587,38 @@ std::shared_ptr<Sipm> LanConnection::getSetSipmVoltagFromHub(std::shared_ptr<Sip
     }
 }
 
+void LanConnection::loadAllSetSipmVoltageFromHub()
+{
+    QJsonArray command {DOWNLOAD_ALL_SET_VOLTAGE_COMMAND};
+    qint64 result = socket->write(QJsonDocument(command).toJson(QJsonDocument::Compact));
+
+    if (result <= 0) {
+        emit writingError(command);
+    }
+
+    if (socket->waitForBytesWritten(BYTES_WRITEN_LAN_TIME)) {
+        if (socket->waitForReadyRead(READ_READY_LAN_TIME)) {
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
+            QString status = jsonDocument.array().at(0).toString();
+            QPair<QVariantHash, QVariantHash> data;
+            if (status.isNull() || status.compare("OK") != 0) {
+                emit readingError("Reading all set voltage from SiPM error");
+            } else {
+                QJsonArray masterSlaveVoltages = jsonDocument.array().at(1).toArray();
+                QJsonObject masterVoltages = masterSlaveVoltages.at(0).toObject();
+                QJsonObject slaveVoltages = masterSlaveVoltages.at(1).toObject();
+                if(!masterVoltages.isEmpty() && !slaveVoltages.isEmpty()){
+                    data.first = masterVoltages.toVariantHash();
+                    data.second = slaveVoltages.toVariantHash();
+                }
+            }
+            emit loadAllSetSipmVoltageCompleted(data);
+        }
+    }
+
+
+}
+
 
 std::shared_ptr<Sipm> LanConnection::getSipmAmperageFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command,
                                                             quint16 avgNumber) {
@@ -602,14 +636,14 @@ std::shared_ptr<Sipm> LanConnection::getSipmAmperageFromHub(std::shared_ptr<Sipm
                 QJsonDocument jsonDocument = QJsonDocument::fromJson(socket->readAll());
                 QString status = jsonDocument.array().at(0).toString();
                 if (status.isNull() || status.compare("OK") != 0) {
-                    sipm->setStatus("Error reading amperage from SiPM");
+                    sipm->setStatus("Reading amperage from SiPM error");
                     return sipm;
                 } else {
                     double amperage = jsonDocument.array().at(1).toDouble();
                     amperageList.append(amperage);
                 }
             } else {
-                sipm->setStatus("Error reading amperage from SiPM");
+                sipm->setStatus("Reading amperage from SiPM error");
                 return sipm;
             }
         } else {

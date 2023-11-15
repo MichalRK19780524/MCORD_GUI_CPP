@@ -151,6 +151,7 @@ QString DetectorTableModel::appendSlab(Slab slab) {
 
 QString DetectorTableModel::updateSlab(Slab slab) {
     qDebug() << "Slab in DetectorTableModel::updateSlab: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Master Voltage: " << slab.getMaster()->getSetVoltage();
+    qDebug() << "Slab in DetectorTableModel::updateSlab: "<< '\n' << "Id:" << slab.getId() << '\t' << "Set Slave Voltage: " << slab.getSlave()->getSetVoltage();
     int slabPosition = findSlabPosition(slab.getId());
     if(slabs->size() > 0){
         slabs->replace(slabPosition, slab);

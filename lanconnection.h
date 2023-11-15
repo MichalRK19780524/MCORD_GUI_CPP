@@ -3,6 +3,8 @@
 
 #include <QJsonArray>
 #include <QTcpSocket>
+#include <QHash>
+#include <QPair>
 
 #include "slab.h"
 #include "afetype.h"
@@ -73,6 +75,8 @@ signals:
     void offManySlabsSucceeded(QList<Slab> slabs);
     void onHubSucceeded();
     void offHubSucceeded();
+    void loadAllSetSipmVoltageCompleted(QPair<QVariantHash, QVariantHash> voltages);
+
 public slots:
     void connect(QString ipAddress, quint16 port = PORT);
     void closeConnection();
@@ -88,6 +92,7 @@ public slots:
     void setSlaveVoltage(Slab slab);
     void onHub();
     void offHub();
+    void loadAllSetSipmVoltageFromHub();
 
 
 private:
@@ -96,6 +101,7 @@ private:
     static const QString DOWNLOAD_SLAVE_VOLTAGE_COMMAND;
     static const QString DOWNLOAD_MASTER_SET_VOLTAGE_COMMAND;
     static const QString DOWNLOAD_SLAVE_SET_VOLTAGE_COMMAND;
+    static const QString DOWNLOAD_ALL_SET_VOLTAGE_COMMAND;
     static const QString DOWNLOAD_MASTER_CURRENT_COMMAND;
     static const QString DOWNLOAD_SLAVE_CURRENT_COMMAND;
     static const QString DOWNLOAD_MASTER_TEMPERATURE_COMMAND;

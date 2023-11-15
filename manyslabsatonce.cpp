@@ -131,6 +131,8 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
 //    connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
 
     connect(lanConnection, &LanConnection::connectionSucceeded, this, &ManySlabsAtOnce::loadIdNumbers);
+    connect(this, &ManySlabsAtOnce::loadIdNumbersSucceded, lanConnection, &LanConnection::loadAllSetSipmVoltageFromHub);
+    connect(lanConnection, &LanConnection::loadAllSetSipmVoltageCompleted, this, &ManySlabsAtOnce::loadSetVoltages);
 
     connect(setMasterSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::setMasterVoltageClicked);
     connect(setSlaveSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::setSlaveVoltageClicked);
@@ -424,9 +426,35 @@ void ManySlabsAtOnce::updateSlabInModel(Slab slab) {
 }
 
 void ManySlabsAtOnce::updateManySlabsInModel(QList<Slab> slabs){
+    QString message;
     for(Slab slab: slabs){
+        QModelIndex masterSlabSetButtonIndex = model->findIndexOfMasterSlabSetButton(slab.getId());
+        QWidget* masterSlabSetWidget = ui->slabsTableView->indexWidget(masterSlabSetButtonIndex);
+        QString masterSetVoltage = masterSlabSetWidget->findChild<QLineEdit*>()->text();
+        if(!masterSetVoltage.isEmpty()){
+            bool ok;
+            slab.getMaster()->setSetVoltage(masterSetVoltage.toFloat(&ok));
+            if(!ok){
+                message = QString("Updating detection slab ") + QString::number(slab.getId()) + "internal error";
+                qDebug() << message + " incoorect string: " + masterSetVoltage;
+                QMessageBox::information(this, message, masterSetVoltage);
+            }
+        }
+
+        QModelIndex slaveSlabSetButtonIndex = model->findIndexOfSlaveSlabSetButton(slab.getId());
+        QWidget* slaveSlabSetWidget = ui->slabsTableView->indexWidget(slaveSlabSetButtonIndex);
+        QString slaveSetVoltage = slaveSlabSetWidget->findChild<QLineEdit*>()->text();
+        if(!slaveSetVoltage.isEmpty()){
+            bool ok;
+            slab.getSlave()->setSetVoltage(slaveSetVoltage.toFloat(&ok));
+            if(!ok){
+                message = QString("Updating detection slab ") + QString::number(slab.getId()) + "internal error";
+                qDebug() << message + " incoorect string: " + slaveSetVoltage;
+                QMessageBox::information(this, message, slaveSetVoltage);
+            }
+        }
+
         QString result = model->updateSlab(slab);
-        QString message;
         if (result != "OK") {
             message = QString("Updating detection slab ") + QString::number(slab.getId()) + " error";
             QMessageBox::information(this, message, result);
@@ -479,6 +507,62 @@ void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){
             }
         }
     }
+    emit loadIdNumbersSucceded();
+}
+
+
+void ManySlabsAtOnce::loadSetVoltages(QPair<QVariantHash, QVariantHash> voltages)
+{
+    if(voltages.first.isEmpty() && voltages.second.isEmpty()){
+        return;
+    }
+
+    QVariantHash masterVoltages = voltages.first;
+    QVariantHash slaveVoltages = voltages.second;
+
+    for (int i = 0; i < model->rowCount(); i+=2){
+        QModelIndex masterIdIndex = model->index(i, BaseWidget::ID_COLUMN_INDEX);
+        QWidget* masterIdWidget = ui->slabsTableView->indexWidget(masterIdIndex);
+        QLineEdit* masterIdLineEdit = masterIdWidget->findChildren<QLineEdit *>().at(0);
+        QString masterId = masterIdLineEdit->text();
+
+        QModelIndex masterVoltageIndex = model->index(i, BaseWidget::SET_COLUMN_INDEX);
+        QWidget* masterVoltageWidget = ui->slabsTableView->indexWidget(masterVoltageIndex);
+        QLineEdit* masterVoltageLineEdit = masterVoltageWidget->findChildren<QLineEdit *>().at(0);
+        masterVoltageLineEdit->setText(masterVoltages.value(masterId).toString());
+
+        QModelIndex slaveVoltageIndex = model->index(i + 1, BaseWidget::SET_COLUMN_INDEX);
+        QWidget* slaveVoltageWidget = ui->slabsTableView->indexWidget(slaveVoltageIndex);
+        QLineEdit* slaveVoltageLineEdit = slaveVoltageWidget->findChildren<QLineEdit *>().at(0);
+        slaveVoltageLineEdit->setText(slaveVoltages.value(masterId).toString());
+    }
+//    for (int i = 0; i < model->rowCount(); i+=2){
+//        QVariantList::iterator masterVoltagesIterator = voltages.first.begin();
+//        QVariantList::iterator masterVoltagesEndIterator = voltages.first.end();
+
+//        if(masterVoltagesIterator != masterVoltagesEndIterator){
+//            QModelIndex masterVoltageIndex = model->index(i, BaseWidget::SET_COLUMN_INDEX);
+//            QWidget* masterVoltageWidget = ui->slabsTableView->indexWidget(masterVoltageIndex);
+//            QLineEdit* masterVoltageLineEdit = masterVoltageWidget->findChildren<QLineEdit *>().at(0);
+//            masterVoltageLineEdit->setText("do uzupelnienia");
+//            ++masterVoltagesIterator;
+//        }
+
+//        QVariantList::iterator slaveVoltagesIterator = voltages.second.begin();
+//        QVariantList::iterator slaveVoltagesEndIterator = voltages.second.end();
+//        if(slaveVoltagesIterator != slaveVoltagesEndIterator){
+
+//            ++slaveVoltagesIterator;
+//        }
+//        if(idListIterator != idListEndIterator){
+//            QString id = QString::number(*idListIterator);
+//            QModelIndex idIndex = model->index(i, BaseWidget::ID_COLUMN_INDEX);
+//            QWidget* idWidget = ui->slabsTableView->indexWidget(idIndex);
+//            QLineEdit* idLineEdit = idWidget->findChildren<QLineEdit *>().at(0);
+//            idLineEdit->setText(id);
+//            ++idListIterator;
+//        }
+
 }
 
 void ManySlabsAtOnce::setMasterStatusColor(Slab &slab)
