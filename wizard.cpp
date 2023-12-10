@@ -2,6 +2,7 @@
 #include <QRegularExpressionValidator>
 #include <QThread>
 #include <QGridLayout>
+#include <QMessageBox>
 
 #include "wizard.h"
 #include "manyslabsatonce.h"
@@ -100,6 +101,10 @@ int SelectOneManyPage::nextId() const
     }
 }
 
+QFile ManySlabsAtOnce::file {"current_slab_ids.txt"};
+QTextStream ManySlabsAtOnce::textIds(&ManySlabsAtOnce::file);
+QHash<QString, std::tuple<int, QString, QList<int>>> *const ManySlabsAtOnce::hubsComentsAndIds = new QHash<QString, std::tuple<int, QString, QList<int>>>;
+
 SelectLanUsbPage::SelectLanUsbPage(QWidget *parent): QWizardPage(parent)
 {
     setTitle(tr("Select LAN or USB connection Mode"));
@@ -111,6 +116,32 @@ SelectLanUsbPage::SelectLanUsbPage(QWidget *parent): QWizardPage(parent)
     layout->addWidget(oneByOneSlabRadioButton, 0, 0);
     layout->addWidget(manySlabsRadioButton, 0, 1);
     setLayout(layout);
+
+
+    if(!ManySlabsAtOnce::file.open(QFile::ReadOnly | QFile::Text)){
+        QMessageBox::warning(this, "Error", "File not open");
+    }
+    static QRegularExpression regex("\\s+");
+    while(!ManySlabsAtOnce::textIds.atEnd()){
+        QString firstLine = ManySlabsAtOnce::textIds.readLine();
+        QStringList firstLineList = firstLine.split(regex);
+        QString section = firstLineList.last();
+        QString hubIpAddress = ManySlabsAtOnce::textIds.readLine();
+        QString idsSeries = ManySlabsAtOnce::textIds.readLine();
+        QStringList idsStrings = idsSeries.split(regex);
+        QList<int> idList;
+        for(const QString &id : idsStrings){
+            bool ok;
+            idList.append(id.toInt(&ok));
+            if(!ok){
+                qDebug() << "Reading Ids From File Error";
+                //                emit readIdsFromFileError(); //Chyba nie zadziała
+                break;
+            }
+        }
+        ManySlabsAtOnce::hubsComentsAndIds->insert(hubIpAddress, std::make_tuple(section.toInt(), firstLine, idList));
+    }
+    ManySlabsAtOnce::file.close();
 }
 
 SelectLanUsbPage::~SelectLanUsbPage()
@@ -245,12 +276,9 @@ void EnterIpAddressPage::connectButtonClicked(int which)
                 if(manySlabsRadioButton->isChecked()){
                         wizardPointer->insertLanConnection(hostAddress, lc);
                         connect(wizardPointer, &Wizard::connectionRequst, lc, &LanConnection::connect);
-                        ManySlabsAtOnce* manySlabsAtOnce = new ManySlabsAtOnce(lc, /*settings,*/ nullptr);
+                        ManySlabsAtOnce* manySlabsAtOnce = new ManySlabsAtOnce(lc, ipAddress, nullptr);
                         connect(manySlabsAtOnce, &ManySlabsAtOnce::closeLanConnection, lc, &LanConnection::closeConnection);
-//                        connect()
-//                        connect(manySlabsAtOnce, &ManySlabsAtOnce::initializationManySlabsRequired, lc, &LanConnection::initAndOnManySlabs);
                         manySlabsAtOnce->show();
-
                         emit connectManySlabsLan(ipAddress, LanConnection::PORT);
                     }
                 if(oneByOneSlabRadioButton->isChecked()){

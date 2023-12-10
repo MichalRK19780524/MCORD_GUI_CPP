@@ -8,11 +8,12 @@
 #include "manyslabsatonce.h"
 #include "ui_manyslabsatonce.h"
 
-QHash<QString, QList<int>>* ManySlabsAtOnce::hubsIds = new QHash<QString, QList<int>>;
+// QHash<QString, QPair<QString, QList<int>>> *const ManySlabsAtOnce::hubsComentsAndIds = new QHash<QString, QPair<QString, QList<int>>>;
 
-ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *settings,*/ QWidget *parent) :
+
+ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ManySlabsAtOnce), /*settings(settings),*/ base(new BaseWidget(lanConnection))
+    ui(new Ui::ManySlabsAtOnce), base(new BaseWidget(lanConnection))
 {
     ui->setupUi(this);
     model = new DetectorTableModel(Widget::HEADERS, 8, this);
@@ -97,12 +98,16 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
     QPalette labelPalette = ui->labelSection->palette();
     labelPalette.setColor(QPalette::WindowText, Qt::white);
     ui->labelIp->setAutoFillBackground(true);
+    ui->labelIp->setText(ui->labelIp->text() + " " +ipAddress);
     ui->labelSection->setAutoFillBackground(true);
     ui->groupBoxDetectionSlabs->setAutoFillBackground(true);
 //    palette.setColor(ui->pLabel->foregroundRole(), Qt::yellow);
     ui->labelSection->setPalette(labelPalette);
     ui->labelIp->setPalette(labelPalette);
     ui->groupBoxDetectionSlabs->setPalette(labelPalette);
+
+    std::tuple<int, QString, QList<int>> value = ManySlabsAtOnce::hubsComentsAndIds->value(ipAddress);
+    ui->labelSection->setText(ui->labelSection->text() + " " + QString::number(std::get<0>(value)));
 
     QHeaderView *verticalHeader = ui->slabsTableView->verticalHeader();
     verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
@@ -128,7 +133,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
 
     connect(this, &ManySlabsAtOnce::manySlabsUpdateRequired, lanConnection, &LanConnection::updateManySlabs);
     connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManySlabsInModel);
-//    connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
+    connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
 
     connect(lanConnection, &LanConnection::connectionSucceeded, this, &ManySlabsAtOnce::loadIdNumbers);
     connect(this, &ManySlabsAtOnce::loadIdNumbersSucceded, lanConnection, &LanConnection::loadAllSetSipmVoltageFromHub);
@@ -144,31 +149,6 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *sett
     connect(this, &ManySlabsAtOnce::setMasterVoltageRequired, lanConnection, &LanConnection::setMasterVoltage);
     connect(this, &ManySlabsAtOnce::setSlaveVoltageRequired, lanConnection, &LanConnection::setSlaveVoltage);
     connect(this, &ManySlabsAtOnce::destroyed, lanConnection , &LanConnection::deleteLater);
-
-//TO DO zastanowić się, czy nie przenieść wczytywania z pliku w inne miejsce
-    file.setFileName("current_slab_ids.txt");
-    if(!file.open(QFile::ReadWrite | QFile::Text)){
-        QMessageBox::warning(this, "Error", "File not open");
-    }
-    static QRegularExpression regex("\\s+");
-    textIds.setDevice(&file);
-    while(!textIds.atEnd()){
-        textIds.readLine();
-        QString hubIpAddress = textIds.readLine();
-        QString idsSeries = textIds.readLine();
-        QStringList idsStrings = idsSeries.split(regex);
-        QList<int> idList;
-        for(const QString &id : idsStrings){
-            bool ok;
-            idList.append(id.toInt(&ok));
-            if(!ok){
-                qDebug() << "Reading Ids From File Error";
-//                emit readIdsFromFileError(); //Chyba nie zadziała
-                break;
-            }
-        }
-        hubsIds->insert(hubIpAddress, idList);
-    }
 
     addIdWidgets();
     addPowerWidgets();
@@ -301,6 +281,21 @@ QString ManySlabsAtOnce::getIpAddress()
     }
 }
 
+bool ManySlabsAtOnce::saveId(QString ipAddress, int position, QString id)
+{
+
+//    QFile ofile("current_slab_ids_temp.txt");
+//    ofile.open(QIODevice::WriteOnly | QIODevice::Text);
+//    QTextStream out(&ofile);
+//    for (auto i = hubsComentsAndIds->cbegin(), end = hubsComentsAndIds->cend(); i != end; ++i){
+//        out << i.value().first << '\n';
+//    }
+////        cout << qPrintable(i.key()) << ": " << i.value() << endl;
+//    file.remove();
+//    ofile.rename("current_slab_ids.txt");
+    return true;
+}
+
 void ManySlabsAtOnce::onAllClicked()
 {
     for (int i = 0; i < model->rowCount(); i+=2){
@@ -372,7 +367,7 @@ void ManySlabsAtOnce::setAllClicked()
 void ManySlabsAtOnce::offClicked(int rowId)
 {    
     QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
-    int slabId = model->data(index).toInt();
+    int slabId = model->data(index, Qt::UserRole).toInt();
     Slab slab = model->findSlab(slabId);
     //    slab.getMaster()->setStatusColor(StatusColor::Transparent);
     //    slabStates[slabId] = SlabState::On;
@@ -470,13 +465,17 @@ void ManySlabsAtOnce::idEditingFinished(int position)
     QModelIndex idIndex = model->index(position, BaseWidget::ID_COLUMN_INDEX);
     QWidget* idWidget = ui->slabsTableView->indexWidget(idIndex);
     QLineEdit* idLineEdit = idWidget->findChildren<QLineEdit *>().at(0);
+    QString id = idLineEdit->text();
+    QString ipAddress = this->getIpAddress();
+    bool isSaved = saveId(ipAddress, position, id);
 //    settings->beginGroup("ids");
 //        settings->setValue(QString::number(position), idLineEdit->text());
     //    settings->endGroup();
 }
 
 void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){
-    QList<int> idList = hubsIds->value(ipAddress);
+    std::tuple<int, QString, QList<int>> idTuple = hubsComentsAndIds->value(ipAddress);
+    QList<int> idList = std::get<2>(idTuple);
 
     for(int i = 0; i < idList.size(); ++i){
         int id = idList[i];
@@ -484,18 +483,18 @@ void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){
         model->replaceSlab(i, slab);
     }
 //    QString ipAddress = getIpAddress();
-    QHash<QString, QList<int>>::iterator idsIterator;
+    QHash<QString, std::tuple<int, QString, QList<int>>>::iterator idsIterator;
     if(!ipAddress.isNull()){
-        idsIterator = hubsIds->find(ipAddress);
+        idsIterator = hubsComentsAndIds->find(ipAddress);
     } else {
-        idsIterator = hubsIds->end();
+        idsIterator = hubsComentsAndIds->end();
     }
 
     QList<int>::iterator idListIterator;
     QList<int>::iterator idListEndIterator;
-    if(idsIterator != hubsIds->end()){
-        idListIterator = idsIterator->begin();
-        idListEndIterator = idsIterator->end();
+    if(idsIterator != hubsComentsAndIds->end()){
+        idListIterator = std::get<2>(*idsIterator).begin();
+        idListEndIterator = std::get<2>(*idsIterator).end();
         for (int i = 0; i < model->rowCount(); i+=2){
             if(idListIterator != idListEndIterator){
                 QString id = QString::number(*idListIterator);
@@ -591,8 +590,14 @@ void ManySlabsAtOnce::setSlaveStatusColor(Slab &slab)
 }
 
 void ManySlabsAtOnce::onClicked(int rowId) {
-    QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
-    int slabId = model->data(index).toInt();
+    QModelIndex  idIndex = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
+    QWidget *idWidget = ui->slabsTableView->indexWidget(idIndex);
+    QString id = idWidget->findChildren<QLineEdit *>().at(0)->text();
+
+    if(!id.isEmpty()){
+        model->replaceSlab(rowId/2, Slab(id.toInt(), std::make_shared<Sipm>(), std::make_shared<Sipm>()));
+    }
+    int slabId = model->data(idIndex, Qt::UserRole).toInt();
     Slab slab = model->findSlab(slabId);
 //    slab.getMaster()->setStatusColor(StatusColor::Yellow);
 //    slabStates[slabId] = SlabState::On;
@@ -608,7 +613,7 @@ void ManySlabsAtOnce::onClicked(int rowId) {
 void ManySlabsAtOnce::setMasterVoltageClicked(int rowId)
 {
     QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
-    int slabId = model->data(index).toInt();
+    int slabId = model->data(index, Qt::UserRole).toInt();
     Slab slab = model->findSlab(slabId);
     QWidget *setWidget = ui->slabsTableView->indexWidget(model->findIndexOfMasterSlabSetButton(slabId));
     QString setVoltageText = setWidget->findChildren<QLineEdit*>().at(0)->text();
@@ -624,7 +629,7 @@ void ManySlabsAtOnce::setMasterVoltageClicked(int rowId)
 void ManySlabsAtOnce::setSlaveVoltageClicked(int rowId)
 {
     QModelIndex  index = model->index(rowId, BaseWidget::ID_COLUMN_INDEX);
-    int slabId = model->data(index).toInt();
+    int slabId = model->data(index, Qt::UserRole).toInt();
     Slab slab = model->findSlab(slabId);
     QWidget *setWidget = ui->slabsTableView->indexWidget(model->findIndexOfSlaveSlabSetButton(slabId));
     QString setVoltageText = setWidget->findChildren<QLineEdit*>().at(0)->text();

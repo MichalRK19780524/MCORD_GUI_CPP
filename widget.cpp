@@ -445,14 +445,14 @@ void Widget::addSetWidgets() {
     ui->slabsTableView->setIndexWidget(masterSetIndex, setVoltageWidgetMaster);
     connect(setVoltageButtonMaster, &QPushButton::clicked, setMasterSignalMapper,
             static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-    int masterSlabId = model->data(model->index(masterRow, 0)).toInt();
+    int masterSlabId = model->data(model->index(masterRow, Qt::UserRole)).toInt();
     setMasterSignalMapper->setMapping(setVoltageButtonMaster, masterSlabId);
 
     int slaveRow = model->rowCount() - 1;
     QModelIndex slaveSetIndex = model->index(slaveRow, SET_COLUMN_INDEX);
     ui->slabsTableView->setIndexWidget(slaveSetIndex, setVoltageWidgetSlave);
     connect(setVoltageButtonSlave, &QPushButton::clicked, setSlaveSignalMapper,static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-    int slaveSlabId = model->data(model->index(slaveRow, 0)).toInt();
+    int slaveSlabId = model->data(model->index(slaveRow, Qt::UserRole)).toInt();
     setSlaveSignalMapper->setMapping(setVoltageButtonSlave, slaveSlabId);
 }
 
@@ -464,7 +464,7 @@ void Widget::addPowerWidgets() {
 
     powerLayout->addWidget(powerOnButton);
     int row = model->rowCount() - 2;
-    int slabId = model->data(model->index(row, 0)).toInt();
+    int slabId = model->data(model->index(row, Qt::UserRole)).toInt();
 
     QModelIndex powerIndex = model->index(row, POWER_COLUMN_INDEX);
     powerLayout->addWidget(powerOffButton);

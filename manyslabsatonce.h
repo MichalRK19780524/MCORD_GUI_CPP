@@ -19,18 +19,19 @@ class ManySlabsAtOnce : public QWidget
     Q_OBJECT
 
 public:
-    explicit ManySlabsAtOnce(LanConnection *lanConnection, /*QSettings *settings,*/ QWidget *parent = nullptr);
+    explicit ManySlabsAtOnce(LanConnection *lanConnection,  QString ipAddress, QWidget *parent = nullptr);
     ~ManySlabsAtOnce() override;
+
+    static QFile file;
+    static QTextStream textIds;
+    static QHash<QString, std::tuple<int, QString, QList<int>>> *const hubsComentsAndIds;
 
 private:
     Ui::ManySlabsAtOnce *ui;
     BaseWidget* base;
     DetectorTableModel *model = nullptr;
 //    QSettings *settings = nullptr;
-    QFile file;
-    QTextStream textIds;
 
-    static QHash<QString, QList<int>> *hubsIds;
 
     QSignalMapper *setMasterSignalMapper = nullptr;
     QSignalMapper *setSlaveSignalMapper = nullptr;
@@ -46,6 +47,7 @@ private:
     QList<Slab> takeSlabsIds();
     QString getIpAddress();
 
+    bool saveId(QString ipAddress, int position, QString id);
 private slots:
     void onAllClicked();
     void onClicked(int slabId);

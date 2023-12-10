@@ -84,17 +84,21 @@ QVariant DetectorTableModel::data(const QModelIndex &index, int role) const {
         sipm = slab.getSlave();
     }
 
-    if (role == Qt::DisplayRole) {
+    if (role == Qt::DisplayRole || role == Qt::UserRole) {
         QVariant var;
         float measuredVoltage;
         switch (index.column()) {
             int id;
             case 0:
-                id = slab.getId();
-                if (id == -1) {
-                    return QString();
+                if(role == Qt::UserRole){
+                    id = slab.getId();
+                    if (id == -1) {
+                        return QString();
+                    } else {
+                        return slab.getId();
+                    }
                 } else {
-                    return slab.getId();
+                    return QString();
                 }
             case 1:
                 var.setValue(sipm->getStatusColor());

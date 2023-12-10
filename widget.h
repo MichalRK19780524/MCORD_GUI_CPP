@@ -9,6 +9,7 @@
 #include <QSignalMapper>
 #include <QSettings>
 #include <QFile>
+#include <QMessageBox>
 
 //#include "detectionslabswidget.h"
 #include "lanconnection.h"

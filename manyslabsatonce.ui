@@ -59,7 +59,7 @@
          <item>
           <widget class="QLabel" name="labelSection">
            <property name="text">
-            <string>Section No. 1</string>
+            <string>Section No. </string>
            </property>
           </widget>
          </item>
