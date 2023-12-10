@@ -103,7 +103,7 @@ int SelectOneManyPage::nextId() const
 
 QFile ManySlabsAtOnce::file {"current_slab_ids.txt"};
 QTextStream ManySlabsAtOnce::textIds(&ManySlabsAtOnce::file);
-QHash<QString, std::tuple<int, QString, QList<int>>> *const ManySlabsAtOnce::hubsComentsAndIds = new QHash<QString, std::tuple<int, QString, QList<int>>>;
+QHash<QString, std::tuple<QString, QList<int>>> *const ManySlabsAtOnce::hubsComentsAndIds = new QHash<QString, std::tuple<QString, QList<int>>>;
 
 SelectLanUsbPage::SelectLanUsbPage(QWidget *parent): QWizardPage(parent)
 {
@@ -124,8 +124,8 @@ SelectLanUsbPage::SelectLanUsbPage(QWidget *parent): QWizardPage(parent)
     static QRegularExpression regex("\\s+");
     while(!ManySlabsAtOnce::textIds.atEnd()){
         QString firstLine = ManySlabsAtOnce::textIds.readLine();
-        QStringList firstLineList = firstLine.split(regex);
-        QString section = firstLineList.last();
+        // QStringList firstLineList = firstLine.split(regex);
+        // QString section = firstLineList.last();
         QString hubIpAddress = ManySlabsAtOnce::textIds.readLine();
         QString idsSeries = ManySlabsAtOnce::textIds.readLine();
         QStringList idsStrings = idsSeries.split(regex);
@@ -139,7 +139,7 @@ SelectLanUsbPage::SelectLanUsbPage(QWidget *parent): QWizardPage(parent)
                 break;
             }
         }
-        ManySlabsAtOnce::hubsComentsAndIds->insert(hubIpAddress, std::make_tuple(section.toInt(), firstLine, idList));
+        ManySlabsAtOnce::hubsComentsAndIds->insert(hubIpAddress, std::make_tuple(firstLine, idList));
     }
     ManySlabsAtOnce::file.close();
 }

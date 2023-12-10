@@ -24,7 +24,7 @@ public:
 
     static QFile file;
     static QTextStream textIds;
-    static QHash<QString, std::tuple<int, QString, QList<int>>> *const hubsComentsAndIds;
+    static QHash<QString, std::tuple<QString, QList<int>>> *const hubsComentsAndIds;
 
 private:
     Ui::ManySlabsAtOnce *ui;

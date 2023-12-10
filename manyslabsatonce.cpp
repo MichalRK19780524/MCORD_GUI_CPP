@@ -106,8 +106,9 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress
     ui->labelIp->setPalette(labelPalette);
     ui->groupBoxDetectionSlabs->setPalette(labelPalette);
 
-    std::tuple<int, QString, QList<int>> value = ManySlabsAtOnce::hubsComentsAndIds->value(ipAddress);
-    ui->labelSection->setText(ui->labelSection->text() + " " + QString::number(std::get<0>(value)));
+    std::tuple<QString, QList<int>> value = ManySlabsAtOnce::hubsComentsAndIds->value(ipAddress);
+    static QRegularExpression regex("\\s+");
+    ui->labelSection->setText(ui->labelSection->text() + " " + std::get<0>(value).split(regex).last());
 
     QHeaderView *verticalHeader = ui->slabsTableView->verticalHeader();
     verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
@@ -474,8 +475,8 @@ void ManySlabsAtOnce::idEditingFinished(int position)
 }
 
 void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){
-    std::tuple<int, QString, QList<int>> idTuple = hubsComentsAndIds->value(ipAddress);
-    QList<int> idList = std::get<2>(idTuple);
+    std::tuple<QString, QList<int>> idTuple = hubsComentsAndIds->value(ipAddress);
+    QList<int> idList = std::get<1>(idTuple);
 
     for(int i = 0; i < idList.size(); ++i){
         int id = idList[i];
@@ -483,7 +484,7 @@ void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){
         model->replaceSlab(i, slab);
     }
 //    QString ipAddress = getIpAddress();
-    QHash<QString, std::tuple<int, QString, QList<int>>>::iterator idsIterator;
+    QHash<QString, std::tuple<QString, QList<int>>>::iterator idsIterator;
     if(!ipAddress.isNull()){
         idsIterator = hubsComentsAndIds->find(ipAddress);
     } else {
@@ -493,8 +494,8 @@ void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){
     QList<int>::iterator idListIterator;
     QList<int>::iterator idListEndIterator;
     if(idsIterator != hubsComentsAndIds->end()){
-        idListIterator = std::get<2>(*idsIterator).begin();
-        idListEndIterator = std::get<2>(*idsIterator).end();
+        idListIterator = std::get<1>(*idsIterator).begin();
+        idListEndIterator = std::get<1>(*idsIterator).end();
         for (int i = 0; i < model->rowCount(); i+=2){
             if(idListIterator != idListEndIterator){
                 QString id = QString::number(*idListIterator);
