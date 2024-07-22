@@ -30,8 +30,7 @@ const QString LanConnection::DOWNLOAD_MASTER_TEMPERATURE_COMMAND{
 const QString LanConnection::DOWNLOAD_SLAVE_TEMPERATURE_COMMAND{
         "get_temperature_degree_slave"};
 const QString LanConnection::INIT_COMMAND{"init"};
-//const QString LanConnection::ON_COMMAND{"hvon"};
-//const QString LanConnection::OFF_COMMAND{"hvoff"};
+
 const QString LanConnection::ON_COMMAND{"slabOn"};
 const QString LanConnection::OFF_COMMAND{"slabOff"};
 const QString LanConnection::SET_VOLTAGE_COMMAND{"setdac"};

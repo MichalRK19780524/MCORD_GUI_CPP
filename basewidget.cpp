@@ -8,6 +8,8 @@
 const QStringList BaseWidget::HEADERS{
                                   "Slab No.", "Status", "Power", "Type", "Set SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
 
+const QString BaseWidget::STANDARD_COMMENT = "List IP number and Slabs numbers in the section No:";
+
 LanConnection *BaseWidget::getLanConnection() const
 {
     return lanConnection;

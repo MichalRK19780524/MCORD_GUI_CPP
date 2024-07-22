@@ -53,6 +53,8 @@ private:
     QButtonGroup *slabsAmountButtonGroup;
     QRadioButton *oneByOneSlabRadioButton;
     QRadioButton *manySlabsRadioButton;
+    QRadioButton *calibrationRadioButton;
+    QRadioButton *noActiveRadioButton;
 };
 
 

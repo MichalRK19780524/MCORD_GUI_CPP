@@ -24,7 +24,8 @@ public:
 
     static QFile file;
     static QTextStream textIds;
-    static QHash<QString, std::tuple<QString, QList<int>>> *const hubsComentsAndIds;
+    // static QHash<QString, std::tuple<QString, QList<int>>> *const hubsComentsAndIds;
+    static QHash<QString, std::tuple<QString, unsigned int, QList<int>>> *const hubsComentsAndIds;
 
 private:
     Ui::ManySlabsAtOnce *ui;
@@ -46,6 +47,8 @@ private:
     void setSlaveStatusColor(Slab &slab);
     QList<Slab> takeSlabsIds();
     QString getIpAddress();
+
+    std::tuple<QString, unsigned int, QList<int>> readIdsFromTable();
 
     bool saveId(QString ipAddress, int position, QString id);
 private slots:

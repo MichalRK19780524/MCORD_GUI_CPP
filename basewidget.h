@@ -21,6 +21,7 @@ public:
     static constexpr quint16 PORT = 5555;
     static constexpr quint16 READ_READY_SERIAL_TIME = 5000;
     static const QStringList HEADERS;
+    static const QString STANDARD_COMMENT;
 protected:
     enum class SlabState : size_t {
         Detected,
