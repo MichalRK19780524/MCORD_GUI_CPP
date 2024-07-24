@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QGridLayout>
 #include <QMessageBox>
+#include <QRegularExpression>
 
 #include "wizard.h"
 #include "manyslabsatonce.h"
