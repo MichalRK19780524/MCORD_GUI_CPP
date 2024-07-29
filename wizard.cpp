@@ -22,7 +22,7 @@ Wizard::Wizard(QWidget *parent) :
     setWizardStyle(ClassicStyle);
 
     connect(enterIpAddressPage, &EnterIpAddressPage::connectManySlabsLan, this, &Wizard::connectManySlabs);
-    connect(enterIpAddressPage, &EnterIpAddressPage::connectOneSlabLan, this, &Wizard::connectOneSlab);
+    // connect(enterIpAddressPage, &EnterIpAddressPage::connectOneSlabLan, this, &Wizard::connectOneSlab);
 }
 
 Wizard::~Wizard()
@@ -65,15 +65,15 @@ void Wizard::connectOneSlab(QString ipAddress, quint16 port)
 SelectOneManyPage::SelectOneManyPage(QWidget *parent): QWizardPage(parent)
 {
     setTitle(tr("Select One or Many Slabs Mode"));
-    slabsAmountButtonGroup = new QButtonGroup(this);
+    slabsButtonGroup = new QButtonGroup(this);
     oneByOneSlabRadioButton = new QRadioButton(tr("&One by one"), this);
     manySlabsRadioButton = new QRadioButton(tr("&Many slabs at once"), this);
     calibrationRadioButton = new QRadioButton(tr("&Calibration"), this);
     noActiveRadioButton = new QRadioButton(tr("&No Active"), this);
-    slabsAmountButtonGroup->addButton(oneByOneSlabRadioButton);
-    slabsAmountButtonGroup->addButton(manySlabsRadioButton);
-    slabsAmountButtonGroup->addButton(calibrationRadioButton);
-    slabsAmountButtonGroup->addButton(noActiveRadioButton);
+    slabsButtonGroup->addButton(oneByOneSlabRadioButton);
+    slabsButtonGroup->addButton(manySlabsRadioButton);
+    slabsButtonGroup->addButton(calibrationRadioButton);
+    slabsButtonGroup->addButton(noActiveRadioButton);
     manySlabsRadioButton->setChecked(true);
 
     registerField("one.by.one", oneByOneSlabRadioButton);
@@ -89,8 +89,8 @@ SelectOneManyPage::SelectOneManyPage(QWidget *parent): QWizardPage(parent)
 
 SelectOneManyPage::~SelectOneManyPage()
 {
-    delete slabsAmountButtonGroup;
-    slabsAmountButtonGroup = nullptr;
+    delete slabsButtonGroup;
+    slabsButtonGroup = nullptr;
 
     delete oneByOneSlabRadioButton;
     oneByOneSlabRadioButton = nullptr;
@@ -118,6 +118,8 @@ SelectLanUsbPage::SelectLanUsbPage(QWidget *parent): QWizardPage(parent)
     slabsAmountButtonGroup = new QButtonGroup(this);
     oneByOneSlabRadioButton = new QRadioButton(tr("&One by one"), this);
     manySlabsRadioButton = new QRadioButton(tr("&Many slabs at once"), this);
+    oneByOneSlabRadioButton->setDisabled(true);
+    manySlabsRadioButton->setDisabled(true);
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(oneByOneSlabRadioButton, 0, 0);
