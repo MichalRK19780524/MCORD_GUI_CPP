@@ -19,7 +19,7 @@ class Wizard : public QWizard
     Q_OBJECT
 
 public:
-    enum class Pages {SelectOneMany, SelectLanUsb, EnterIpAddress };
+    enum class Pages {SelectOneMany, SelectLanUsb, EnterIpAddress, EnterSerialPort};
 
     explicit Wizard(QWidget *parent = nullptr);
     ~Wizard();
@@ -73,6 +73,7 @@ private:
     QButtonGroup *slabsAmountButtonGroup;
     QRadioButton *oneByOneSlabRadioButton;
     QRadioButton *manySlabsRadioButton;
+    QButtonGroup *connectionTypeButtonGroup;
     QRadioButton *usbRadioButton;
     QRadioButton *lanRadioButton;
 };

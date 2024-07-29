@@ -118,12 +118,21 @@ SelectLanUsbPage::SelectLanUsbPage(QWidget *parent): QWizardPage(parent)
     slabsAmountButtonGroup = new QButtonGroup(this);
     oneByOneSlabRadioButton = new QRadioButton(tr("&One by one"), this);
     manySlabsRadioButton = new QRadioButton(tr("&Many slabs at once"), this);
+    slabsAmountButtonGroup->addButton(oneByOneSlabRadioButton);
+    slabsAmountButtonGroup->addButton(manySlabsRadioButton);
+    connectionTypeButtonGroup = new QButtonGroup(this);
+    usbRadioButton = new QRadioButton(tr("&USB"), this);
+    lanRadioButton = new QRadioButton(tr("&LAN"), this);
+    connectionTypeButtonGroup->addButton(usbRadioButton);
+    connectionTypeButtonGroup->addButton(lanRadioButton);
     oneByOneSlabRadioButton->setDisabled(true);
     manySlabsRadioButton->setDisabled(true);
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(oneByOneSlabRadioButton, 0, 0);
     layout->addWidget(manySlabsRadioButton, 0, 1);
+    layout->addWidget(usbRadioButton, 1, 0);
+    layout->addWidget(lanRadioButton, 1, 1);
     setLayout(layout);
 
 
@@ -184,7 +193,11 @@ void SelectLanUsbPage::initializePage()
 
 int SelectLanUsbPage::nextId() const
 {
-    return -1;
+    if (lanRadioButton->isChecked()) {
+        return static_cast<int>(Wizard::Pages::EnterIpAddress);
+    } else {
+        return static_cast<int>(Wizard::Pages::EnterSerialPort);
+    }
 }
 
 EnterIpAddressPage::EnterIpAddressPage(QWidget *parent): QWizardPage(parent)
