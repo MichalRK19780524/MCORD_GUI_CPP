@@ -50,7 +50,7 @@ public:
     int nextId() const override;
 
 private:
-    QButtonGroup *slabsAmountButtonGroup;
+    QButtonGroup *slabsButtonGroup;
     QRadioButton *oneByOneSlabRadioButton;
     QRadioButton *manySlabsRadioButton;
     QRadioButton *calibrationRadioButton;
@@ -73,6 +73,8 @@ private:
     QButtonGroup *slabsAmountButtonGroup;
     QRadioButton *oneByOneSlabRadioButton;
     QRadioButton *manySlabsRadioButton;
+    QRadioButton *usbRadioButton;
+    QRadioButton *lanRadioButton;
 };
 
 
