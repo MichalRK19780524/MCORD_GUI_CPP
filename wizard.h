@@ -44,10 +44,10 @@ class SelectOneManyPage : public QWizardPage
     Q_OBJECT
 
 public:
-    SelectOneManyPage(QWidget *parent = nullptr);
-    virtual ~SelectOneManyPage();
+    explicit SelectOneManyPage(QWidget *parent = nullptr);
+    ~SelectOneManyPage() override;
 
-    int nextId() const override;
+    [[nodiscard]] int nextId() const override;
 
 private:
     QButtonGroup *slabsAmountButtonGroup;
@@ -63,11 +63,11 @@ class SelectLanUsbPage : public QWizardPage
     Q_OBJECT
 
 public:
-    SelectLanUsbPage(QWidget *parent = nullptr);
-    virtual  ~SelectLanUsbPage();
+    explicit SelectLanUsbPage(QWidget *parent = nullptr);
+     ~SelectLanUsbPage() override;
 
     void initializePage() override;
-    int nextId() const override;
+    [[nodiscard]] int nextId() const override;
 
 private:
     QButtonGroup *slabsAmountButtonGroup;
@@ -81,12 +81,12 @@ class EnterIpAddressPage : public QWizardPage
     Q_OBJECT
 
 public:
-    EnterIpAddressPage(QWidget *parent = nullptr);
-    virtual ~EnterIpAddressPage();
+    explicit EnterIpAddressPage(QWidget *parent = nullptr);
+    ~EnterIpAddressPage() override;
 
     void setVisible(bool visible) override;
     void initializePage() override;
-    int nextId() const override;
+    [[nodiscard]] int nextId() const override;
 
 private:
     QButtonGroup *slabsAmountButtonGroup;
