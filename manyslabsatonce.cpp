@@ -95,6 +95,13 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress
 
     ui->slabsTableWidget->setCellWidget(0,1, consoleWidget);
 
+    auto *newConnectionWidget = new QWidget(this);
+    auto *newConnectionLayout = new QHBoxLayout(newConnectionWidget);
+    auto *newConnectionButton = new QPushButton("New Connection", newConnectionWidget);
+    newConnectionLayout->addWidget(newConnectionButton, Qt::AlignCenter);
+
+    ui->slabsTableWidget->setCellWidget(0,0, newConnectionWidget);
+
     QPalette labelPalette = ui->labelSection->palette();
     labelPalette.setColor(QPalette::WindowText, Qt::white);
     ui->labelIp->setAutoFillBackground(true);
@@ -106,7 +113,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress
     ui->labelIp->setPalette(labelPalette);
     ui->groupBoxDetectionSlabs->setPalette(labelPalette);
 
-    std::tuple<QString, unsigned int, QList<int>> value = ManySlabsAtOnce::hubsComentsAndIds->value(ipAddress);
+    std::tuple<QString, unsigned int, QList<int>> value = hubsComentsAndIds->value(ipAddress);
     // ui->labelSection->setText(ui->labelSection->text() + " " + );
     ui->sectionLineEdit->setText(QString::number(std::get<1>(value)));
 

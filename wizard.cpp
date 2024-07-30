@@ -7,7 +7,7 @@
 
 #include "wizard.h"
 #include "manyslabsatonce.h"
-
+#include "widget.h"
 
 
 Wizard::Wizard(QWidget *parent) :
@@ -303,18 +303,21 @@ void EnterIpAddressPage::connectButtonClicked(int which)
         QString ipAddress = ipLineEdit->text();
         if(hostAddress.setAddress(ipAddress)){
             if(!wizardPointer->containsAddress(hostAddress)){
+                wizardPointer->insertLanConnection(hostAddress, lc);
+                connect(wizardPointer, &Wizard::connectionRequst, lc, &LanConnection::connect);
                 if(manySlabsRadioButton->isChecked()){
-                        wizardPointer->insertLanConnection(hostAddress, lc);
-                        connect(wizardPointer, &Wizard::connectionRequst, lc, &LanConnection::connect);
                         ManySlabsAtOnce* manySlabsAtOnce = new ManySlabsAtOnce(lc, ipAddress, nullptr);
                         connect(manySlabsAtOnce, &ManySlabsAtOnce::closeLanConnection, lc, &LanConnection::closeConnection);
                         manySlabsAtOnce->show();
                         emit connectManySlabsLan(ipAddress, LanConnection::PORT);
                     }
-                if(oneByOneSlabRadioButton->isChecked()){
-                        wizardPointer->insertLanConnection(hostAddress, lc);
+                else if(oneByOneSlabRadioButton->isChecked()){
+                        Widget* oneByOneSlab = new Widget(lc, nullptr);
+                        connect(oneByOneSlab, &Widget::closeLanConnection, lc, &LanConnection::closeConnection);
+                        oneByOneSlab->show();
                         emit connectOneSlabLan(ipAddress, LanConnection::PORT);
-                }
+                    }
+                wizardPointer->hide();
             }else {
                 qDebug() << "You are trying to connect to a Hub that you have already connected to";
             }
