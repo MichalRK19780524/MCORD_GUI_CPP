@@ -8,6 +8,7 @@
 #include <QFile>
 #include "detectortablemodel.h"
 #include "basewidget.h"
+#include "wizard.h"
 //#include "lanconnection.h"
 
 namespace Ui {
@@ -19,7 +20,7 @@ class ManySlabsAtOnce : public QWidget
     Q_OBJECT
 
 public:
-    explicit ManySlabsAtOnce(LanConnection *lanConnection,  QString ipAddress, QWidget *parent = nullptr);
+    explicit ManySlabsAtOnce(LanConnection *lanConnection,  QString ipAddress, const QWizard &wizard, QWidget *parent = nullptr);
     ~ManySlabsAtOnce() override;
 
     static QFile file;
@@ -31,6 +32,7 @@ private:
     Ui::ManySlabsAtOnce *ui;
     BaseWidget* base;
     DetectorTableModel *model = nullptr;
+    const QWizard &wizard;
 //    QSettings *settings = nullptr;
 
 

@@ -1,3 +1,4 @@
+#include <memory>
 #include <QRegularExpression>
 #include <QRegularExpressionValidator>
 #include <QThread>
@@ -306,7 +307,7 @@ void EnterIpAddressPage::connectButtonClicked(int which)
                 wizardPointer->insertLanConnection(hostAddress, lc);
                 connect(wizardPointer, &Wizard::connectionRequst, lc, &LanConnection::connect);
                 if(manySlabsRadioButton->isChecked()){
-                        ManySlabsAtOnce* manySlabsAtOnce = new ManySlabsAtOnce(lc, ipAddress, nullptr);
+                        ManySlabsAtOnce* manySlabsAtOnce = new ManySlabsAtOnce(lc, ipAddress, *wizardPointer, nullptr);
                         connect(manySlabsAtOnce, &ManySlabsAtOnce::closeLanConnection, lc, &LanConnection::closeConnection);
                         manySlabsAtOnce->show();
                         emit connectManySlabsLan(ipAddress, LanConnection::PORT);
@@ -317,7 +318,7 @@ void EnterIpAddressPage::connectButtonClicked(int which)
                         oneByOneSlab->show();
                         emit connectOneSlabLan(ipAddress, LanConnection::PORT);
                     }
-                wizardPointer->hide();
+                wizardPointer->close();
             }else {
                 qDebug() << "You are trying to connect to a Hub that you have already connected to";
             }

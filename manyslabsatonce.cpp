@@ -4,6 +4,7 @@
 #include <QLineEdit>
 
 #include "widget.h"
+#include "wizard.h"
 #include "statusicondelegate.h"
 #include "manyslabsatonce.h"
 #include "ui_manyslabsatonce.h"
@@ -11,8 +12,9 @@
 // QHash<QString, QPair<QString, QList<int>>> *const ManySlabsAtOnce::hubsComentsAndIds = new QHash<QString, QPair<QString, QList<int>>>;
 
 
-ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress, QWidget *parent) :
+ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress, const QWizard &wizard, QWidget *parent) :
     QWidget(parent),
+    wizard(wizard),
     ui(new Ui::ManySlabsAtOnce), base(new BaseWidget(lanConnection))
 {
     ui->setupUi(this);
