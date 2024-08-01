@@ -12,7 +12,7 @@
 // QHash<QString, QPair<QString, QList<int>>> *const ManySlabsAtOnce::hubsComentsAndIds = new QHash<QString, QPair<QString, QList<int>>>;
 
 
-ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress, const QWizard &wizard, QWidget *parent) :
+ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress, QWizard &wizard, QWidget *parent) :
     QWidget(parent),
     wizard(wizard),
     ui(new Ui::ManySlabsAtOnce), base(new BaseWidget(lanConnection))
@@ -101,6 +101,8 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress
     auto *newConnectionLayout = new QHBoxLayout(newConnectionWidget);
     auto *newConnectionButton = new QPushButton("New Connection", newConnectionWidget);
     newConnectionLayout->addWidget(newConnectionButton, Qt::AlignCenter);
+
+    connect(newConnectionButton, &QPushButton::clicked, this, &ManySlabsAtOnce::newConnectionClicked);
 
     ui->slabsTableWidget->setCellWidget(0,0, newConnectionWidget);
 
@@ -407,6 +409,11 @@ void ManySlabsAtOnce::setAllClicked()
         slabs.append(slab);
     }
     emit setManySlabsRequired(slabs);
+}
+
+void ManySlabsAtOnce::newConnectionClicked()
+{
+    wizard.show();
 }
 
 void ManySlabsAtOnce::offClicked(int rowId)

@@ -20,7 +20,7 @@ class ManySlabsAtOnce : public QWidget
     Q_OBJECT
 
 public:
-    explicit ManySlabsAtOnce(LanConnection *lanConnection,  QString ipAddress, const QWizard &wizard, QWidget *parent = nullptr);
+    explicit ManySlabsAtOnce(LanConnection *lanConnection,  QString ipAddress, QWizard &wizard, QWidget *parent = nullptr);
     ~ManySlabsAtOnce() override;
 
     static QFile file;
@@ -32,7 +32,7 @@ private:
     Ui::ManySlabsAtOnce *ui;
     BaseWidget* base;
     DetectorTableModel *model = nullptr;
-    const QWizard &wizard;
+    QWizard &wizard;
 //    QSettings *settings = nullptr;
 
 
@@ -59,6 +59,7 @@ private slots:
     void setMasterVoltageClicked(int slabId);
     void setSlaveVoltageClicked(int slabId);
     void setAllClicked();
+    void newConnectionClicked();
     void offClicked(int slabId);
     void offAllClicked();
     void appendManySlabsToModel(QList<Slab> slabs);
