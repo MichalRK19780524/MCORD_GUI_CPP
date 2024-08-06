@@ -9,6 +9,7 @@
 #include "wizard.h"
 #include "manyslabsatonce.h"
 #include "widget.h"
+#include "calibrationwidget.h"
 
 
 Wizard::Wizard(QWidget *parent) :
@@ -24,6 +25,7 @@ Wizard::Wizard(QWidget *parent) :
 
     connect(enterIpAddressPage, &EnterIpAddressPage::connectManySlabsLan, this, &Wizard::connectManySlabs);
     // connect(enterIpAddressPage, &EnterIpAddressPage::connectOneSlabLan, this, &Wizard::connectOneSlab);
+    connect(enterIpAddressPage, &EnterIpAddressPage::connectManySlabsLan, this, &Wizard::connectCalibration);
 }
 
 Wizard::~Wizard()
@@ -58,6 +60,12 @@ void Wizard::connectManySlabs(QString ipAddress, quint16 port)
     emit connectionRequst(ipAddress, LanConnection::PORT);
 }
 
+void Wizard::connectCalibration(QString ipAddress, quint16 port)
+{
+    emit connectionRequst(ipAddress, LanConnection::PORT);
+}
+
+
 void Wizard::connectOneSlab(QString ipAddress, quint16 port)
 {
 
@@ -79,6 +87,8 @@ SelectOneManyPage::SelectOneManyPage(QWidget *parent): QWizardPage(parent)
 
     registerField("one.by.one", oneByOneSlabRadioButton);
     registerField("many.slabs", manySlabsRadioButton);
+    registerField("calibration", calibrationRadioButton);
+    registerField("no.action", noActiveRadioButton);
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(oneByOneSlabRadioButton, 0, 0);
@@ -276,6 +286,14 @@ void EnterIpAddressPage::initializePage()
     bool selectedMany = field("many.slabs").toBool();
     manySlabsRadioButton->setChecked(selectedMany);
 
+
+    bool selectedCalibration = field("calibration").toBool();
+    if(selectedCalibration){
+        oneByOneSlabRadioButton->setEnabled(true);
+        manySlabsRadioButton->setEnabled(true);
+        oneByOneSlabRadioButton->setChecked(true);
+    }
+
     wizard()->setButtonText(QWizard::CustomButton1, tr("&Connect"));
     settings->beginGroup("IP address");
     QString ipAddress =
@@ -306,17 +324,28 @@ void EnterIpAddressPage::connectButtonClicked(int which)
             if(!wizardPointer->containsAddress(hostAddress)){
                 wizardPointer->insertLanConnection(hostAddress, lc);
                 connect(wizardPointer, &Wizard::connectionRequst, lc, &LanConnection::connect);
-                if(manySlabsRadioButton->isChecked()){
+                bool selectedMany = field("many.slabs").toBool();
+                bool selectedOneByOne = field("one.by.one").toBool();
+                bool selectedCalibration = field("calibration").toBool();
+                if(selectedMany){
                         ManySlabsAtOnce* manySlabsAtOnce = new ManySlabsAtOnce(lc, ipAddress, *wizardPointer, nullptr);
                         connect(manySlabsAtOnce, &ManySlabsAtOnce::closeLanConnection, lc, &LanConnection::closeConnection);
                         manySlabsAtOnce->show();
                         emit connectManySlabsLan(ipAddress, LanConnection::PORT);
                     }
-                else if(oneByOneSlabRadioButton->isChecked()){
+                else if(selectedOneByOne){
                         Widget* oneByOneSlab = new Widget(lc, nullptr);
                         connect(oneByOneSlab, &Widget::closeLanConnection, lc, &LanConnection::closeConnection);
                         oneByOneSlab->show();
                         emit connectOneSlabLan(ipAddress, LanConnection::PORT);
+                    }
+                else if(selectedCalibration){
+                        CalibrationWidget* calibrationWidget = new CalibrationWidget(lc, ipAddress, *wizardPointer, nullptr);
+                        connect(calibrationWidget, &CalibrationWidget::closeLanConnection, lc, &LanConnection::closeConnection);
+                        calibrationWidget->show();
+                        emit connectCalibrationLan(ipAddress, LanConnection::PORT);
+                    } else {
+
                     }
                 wizardPointer->close();
             }else {

@@ -2,9 +2,10 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QLineEdit>
+#include <QWizard>
 
 #include "widget.h"
-#include "wizard.h"
+// #include "wizard.h"
 #include "statusicondelegate.h"
 #include "manyslabsatonce.h"
 #include "ui_manyslabsatonce.h"

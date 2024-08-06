@@ -40,7 +40,9 @@ set(PROJECT_SOURCES
         wizard.cpp
         images.qrc
 
-        manyslabsatonce.ui
+        # manyslabsatonce.ui
+        wizard.ui
+        widget.ui
     )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -49,6 +51,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         manyslabsatonce.h manyslabsatonce.cpp manyslabsatonce.ui
         basewidget.h basewidget.cpp
+        calibrationwidget.h calibrationwidget.cpp calibrationwidget.ui
+        calibrationbarelement.h calibrationbarelement.cpp calibrationbarelement.ui
 #        wizard.ui
     )
 # Define target properties for Android with Qt 6 as:

@@ -8,7 +8,6 @@
 #include <QThread>
 #include <QTimer>
 #include <QDateTime>
-#include <utility>
 
 #include "./ui_widget.h"
 #include "statusicondelegate.h"

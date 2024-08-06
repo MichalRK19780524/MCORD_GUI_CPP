@@ -35,6 +35,7 @@ private:
 private slots:
     void connectManySlabs(QString ipAddress, quint16 port);
     void connectOneSlab(QString ipAddress, quint16 port);
+    void connectCalibration(QString ipAddress, quint16 port);
 signals:
     void connectionRequst(QString ipAddress, quint16 port);
 };
@@ -105,5 +106,6 @@ private slots:
 signals:
            void connectManySlabsLan(QString ipAddress, quint16 port);
            void connectOneSlabLan(QString ipAddress, quint16 port);
+           void connectCalibrationLan(QString ipAddress, quint16 port);
 };
 #endif // WIZARD_H
