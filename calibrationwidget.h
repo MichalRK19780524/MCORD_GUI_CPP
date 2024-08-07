@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "basewidget.h"
 #include "wizard.h"
+#include "calibrationbarelement.h"
 
 namespace Ui {
 class CalibrationWidget;
@@ -21,12 +22,14 @@ private:
     Ui::CalibrationWidget *ui;
     BaseWidget* base;
     QWizard &wizard;
+    vector<CalibrationBarElement> bars;
 
 signals:
     void closeLanConnection();
 
 private slots:
     void newConnectionClicked();
+    void addNewBarClicked();
 };
 
 #endif // CALIBRATIONWIDGET_H
