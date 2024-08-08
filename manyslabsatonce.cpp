@@ -178,6 +178,9 @@ ManySlabsAtOnce::~ManySlabsAtOnce()
 
     delete model;
     model = nullptr;
+
+    delete base;
+    base = nullptr;
 }
 
 void ManySlabsAtOnce::addPowerWidgets() {

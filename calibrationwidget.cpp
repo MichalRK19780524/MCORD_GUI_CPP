@@ -14,7 +14,12 @@ CalibrationWidget::CalibrationWidget(LanConnection *lanConnection,  QString ipAd
 
 CalibrationWidget::~CalibrationWidget()
 {
+    emit closeLanConnection();
     delete ui;
+    ui = nullptr;
+
+    delete base;
+    base = nullptr;
 }
 
 void CalibrationWidget::newConnectionClicked()
@@ -24,7 +29,10 @@ void CalibrationWidget::newConnectionClicked()
 
 void CalibrationWidget::addNewBarClicked()
 {
-    auto *layout = ui->barListWidget->layout();
-    // QVBoxLayout *layout = new QVBoxLayout(ui->barListWidget);
-    layout->addWidget(new CalibrationBarElement);
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(ui->barListWidget->layout());
+    bool ok;
+    int id = ui->addBarLineEdit->text().toInt(&ok);
+    Slab slab(id, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+    emit slabRequired(slab);
+    layout->insertWidget(layout->count() - 2, new CalibrationBarElement);
 }

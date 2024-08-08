@@ -26,6 +26,7 @@ private:
 
 signals:
     void closeLanConnection();
+    void slabRequired(Slab slab);
 
 private slots:
     void newConnectionClicked();
