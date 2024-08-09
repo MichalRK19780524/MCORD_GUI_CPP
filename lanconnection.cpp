@@ -53,7 +53,7 @@ LanConnection::~LanConnection() {
 
 QString LanConnection::downloadSetVoltage(Slab &slab, AfeType afeType)
 {
-    QString result = LanConnection::isSlabCorrect(&slab);
+    QString result = LanConnection::isSlabCorrect(slab);
     if (result != "OK") {
         return result;
     }
@@ -100,7 +100,7 @@ void LanConnection::closeConnection() {
     }
 }
 
-void LanConnection::connect(QString ipAddress, quint16 port) {
+void LanConnection::connect(const QString &ipAddress, quint16 port) {
 
     socket->connectToHost(QHostAddress(ipAddress), port);
 
@@ -130,7 +130,7 @@ void LanConnection::connect(QString ipAddress, quint16 port) {
 
 QString LanConnection::downloadMeasuredCurrent(Slab &slab, AfeType afeType,
                                                quint16 avgNumber) {
-    QString result = LanConnection::isSlabCorrect(&slab);
+    QString result = LanConnection::isSlabCorrect(slab);
     if (result != "OK") {
         return result;
     }
@@ -169,7 +169,7 @@ QString LanConnection::downloadMeasuredCurrent(Slab &slab, AfeType afeType,
 
 QString LanConnection::downloadMeasuredTemperature(Slab &slab, AfeType afeType,
                                                    quint16 avgNumber) {
-    QString result = LanConnection::isSlabCorrect(&slab);
+    QString result = LanConnection::isSlabCorrect(slab);
     if (result != "OK") {
         return result;
     }
@@ -200,7 +200,7 @@ QString LanConnection::downloadMeasuredTemperature(Slab &slab, AfeType afeType,
 
  QString LanConnection::setSlabVoltage(Slab &slab)
 {
-     QString result = LanConnection::isSlabCorrect(&slab);
+     QString result = LanConnection::isSlabCorrect(slab);
      if(result != "OK")
      {
          return result;
@@ -266,17 +266,17 @@ bool LanConnection::readSlab(Slab &slab, AfeType afeType) {
 //    }
     result = downloadMeasuredVoltage(slab, afeType);
     if (result != "OK") {
-        emit readingError(result);
+        emit readingSlabError(slab, result);
         return false;
     }
     result = downloadMeasuredCurrent(slab, afeType, CURRENT_AVG_NUMBER);
     if (result != "OK") {
-        emit readingError(result);
+        emit readingSlabError(slab, result);
         return false;
     }
     result = downloadMeasuredTemperature(slab, afeType, TEMPERATURE_AVG_NUMBER);
     if (result != "OK") {
-        emit readingError(result);
+        emit readingSlabError(slab, result);
         return false;
     }
     return true;
@@ -310,7 +310,7 @@ void LanConnection::updateManySlabs(QList<Slab> slabs)
 }
 
 
-QString LanConnection::initSlab(Slab& slab) {
+QString LanConnection::initSlab(const Slab& slab) {
     QJsonArray command = {INIT_COMMAND, slab.getId()};
 
     if (socket->isOpen()) {
@@ -423,7 +423,7 @@ QString LanConnection::offSlab(const Slab& slab) {
 
 QString LanConnection::downloadMeasuredVoltage(Slab &slab, AfeType afeType) {
 
-    QString result = LanConnection::isSlabCorrect(&slab);
+    QString result = LanConnection::isSlabCorrect(slab);
     if (result != "OK") {
         return result;
     }
@@ -483,7 +483,7 @@ std::shared_ptr<Sipm> LanConnection::getSipmVoltagFromHub(std::shared_ptr<Sipm> 
                                 sipm->setStatus("Error reading voltage from SiPM");
                                 return sipm;
                             } else {
-                                float voltage = jsonDocument.array().at(1).toDouble();
+                                float voltage = static_cast<float>(jsonDocument.array().at(1).toDouble());
                                 sipm->setMeasuredVoltage(voltage);
                                 sipm->setStatus("OK");
                                 return sipm;
@@ -601,7 +601,7 @@ void LanConnection::loadAllSetSipmVoltageFromHub()
             QString status = jsonDocument.array().at(0).toString();
             QPair<QVariantHash, QVariantHash> data;
             if (status.isNull() || status.compare("OK") != 0) {
-                emit readingError("Reading all set voltage from SiPM error");
+                emit readingAllSlabsError("Reading all set voltage from SiPM error");
             } else {
                 QJsonArray masterSlaveVoltages = jsonDocument.array().at(1).toArray();
                 QJsonObject masterVoltages = masterSlaveVoltages.at(0).toObject();
@@ -703,19 +703,17 @@ std::shared_ptr<Sipm> LanConnection::getSipmTemperatureFromHub(std::shared_ptr<S
     return sipm;
 }
 
-QString LanConnection::isSlabCorrect(Slab *slab) {
-    if (slab == nullptr) {
-        return "Error: Slab Null Ptr";
-    } else if (slab->getMaster() == nullptr) {
+QString LanConnection::isSlabCorrect(const Slab &slab) {
+    if (slab.getMaster() == nullptr) {
         return "Error: Master SiPM Null Ptr";
-    } else if (slab->getSlave() == nullptr) {
+    } else if (slab.getSlave() == nullptr) {
         return "Error: Slave SiPM Null Ptr";
-    } else if (slab->getId() == 0) {
+    } else if (slab.getId() == 0) {
         return "Error: Null Id";
-    } else if (slab->getMaster()->getStatus().compare("OK") != 0) {
-        return "Error: Master SiPM Status: " + slab->getMaster()->getStatus();
-    } else if (slab->getSlave()->getStatus().compare("OK") != 0) {
-        return "Error: Slave SiPM Status: " + slab->getSlave()->getStatus();
+    } else if (slab.getMaster()->getStatus().compare("OK") != 0) {
+        return "Error: Master SiPM Status: " + slab.getMaster()->getStatus();
+    } else if (slab.getSlave()->getStatus().compare("OK") != 0) {
+        return "Error: Slave SiPM Status: " + slab.getSlave()->getStatus();
     } else {
         return "OK";
     }
@@ -723,7 +721,7 @@ QString LanConnection::isSlabCorrect(Slab *slab) {
 
 QTcpSocket *LanConnection::getSocket() { return socket; }
 
-bool LanConnection::initAndOnSlab(Slab slab) {
+bool LanConnection::initAndOnSlab(const Slab &slab) {
     QString result = initSlab(slab);
     if (result == "OK") {
         result = onSlab(slab);

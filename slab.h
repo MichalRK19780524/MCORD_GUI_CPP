@@ -33,9 +33,9 @@ public:
     [[nodiscard]] int getId() const;
 //  void setId(quint16 newId);
 
-    [[nodiscard]] std::shared_ptr<Sipm> &getMaster();
+    [[nodiscard]] const std::shared_ptr<Sipm> &getMaster() const;
 
-    [[nodiscard]] std::shared_ptr<Sipm> &getSlave();
+    [[nodiscard]] const std::shared_ptr<Sipm> &getSlave() const;
 
 private:
     qint16 id = -1;

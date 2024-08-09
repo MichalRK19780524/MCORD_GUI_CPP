@@ -33,13 +33,13 @@ int Slab::getId() const
 //  id = newId;
 //}
 
-std::shared_ptr<Sipm>& Slab::getMaster()
+const std::shared_ptr<Sipm>& Slab::getMaster() const
 {
   QMutexLocker locker(mutex.get());
   return master;
 }
 
-std::shared_ptr<Sipm>& Slab::getSlave()
+const std::shared_ptr<Sipm>& Slab::getSlave() const
 {
   QMutexLocker locker(mutex.get());
   return slave;

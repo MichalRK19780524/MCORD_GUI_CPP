@@ -40,45 +40,46 @@ public:
     QString downloadMeasuredVoltage(Slab& slab, AfeType afeType);
     QString downloadMeasuredCurrent(Slab& slab, AfeType afeType, quint16 avgNumber);
     QString downloadMeasuredTemperature(Slab& slab, AfeType afeType, quint16 avgNumber);
-    QString initSlab(Slab& slab);
+    QString initSlab(const Slab& slab);
     QString onSlab(const Slab& slab);
     QString offSlab(const Slab& slab);
     QString setSlabVoltage(Slab& slab);
     QTcpSocket* getSocket();
-    bool initAndOnSlab(Slab slab);
+    bool initAndOnSlab(const Slab &slab);
     QHostAddress getPeerAddress();
 
 signals:
-    void connectionFailed(QString message);
-    void connectionSucceeded(QString ipAddress);
-    void writingError(QJsonArray command);
-    void readingError(QString message);
-    void slabReadingCompleted(Slab slab);
-    void onFailed(quint16 slabId, QString message);
-    void initFailed(quint16 slabId, QString message);
-    void offFailed(quint16 slabId, QString message);
-    void appendSlabToTableRequired(Slab slab);
-    void appendManySlabsToTableRequired(QList<Slab> slabs);
-    void updateManySlabsToTableRequired(QList<Slab> slabs);
-    void updateSlabToTableRequired(Slab slab);
-    void slabDataRetrieved(Slab slab);
-    void manySlabsDataRetrieved(QList<Slab> slabs);
-    void setMasterFailed(quint16 slabId, QString message);
-    void setSlaveFailed(quint16 slabId, QString message);
-    void setManySlabsFailed(QList<int> ids, QStringList results);
-    void offManySlabsFailed(QList<int> ids, QStringList results);
-    void onHubFailed(QString message);
-    void offHubFailed(QString message);
-    void setMasterSucceeded(Slab slab);
-    void setSlaveSucceeded(Slab slab);
-    void setManySlabsSucceeded(QList<Slab> slabs);
-    void offManySlabsSucceeded(QList<Slab> slabs);
+    void connectionFailed(const QString &message);
+    void connectionSucceeded(const QString &ipAddress);
+    void writingError(const QJsonArray &command);
+    void readingSlabError(const Slab &slab, const QString &message);
+    void readingAllSlabsError(const QString &message);
+    void slabReadingCompleted(const Slab &slab);
+    void onFailed(quint16 slabId, const QString &message);
+    void initFailed(quint16 slabId, const QString &message);
+    void offFailed(quint16 slabId, const QString &message);
+    void appendSlabToTableRequired(const Slab &slab);
+    void appendManySlabsToTableRequired(const QList<Slab> &slabs);
+    void updateManySlabsToTableRequired(const QList<Slab> &slabs);
+    void updateSlabToTableRequired(const Slab &slab);
+    void slabDataRetrieved(const Slab &slab);
+    void manySlabsDataRetrieved(const QList<Slab> &slabs);
+    void setMasterFailed(quint16 slabId, const QString &message);
+    void setSlaveFailed(quint16 slabId, const QString &message);
+    void setManySlabsFailed(const QList<int> &ids, const QStringList &results);
+    void offManySlabsFailed(const QList<int> &ids, const QStringList &results);
+    void onHubFailed(const QString &message);
+    void offHubFailed(const QString &message);
+    void setMasterSucceeded(const Slab &slab);
+    void setSlaveSucceeded(const Slab &slab);
+    void setManySlabsSucceeded(const QList<Slab> &slabs);
+    void offManySlabsSucceeded(const QList<Slab> &slabs);
     void onHubSucceeded();
     void offHubSucceeded();
-    void loadAllSetSipmVoltageCompleted(QPair<QVariantHash, QVariantHash> voltages);
+    void loadAllSetSipmVoltageCompleted(const QPair<QVariantHash, QVariantHash> &voltages);
 
 public slots:
-    void connect(QString ipAddress, quint16 port = PORT);
+    void connect(const QString &ipAddress, quint16 port = PORT);
     void closeConnection();
     void initAndOnNewSlab(Slab slab);
     void initAndOnManySlabs(QList<Slab> slabs);
@@ -118,7 +119,7 @@ private:
 
     QTcpSocket *socket = nullptr;
 
-    static QString isSlabCorrect(Slab* slab);
+    static QString isSlabCorrect(const Slab &slab);
     std::shared_ptr<Sipm> getSipmVoltagFromHub(std::shared_ptr<Sipm> simp, QJsonArray command);
     std::shared_ptr<Sipm> getSetSipmVoltagFromHub(std::shared_ptr<Sipm> simp, QJsonArray command);
     std::shared_ptr<Sipm> getSipmAmperageFromHub(std::shared_ptr<Sipm> sipm, QJsonArray command, quint16 avgNumber);

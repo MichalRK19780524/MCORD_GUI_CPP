@@ -500,7 +500,7 @@ void ManySlabsAtOnce::updateManySlabsInModel(QList<Slab> slabs){
             slab.getSlave()->setSetVoltage(slaveSetVoltage.toFloat(&ok));
             if(!ok){
                 message = QString("Updating detection slab ") + QString::number(slab.getId()) + "internal error";
-                qDebug() << message + " incoorect string: " + slaveSetVoltage;
+                qDebug() << message + " incorrect string: " + slaveSetVoltage;
                 QMessageBox::information(this, message, slaveSetVoltage);
             }
         }

@@ -1,3 +1,5 @@
+#include <QMessageBox>
+
 #include "calibrationwidget.h"
 #include "ui_calibrationwidget.h"
 #include "calibrationbarelement.h"
@@ -31,8 +33,14 @@ void CalibrationWidget::addNewBarClicked()
 {
     QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(ui->barListWidget->layout());
     bool ok;
-    int id = ui->addBarLineEdit->text().toInt(&ok);
-    Slab slab(id, std::make_shared<Sipm>(), std::make_shared<Sipm>());
-    emit slabRequired(slab);
-    layout->insertWidget(layout->count() - 2, new CalibrationBarElement);
+    QString idText = ui->addBarLineEdit->text();
+    int id = idText.toInt(&ok);
+    if(!ok){
+        QString message{"Incorrect number format. Enter a valid value."};
+        QMessageBox::information(this, message, idText);
+    } else {
+        Slab slab(id, std::make_shared<Sipm>(), std::make_shared<Sipm>());
+        emit slabRequired(slab);
+        layout->insertWidget(layout->count() - 2, new CalibrationBarElement);
+    }
 }
