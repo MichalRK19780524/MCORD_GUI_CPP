@@ -14,7 +14,9 @@ class CalibrationBarElement : public QFrame
 
 public:
     explicit CalibrationBarElement(QWidget *parent = nullptr);
-    ~CalibrationBarElement();
+    explicit CalibrationBarElement(int id, QWidget *parent = nullptr);
+
+    ~CalibrationBarElement() override;
 
 private:
     Ui::CalibrationBarElement *ui;

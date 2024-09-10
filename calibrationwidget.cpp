@@ -41,6 +41,6 @@ void CalibrationWidget::addNewBarClicked()
     } else {
         Slab slab(id, std::make_shared<Sipm>(), std::make_shared<Sipm>());
         emit slabRequired(slab);
-        layout->insertWidget(layout->count() - 2, new CalibrationBarElement);
+        layout->insertWidget(layout->count() - 2, new CalibrationBarElement(id));
     }
 }
