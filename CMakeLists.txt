@@ -8,10 +8,10 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-list(APPEND CMAKE_PREFIX_PATH "/opt/Qt/6.7.2/gcc_64/lib/cmake")
+list(APPEND CMAKE_PREFIX_PATH "/opt/Qt/6.8.1/gcc_64/lib/cmake")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
@@ -59,6 +59,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 #    set_property(TARGET MCORD_GUI_CPP APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
+add_library(libqtcsv SHARED IMPORTED )
+set_target_properties( libqtcsv PROPERTIES IMPORTED_LOCATION "/usr/local/lib/libqtcsv.so")
 else()
     if(ANDROID)
         add_library(MCORD_GUI_CPP SHARED
@@ -78,6 +80,7 @@ target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::Network)
 target_link_libraries(MCORD_GUI_CPP PRIVATE Qt${QT_VERSION_MAJOR}::Svg)
 target_link_libraries(MCORD_GUI_CPP PRIVATE GSL::gsl GSL::gslcblas)
+target_link_libraries(MCORD_GUI_CPP PRIVATE libqtcsv)
 
 set_target_properties(MCORD_GUI_CPP PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

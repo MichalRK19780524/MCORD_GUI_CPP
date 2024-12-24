@@ -60,7 +60,7 @@ signals:
     void offFailed(quint16 slabId, const QString &message);
     void appendSlabToTableRequired(const Slab &slab);
     void appendManySlabsToTableRequired(const QList<Slab> &slabs);
-    void updateManySlabsToTableRequired(const QList<Slab> &slabs);
+    // void updateManySlabsToTableRequired(const QList<Slab> &slabs);
     void updateSlabToTableRequired(const Slab &slab);
     void slabDataRetrieved(const Slab &slab);
     void manySlabsDataRetrieved(const QList<Slab> &slabs);

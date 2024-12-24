@@ -5,6 +5,8 @@
 #include <gsl/gsl_statistics.h>
 #include <QMessageBox>
 #include <QStringList>
+#include <qtcsv/abstractdata.h>
+#include <qtcsv/writer.h>
 
 #include "afetype.h"
 #include "lanconnection.h"

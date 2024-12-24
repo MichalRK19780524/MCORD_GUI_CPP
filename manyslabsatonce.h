@@ -6,9 +6,9 @@
 #include <QSignalMapper>
 //#include <QSettings>
 #include <QFile>
+#include <QWizard>
 #include "detectortablemodel.h"
 #include "basewidget.h"
-#include "wizard.h"
 //#include "lanconnection.h"
 
 namespace Ui {
@@ -34,6 +34,7 @@ private:
     DetectorTableModel *model = nullptr;
     QWizard &wizard;
 //    QSettings *settings = nullptr;
+    QString pathToData;
 
 
     QSignalMapper *setMasterSignalMapper = nullptr;
@@ -49,6 +50,8 @@ private:
     void setSlaveStatusColor(Slab &slab);
     QList<Slab> takeSlabsIds();
     QString getIpAddress();
+
+    void createDataDirectory();
 
     std::tuple<QString, unsigned int, QList<int>> readIdsFromTable();
 
@@ -66,9 +69,11 @@ private slots:
     void tableUpdate();
     void updateSlabInModel(Slab slab);
     void updateManySlabsInModel(QList<Slab> slab);
+    void updateManyDataFiles(QList<Slab> slab);
     void idEditingFinished(int position);
     void loadIdNumbers(QString ipAddress);
     void loadSetVoltages(QPair<QVariantHash, QVariantHash> voltages);
+    void createDataFiles();
 
 signals:
     void initializationManySlabsRequired(QList<Slab> slabs);
@@ -82,6 +87,7 @@ signals:
     void setMasterVoltageRequired(Slab slab);
     void setSlaveVoltageRequired(Slab slab);
     void loadIdNumbersSucceded();
+
 };
 
 

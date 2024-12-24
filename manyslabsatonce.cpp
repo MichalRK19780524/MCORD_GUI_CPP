@@ -3,6 +3,10 @@
 #include <QTimer>
 #include <QLineEdit>
 #include <QWizard>
+#include <QDir>
+#include <qtcsv/writer.h>
+#include <qtcsv/stringdata.h>
+#include <qtcsv/variantdata.h>
 
 #include "widget.h"
 // #include "wizard.h"
@@ -136,7 +140,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress
     connect(lanConnection, &LanConnection::appendManySlabsToTableRequired, this, &ManySlabsAtOnce::appendManySlabsToModel);
 
     connect(this, &ManySlabsAtOnce::setManySlabsRequired, lanConnection, &LanConnection::setManySlabs);
-    connect(lanConnection, &LanConnection::updateManySlabsToTableRequired, this, &ManySlabsAtOnce::updateManySlabsInModel);
+    // connect(lanConnection, &LanConnection::updateManySlabsToTableRequired, this, &ManySlabsAtOnce::updateManySlabsInModel);
 
     connect(this, &ManySlabsAtOnce::offManySlabsRequired, lanConnection, &LanConnection::offManySlabs);
 
@@ -146,9 +150,11 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress
 
     connect(this, &ManySlabsAtOnce::manySlabsUpdateRequired, lanConnection, &LanConnection::updateManySlabs);
     connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManySlabsInModel);
+    connect(lanConnection, &LanConnection::manySlabsDataRetrieved, this, &ManySlabsAtOnce::updateManyDataFiles);
     connect(setIdSignalMapper, &QSignalMapper::mappedInt, this, &ManySlabsAtOnce::idEditingFinished);
 
     connect(lanConnection, &LanConnection::connectionSucceeded, this, &ManySlabsAtOnce::loadIdNumbers);
+    connect(this, &ManySlabsAtOnce::loadIdNumbersSucceded, this, &ManySlabsAtOnce::createDataFiles);
     connect(this, &ManySlabsAtOnce::loadIdNumbersSucceded, lanConnection, &LanConnection::loadAllSetSipmVoltageFromHub);
     connect(lanConnection, &LanConnection::loadAllSetSipmVoltageCompleted, this, &ManySlabsAtOnce::loadSetVoltages);
 
@@ -166,6 +172,7 @@ ManySlabsAtOnce::ManySlabsAtOnce(LanConnection *lanConnection, QString ipAddress
     addIdWidgets();
     addPowerWidgets();
     addSetWidgets();
+    createDataDirectory();
 
 }
 
@@ -294,6 +301,24 @@ QString ManySlabsAtOnce::getIpAddress()
         return QString();
     } else {
         return ipAddress.toString();
+    }
+}
+
+void ManySlabsAtOnce::createDataDirectory()
+{
+    QString currentDateTimeString = QDateTime::currentDateTime().toString("yyyy_MM_dd_T_HH_mm_ss_z");
+    QString sectionId = ui->sectionLineEdit->text();
+    pathToData = QDir::currentPath() + QDir::separator() + sectionId + "_" + currentDateTimeString;
+    QDir dir(pathToData);
+
+    if(dir.exists()){
+        qDebug() << "Already exists";
+    }
+
+    if(dir.mkpath(pathToData)){
+        qInfo() << "Created";
+    } else {
+        qDebug() << "Could not create!";
     }
 }
 
@@ -516,6 +541,51 @@ void ManySlabsAtOnce::updateManySlabsInModel(QList<Slab> slabs){
     }
 }
 
+void ManySlabsAtOnce::updateManyDataFiles(QList<Slab> slabs){
+    const QString& separator = QString(",");
+    QtCSV::Writer::WriteMode mode = QtCSV::Writer::WriteMode::APPEND;
+    const QString& textDelimiter = QString("\"");
+
+    QMap<qint16, Slab> sortedSlabs;
+    for(Slab s : slabs){
+        sortedSlabs.insert(s.getId(),s);
+    }
+
+    for(auto i = hubsComentsAndIds->cbegin(), endOuter = hubsComentsAndIds->cend(); i != endOuter; ++i)
+    {
+        std::tuple<QString, unsigned int, QList<int>> value = i.value();
+        QString filePath1 = pathToData +  QDir::separator() + QString::number(std::get<1>(value));
+        const QList<int> idList = std::get<2>(value);
+        for(auto j = idList.cbegin(), endInner = idList.cend(); j != endInner; ++j)
+        {
+            Slab slab = sortedSlabs.value(*j);
+
+            std::shared_ptr<Sipm> masterSimp = slab.getMaster();
+            QString filePath2Master = filePath1 + "_" + QString::number(*j) + "_master";
+            QtCSV::VariantData dataMaster;
+            float masterSetVoltage = masterSimp->getSetVoltage();
+            float masterMeasuredVoltage = masterSimp->getMeasuredVoltage();
+            float masterCurrent = masterSimp->getCurrent();
+            float masterTemperature = masterSimp->getTemperature();
+            QList<QVariant> dataMasterList = {QVariant(masterSetVoltage), QVariant(masterMeasuredVoltage), QVariant(masterCurrent), QVariant(masterTemperature)};
+            dataMaster.addRow(dataMasterList);
+            QtCSV::Writer::write(filePath2Master, dataMaster, separator, textDelimiter, mode);
+
+            std::shared_ptr<Sipm> slaveSimp = slab.getSlave();
+            QString filePath2Slave = filePath1 + "_" + QString::number(*j) + "_slave";
+            QtCSV::VariantData dataSlave;
+            float slaveSetVoltage = slaveSimp->getSetVoltage();
+            float slaveMeasuredVoltage = slaveSimp->getMeasuredVoltage();
+            float slaveCurrent = slaveSimp->getCurrent();
+            float slaveTemperature = slaveSimp->getTemperature();
+            QList<QVariant> dataSlaveList = {QVariant(slaveSetVoltage), QVariant(slaveMeasuredVoltage), QVariant(slaveCurrent), QVariant(slaveTemperature)};
+            dataSlave.addRow(dataSlaveList);
+            QtCSV::Writer::write(filePath2Slave, dataSlave, separator, textDelimiter, mode);
+        }
+    }
+
+}
+
 void ManySlabsAtOnce::idEditingFinished(int position)
 {
     QModelIndex idIndex = model->index(position, BaseWidget::ID_COLUMN_INDEX);
@@ -523,10 +593,36 @@ void ManySlabsAtOnce::idEditingFinished(int position)
     QLineEdit* idLineEdit = idWidget->findChildren<QLineEdit *>().at(0);
     QString id = idLineEdit->text();
     QString ipAddress = this->getIpAddress();
-    bool isSaved = saveId(ipAddress, position, id);
+    saveId(ipAddress, position, id);
 //    settings->beginGroup("ids");
 //        settings->setValue(QString::number(position), idLineEdit->text());
     //    settings->endGroup();
+}
+
+void ManySlabsAtOnce::createDataFiles()
+{
+    const QList<QString>& headerMaster = {"Set Master SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
+    const QList<QString>& headerSlave = {"Set Slave SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
+
+    for(auto i = hubsComentsAndIds->cbegin(), endOuter = hubsComentsAndIds->cend(); i != endOuter; ++i)
+    {
+        std::tuple<QString, unsigned int, QList<int>> value = i.value();
+        QString filePath1 = pathToData +  QDir::separator() + QString::number(std::get<1>(value));
+        const QList<int> idList = std::get<2>(value);
+        for(auto j = idList.cbegin(), endInner = idList.cend(); j != endInner; ++j)
+        {
+            QString filePath2Master = filePath1 + "_" + QString::number(*j) + "_master";
+            QtCSV::StringData strDataMaster;
+            strDataMaster.addRow(headerMaster);
+            QtCSV::Writer::write(filePath2Master, strDataMaster);
+
+            QString filePath2Slave = filePath1 + "_" + QString::number(*j) + "_slave";
+            QtCSV::StringData strDataSlave;
+            strDataSlave.addRow(headerSlave);
+            QtCSV::Writer::write(filePath2Slave, strDataSlave);
+        }
+    }
+
 }
 
 void ManySlabsAtOnce::loadIdNumbers(QString ipAddress){

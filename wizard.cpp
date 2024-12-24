@@ -330,6 +330,7 @@ void EnterIpAddressPage::connectButtonClicked(int which)
                 if(selectedMany){
                         ManySlabsAtOnce* manySlabsAtOnce = new ManySlabsAtOnce(lc, ipAddress, *wizardPointer, nullptr);
                         connect(manySlabsAtOnce, &ManySlabsAtOnce::closeLanConnection, lc, &LanConnection::closeConnection);
+
                         manySlabsAtOnce->show();
                         emit connectManySlabsLan(ipAddress, LanConnection::PORT);
                     }
