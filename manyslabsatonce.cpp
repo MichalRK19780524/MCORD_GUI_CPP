@@ -551,36 +551,38 @@ void ManySlabsAtOnce::updateManyDataFiles(QList<Slab> slabs){
         sortedSlabs.insert(s.getId(),s);
     }
 
+    qint64 currentMsecSinceEpoch = QDateTime::currentMSecsSinceEpoch();
     for(auto i = hubsComentsAndIds->cbegin(), endOuter = hubsComentsAndIds->cend(); i != endOuter; ++i)
     {
         std::tuple<QString, unsigned int, QList<int>> value = i.value();
-        QString filePath1 = pathToData +  QDir::separator() + QString::number(std::get<1>(value));
+        QString filePath = pathToData +  QDir::separator() + QString::number(std::get<1>(value));
         const QList<int> idList = std::get<2>(value);
         for(auto j = idList.cbegin(), endInner = idList.cend(); j != endInner; ++j)
         {
             Slab slab = sortedSlabs.value(*j);
 
             std::shared_ptr<Sipm> masterSimp = slab.getMaster();
-            QString filePath2Master = filePath1 + "_" + QString::number(*j) + "_master";
+            QString filePathMaster = filePath + "_" + QString::number(*j) + "_master.csv";
             QtCSV::VariantData dataMaster;
+
             float masterSetVoltage = masterSimp->getSetVoltage();
             float masterMeasuredVoltage = masterSimp->getMeasuredVoltage();
             float masterCurrent = masterSimp->getCurrent();
             float masterTemperature = masterSimp->getTemperature();
-            QList<QVariant> dataMasterList = {QVariant(masterSetVoltage), QVariant(masterMeasuredVoltage), QVariant(masterCurrent), QVariant(masterTemperature)};
+            QList<QVariant> dataMasterList = {QVariant(currentMsecSinceEpoch), QVariant(masterSetVoltage), QVariant(masterMeasuredVoltage), QVariant(masterCurrent), QVariant(masterTemperature)};
             dataMaster.addRow(dataMasterList);
-            QtCSV::Writer::write(filePath2Master, dataMaster, separator, textDelimiter, mode);
+            QtCSV::Writer::write(filePathMaster, dataMaster, separator, textDelimiter, mode);
 
             std::shared_ptr<Sipm> slaveSimp = slab.getSlave();
-            QString filePath2Slave = filePath1 + "_" + QString::number(*j) + "_slave";
+            QString filePathSlave = filePath + "_" + QString::number(*j) + "_slave.csv";
             QtCSV::VariantData dataSlave;
             float slaveSetVoltage = slaveSimp->getSetVoltage();
             float slaveMeasuredVoltage = slaveSimp->getMeasuredVoltage();
             float slaveCurrent = slaveSimp->getCurrent();
             float slaveTemperature = slaveSimp->getTemperature();
-            QList<QVariant> dataSlaveList = {QVariant(slaveSetVoltage), QVariant(slaveMeasuredVoltage), QVariant(slaveCurrent), QVariant(slaveTemperature)};
+            QList<QVariant> dataSlaveList = {QVariant(currentMsecSinceEpoch), QVariant(slaveSetVoltage), QVariant(slaveMeasuredVoltage), QVariant(slaveCurrent), QVariant(slaveTemperature)};
             dataSlave.addRow(dataSlaveList);
-            QtCSV::Writer::write(filePath2Slave, dataSlave, separator, textDelimiter, mode);
+            QtCSV::Writer::write(filePathSlave, dataSlave, separator, textDelimiter, mode);
         }
     }
 
@@ -601,8 +603,8 @@ void ManySlabsAtOnce::idEditingFinished(int position)
 
 void ManySlabsAtOnce::createDataFiles()
 {
-    const QList<QString>& headerMaster = {"Set Master SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
-    const QList<QString>& headerSlave = {"Set Slave SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
+    const QList<QString>& headerMaster = {"Time since Epoch [msec]", "Set Master SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
+    const QList<QString>& headerSlave = {"Time since Epoch [msec]", "Set Slave SiPM Volt.",  "U[V]", "I[nA]", "T[C]"};
 
     for(auto i = hubsComentsAndIds->cbegin(), endOuter = hubsComentsAndIds->cend(); i != endOuter; ++i)
     {

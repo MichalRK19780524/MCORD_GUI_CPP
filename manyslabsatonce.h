@@ -87,7 +87,6 @@ signals:
     void setMasterVoltageRequired(Slab slab);
     void setSlaveVoltageRequired(Slab slab);
     void loadIdNumbersSucceded();
-
 };
 
 
